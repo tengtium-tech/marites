@@ -57,8 +57,7 @@ sequenceDiagram
 | Step | If it is skipped | If it runs twice |
 |---|---|---|
 | Ensure partitions | Capture stalls when the last partition fills | Idempotent |
-| Compaction | Finer tiers grow without bound | **A total doubles.** Needs a per-window marker — see §5 |
-| Delete finer rows | Storage grows | Idempotent, provided the coarser row exists |
+| Compaction — write the coarser row and delete the finer rows | Finer tiers grow without bound | **Cannot double and cannot half-delete.** Totals are recomputed and assigned, and the write and the deletion commit together ([ADR-024](../05-architecture/decisions.md)) |
 | Drop partitions | Rows outlive their retention | Idempotent |
 | Delete spilled objects | The object store grows while rows do not | Idempotent |
 | Sweep the ledger | The ledger grows without bound | Idempotent, and **only** after the redelivery window — sweeping early reopens the double-count ADR-019 closes |
@@ -93,12 +92,13 @@ Recovery from `Capped` is automatic: once the sweeper frees space, rows resume w
 | Failure | Consequence | Status |
 |---|---|---|
 | Compaction retried for one window | Additive upserts would double that window's counts, permanently | Prevented by recomputing and assigning the window's totals rather than adding to them ([ADR-024](../05-architecture/decisions.md)) |
+| Sweep interrupted partway through a window | A retry recomputes from the surviving rows and overwrites a correct total with a smaller one | Prevented by committing the coarser write and the finer deletion together, so a partly deleted tier cannot exist ([ADR-024](../05-architecture/decisions.md)) |
 | Row retention above rollup retention | A period shows zero counts that an operator can still browse | Prevented in application code, not by a constraint ([data dictionary](../07-data-and-contracts/data-dictionary.md) §4) |
 | Partition dropped for the wrong queue | One queue's short retention deletes another's window | Prevented by reading the minimum retention across rules ([migration plan](../07-data-and-contracts/migration-plan.md) §3) |
 | Ledger swept before redelivery completes | A redelivery is counted twice | Prevented by the window; not asserted by a test |
 | Spilled objects orphaned | The object store grows while rows do not | Prevented by the sweeper's delete step, which removes an object only when no remaining row carries its hash ([data dictionary](../07-data-and-contracts/data-dictionary.md) §6) |
 
-Every one of them has a designed guard. The first was the last to get one, and it is the one that would have damaged the number the product exists to produce.
+Every one of them has a designed guard. The first two are the pair that would have damaged the number the product exists to produce — one by inflating it, the other by shrinking it without a symptom.
 
 ## 6. What an operator can and cannot change
 

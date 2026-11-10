@@ -101,9 +101,9 @@ An untested restore is not a backup. That sentence is the whole reason this docu
 
 | Gap | Consequence |
 |---|---|
-| No key-rotation procedure | A suspected KEK compromise has no documented response. Rotation would require re-encrypting every credential, and the path is unwritten |
-| No object-store lifecycle | Spilled payloads have no stated retention or deletion rule, so a backup of them has no stated scope |
 | No automated backup verification | The restore test is manual and quarterly. Nothing checks that last night's backup is restorable |
+
+**Two things that were on this list now have answers elsewhere.** Key rotation is a four-step procedure that needs no downtime ([runbook §8](runbook.md)), and the object store has a content-addressed layout, a deletion rule and a stated backup scope ([data dictionary](../07-data-and-contracts/data-dictionary.md) §6) — the bucket is backed up with `message_capture`, because a row without its object is a body that cannot be read.
 | No off-host storage requirement | Where backups live is unstated. A backup on the same volume as the database is not a backup |
 
 ## 7. Document control

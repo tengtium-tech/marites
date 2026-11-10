@@ -59,6 +59,24 @@ import {
 
 type Role = "viewer" | "support" | "admin"
 type Screen = "queues" | "queue" | "publish" | "report" | "audit" | "ai" | "storage" | "setup"
+
+/** The one place a hash becomes a screen. Two copies of this logic drifted
+    apart once already — the mount path mapped the queue filters and the
+    hashchange path did not, which blanked the app on a link click. */
+function currentHash() {
+  return window.location.hash.replace("#", "")
+}
+
+function screenForHash(h: string): Screen | null {
+  if (h === "replay" || h === "peek" || h === "discard" || h === "purge" || h === "discard-payload")
+    return "queue"
+  if (h === "audit-payload" || h === "audit-bulk" || h === "audit-expired" || h.startsWith("payload-"))
+    return "audit"
+  if (h === "queues" || h === "queues-dlq" || h === "queues-capture") return "queues"
+  if (h === "report" || h === "setup" || h === "queue" || h === "publish" || h === "audit" || h === "ai" || h === "storage")
+    return h
+  return null
+}
 type CaptureState = "live" | "stale" | "capped" | "disabled" | "unavailable"
 type Provider = "rabbitmq" | "servicebus" | "pubsub"
 
@@ -361,37 +379,18 @@ export default function App() {
     return null
   })
 
-  const [screen, setScreen] = React.useState<Screen>(() => {
-    const h = window.location.hash.replace("#", "")
-    if (h === "replay" || h === "peek" || h === "discard" || h === "purge" || h === "discard-payload")
-      return "queue"
-    if (h === "audit-payload" || h === "audit-bulk" || h === "audit-expired" || h.startsWith("payload-")) return "audit"
-    if (
-      h === "report" ||
-      h === "setup" ||
-      h === "queue" ||
-      h === "publish" ||
-      h === "audit" ||
-      h === "ai" ||
-      h === "storage"
-    )
-      return h
-    if (h === "queues-dlq" || h === "queues-capture") return "queues"
-    return "queues"
-  })
+  const [screen, setScreen] = React.useState<Screen>(() => screenForHash(currentHash()) ?? "queues")
   /* Deep links are read on mount; this makes them work when the hash changes
      in an already-open tab, which is how a person actually clicks one. */
   const [hashTick, setHashTick] = React.useState(0)
   React.useEffect(() => {
     function onHash() {
-      const h = window.location.hash.replace("#", "")
       setHashTick((n) => n + 1)
-      if (h === "replay" || h === "peek" || h === "discard" || h === "purge" || h === "discard-payload")
-        return setScreen("queue")
-      if (h === "audit-payload" || h === "audit-bulk" || h === "audit-expired" || h.startsWith("payload-"))
-        return setScreen("audit")
-      if (["report", "setup", "queue", "publish", "audit", "ai", "storage", "queues", "queues-dlq", "queues-capture"].includes(h))
-        return setScreen(h as Screen)
+      const next = screenForHash(currentHash())
+      /* A hash that maps to nothing leaves the current screen alone. Setting an
+         unmapped string here is what blanked the app: it is not a Screen, so
+         nothing rendered. */
+      if (next) setScreen(next)
     }
     window.addEventListener("hashchange", onHash)
     return () => window.removeEventListener("hashchange", onHash)

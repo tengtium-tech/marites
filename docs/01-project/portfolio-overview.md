@@ -58,8 +58,8 @@ If you only read one page, read the [failure modes](../05-architecture/failure-m
 |---|---|
 | Application code | The artefact is the specification. Code would be a second, less reviewable claim about the same design |
 | Tests and results | Nothing has run, so nothing is claimed. Every case is Planned |
-| Wireframe images | Layout is described in text ([wireframes](../08-experience/wireframes-and-navigation.md)) so it can be reviewed in a diff |
-| Visual design | Not designed. Contrast requirements are stated against a palette that does not exist, and the document says so |
+| Working software | A React prototype exists ([screenshots](../08-experience/screenshot-index.md), thirty-nine of them) but it is a demonstration of the design, not the product. No backend, no broker connection, no tests |
+| Brand and marketing | The palette and type scale are defined ([visual design](../08-experience/visual-design.md)) because a UI needed them. There is no logo system, no website, no launch material |
 | Business model, pricing, go-to-market | Out of scope for a technical specification, and inventing them would add noise to the decisions |
 
 ## 5. An honest assessment
@@ -69,10 +69,10 @@ If you only read one page, read the [failure modes](../05-architecture/failure-m
 **Weak, and named as weak in the documents:**
 
 - **Nothing is proven.** The counting claim rests on ADR-019 and ADR-011, both of which need integration tests that do not exist (TC-013, TC-014).
-- **One design item is genuinely unresolved.** A retried compaction over additive upserts would double a total permanently, and no guard is specified ([failure modes §6](../05-architecture/failure-modes.md)).
+- **The counting claim is designed, not proven.** Compaction is idempotent by recomputation and by transaction scope ([ADR-024](../05-architecture/decisions.md)), and redelivery is absorbed by a ledger ([ADR-019](../05-architecture/decisions.md)) — but neither has run, and a design that is right on paper is still a design.
 - **The isolation story has a hole.** Row-level security covers configuration tables but not the capture tables, because the write path batches across tenants ([migration plan](../07-data-and-contracts/migration-plan.md) §4).
 - **Operationally it is blind.** No alerting, no health endpoint, no way to watch Marites with Marites. Every runbook symptom is discovered by a person.
-- **The documentation is large relative to what exists.** Forty-one documents and sixteen indexes for zero lines of code is a real risk: the set can look finished when nothing is built. The readiness dashboard exists to counter that, and it is the page to distrust least.
+- **The documentation is large relative to what exists.** Forty-five documents and sixteen indexes for zero lines of production code is a real risk: the set can look finished when nothing is built. The readiness dashboard exists to counter that, and it is the page to distrust least.
 
 ## 6. What a reviewer should check first
 

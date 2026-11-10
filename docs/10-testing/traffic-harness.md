@@ -40,7 +40,7 @@ A scenario is a file, not code. Each one names what to publish, how the consumer
 | `poison-subset` | 1,000, of which 40 are rejected | `reject` | Dead-letter capture, reason classification, the dead-letter rate |
 | `consumer-down` | 1,000 with no consumer running | — | Depth growth with an empty DLQ — the FR-018 gap, and the honest "no dead-letter routing" state |
 | `duplicate-storm` | 500 distinct, each published 4 times | `accept` | The redelivery ledger (ADR-019): 2,000 delivered, 500 counted |
-| `large-bodies` | 1 KB, 60 KB, 64 KB, 65 KB, 1 MB | `accept` | The inline threshold, and the object-store gap that is still unresolved (RSK-013) |
+| `large-bodies` | 1 KB, 60 KB, 64 KB, 65 KB, 1 MB | `accept` | The inline threshold: 64 KB stays in the row, 65 KB and 1 MB spill to the object store and come back byte-identical, and a body larger than the evidence bound reports `payloadTruncated` |
 | `unicode-and-binary` | UTF-8, emoji, embedded NUL, invalid UTF-8 | `accept` | Encoding safety end to end — storage, display, and the payload dialog |
 | `slow-consumer` | 1,000 at 20/s consumption | `accept`, rate-limited | Backlog, depth-versus-rate, the stale capture state |
 | `replay-target` | 200 rejected, consumer fixed mid-run | `reject` then `accept` | The whole recovery loop: dead-letter, replay, succeed, audit with evidence |
