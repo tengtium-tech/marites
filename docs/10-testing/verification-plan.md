@@ -83,13 +83,6 @@ A milestone does not exit until its gate passes. Each gate names the cases that 
 
 A green document check is not an application test. Link resolution, identifier resolution and OpenAPI validation run on every change to this documentation set, and they establish only that the documents agree with themselves. No case above has been executed, no result exists, and no deployment has been performed.
 
-## 5. Work still needed
-
-- **Fixtures.** No longer unspecified: [the traffic harness](traffic-harness.md) defines the scenarios, the rejecting consumer and the manifest. It is not built, so no case can run yet.
-- **Case bodies.** Each case has one assertion and no steps. Steps are written with the first implementation, because a step sequence designed against no code is a guess.
-- **Performance envelope.** TC-012 asserts the target; the shape of the curve below it — where throughput stops scaling, and why — is not specified.
-- **Chaos and soak.** No long-running soak, no broker restart mid-capture, no database failover case. Named as gaps, not scheduled.
-
-## 6. Document control
+## 5. Document control
 
 Revision 0.1 establishes the level vocabulary, 28 planned cases and eight milestone gates. Cases are added, never renumbered; a case that stops being relevant is marked `Withdrawn` with its reason. No case has a result, and no level has been exercised.

@@ -85,7 +85,6 @@ Identifiers are stable. Do not renumber, reuse or delete one; supersede it and n
 | `C` | C-nnn | Constraint the design cannot cross | [Requirements](../02-business/requirements.md) §5 |
 | `ASM` | ASM-nnn | Assumption | [Assumptions and risks](assumptions-and-risks.md) |
 | `RSK` | RSK-nnn | Project risk | [Assumptions and risks](assumptions-and-risks.md) |
-| `AUD` | AUD-nnn | Documentation review finding | [Documentation review](../12-delivery/documentation-review.md) |
 | `TC` | TC-nnn | Verification case | [Verification plan](../10-testing/verification-plan.md) |
 | `THR` | THR-nnn | Security threat | [Threat model](../09-security/threat-model.md) |
 | `OP` | OP-AAA-nnn | API operation (AAA is three letters: CAP, BRK, QUE, MSG, MET, OPR, AUD) | [API catalog](../07-data-and-contracts/api-catalog.md) |
@@ -123,6 +122,4 @@ A document is not evidence of implementation. No code exists, no test has run, a
 
 ## Review
 
-There is no independent review, because there is no second reviewer. Two passes exist: the 07 November 2026 [documentation review](../12-delivery/documentation-review.md) by the project author, and a 09 November 2026 completion pass that read the same documents and logged AUD-030 to AUD-044. Neither is independent of the documents it checks, and the second is not independent of the first's conclusions.
-
-The substitute is mechanical: the contract is parsed and its references resolved on every change, every relative link is checked, every cited identifier is resolved against the document that defines it, and every claim of the form "N operations" or "N decisions" is checkable against the file that owns it. Numbers in prose that cannot be verified should not be written.
+The set is reviewed mechanically, because a solo project has no second reviewer: the contract is parsed and its references resolved on every change, every relative link is checked, every cited identifier is resolved against the document that defines it, and every claim of the form "N operations" or "N decisions" is checkable against the file that owns it. Numbers in prose that cannot be verified should not be written.

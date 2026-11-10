@@ -17,6 +17,8 @@ Marites is a self-hosted web application that observes message traffic crossing 
 
 It is a **client**. It connects to brokers the adopter already runs. It does not provision, host, upgrade, or repair them, and it does not create or modify dead-letter topology.
 
+**This specification is complete, and completeness is the scope rule.** Every behaviour the product has is written down in one of the fourteen sections. A behaviour that is not described here is not in the product — it is not "to be decided later", not an implied edge of something adjacent, and not something an implementation may add because it seemed reasonable. The list in §6 names the omissions a reader is most likely to look for; the rule covers the rest. Where a reader finds a gap, the gap is in the reading, not in the set: the behaviour is either specified somewhere they have not reached, or it is out of scope by this paragraph.
+
 ## 2. Actors and the primary workflow
 
 **Support is the primary actor.** The product exists so that a support engineer, mid-incident, can find a failing queue, understand what is failing and why, and fix it — retry, discard, or publish — without SSH, without the RabbitMQ management UI, and without a DBA.

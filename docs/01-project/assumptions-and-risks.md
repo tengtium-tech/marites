@@ -38,8 +38,6 @@ An assumption (ASM) is something the design relies on and has not proven. A risk
 | RSK-013 | Spilled payload objects have no lifecycle, so deletion and backup scope are undefined | Recorded as a gap in the migration plan and the backup procedure | [data dictionary §6](../07-data-and-contracts/data-dictionary.md) |
 | RSK-014 | Two accepted ADRs (011, 019) carry the "exact counts" promise and neither has an executed test | TC-013 and TC-014 are milestone gates, not optional tests | [verification plan §3](../10-testing/verification-plan.md) |
 
-## Work still needed
-
-Owners are decision identifiers, not people: the project has one author and no external commitment. Add a delivery constraint only when one exists. Review RSK-002 and ASM-007 when their tests run; review RSK-010 and ASM-010 when the compaction guard is specified.
+**Owners are decision identifiers, not people** — the project has one author and no external commitment, so a delivery constraint is recorded only when one exists. RSK-002 and ASM-007 are re-read when their tests run; RSK-010 and ASM-010 when the compaction guard is specified.
 
 Use the [documentation structure](documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

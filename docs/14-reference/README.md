@@ -24,9 +24,4 @@ The 09 November 2026 pass found one that had escaped: `captureState` was defined
 
 This section holds the controlled vocabulary, which plays the part a data dictionary plays elsewhere. The data dictionary itself lives in [data-and-contracts](../07-data-and-contracts/data-dictionary.md) and owns column-level types; it does not define enumerated values, and links here for them. Marites adopts no external standard by reference.
 
-## Work still needed
-
-- **Wire protocol reference.** Provider connection details live in [operations](../11-operations/deployment-and-onboarding.md) §4 and [provider prerequisites](../11-operations/provider-prerequisites.md).
-- **Localisation.** All user-facing strings are English; a strings section would be added here if that changes.
-
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

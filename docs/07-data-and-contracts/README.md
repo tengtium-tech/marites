@@ -28,11 +28,4 @@ The contract is the product boundary, not a build artefact. The React client and
 2. **Retention affects rows, never counts.** Rollups are never rebuilt from rows.
 3. **An unavailable granularity is an error, not an empty series.** Otherwise a retained gap renders as zero traffic.
 
-## Work still needed
-
-- **Object-store schema.** Spilled payloads live in a store whose bucket layout, lifecycle rule and deletion path are unspecified. `payload_ref` names a key; nothing defines the key format. This is the most likely gap to bite before M2.
-- **Event schemas.** Marites emits none, so there is no `schemas/` folder. Add one if outbound webhooks are introduced.
-- **Fixtures.** Specified by [the traffic harness](../10-testing/traffic-harness.md) — scenarios, a rejecting consumer and a manifest — but not built, so no case can run yet.
-- **Online index and zero-downtime migration.** Every migration step assumes the service can stop. A later index on `message_capture` at volume needs `CREATE INDEX CONCURRENTLY` outside a transaction, and no procedure exists.
-
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

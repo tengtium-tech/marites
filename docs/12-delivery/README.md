@@ -9,7 +9,6 @@ Keep the documentation baseline, milestone ownership and review evidence traceab
 | Record | Shared coverage |
 | --- | --- |
 | [Readiness dashboard](readiness-dashboard.md) | Single summary of readiness by layer, the M0 exit gate, and the four items that would change the page most |
-| [Documentation review](documentation-review.md) | Three self-review passes: 07 November 2026 (AUD-001 to AUD-025), 09 November 2026 completion and 10 November 2026 UI review (AUD-026 to AUD-069), with method, resolutions and the checks run |
 | [Verification plan](../10-testing/verification-plan.md) (§3) | The eight milestone gates that decide whether a milestone exits |
 | [Delivery plan](delivery-plan.md) | Work packages `WP-M0-1` onward, the definition of done, what blocks what, and what is deliberately not scheduled. Milestone names stay owned by operations; M7 is added here because two documents already assumed it |
 | [CI and release](ci-and-release.md) | What runs on a pull request versus a tag, the ten gates, versioning and migrations, artifacts, and the release checklist |
@@ -28,12 +27,5 @@ Keep the documentation baseline, milestone ownership and review evidence traceab
 | Sign-off | **No** | No second party has approved anything |
 
 Most of the five are absent or partial, and this table is the only place that says so in one glance. A milestone cannot exit on the strength of the third row.
-
-## Work still needed
-
-- **No repository, issue tracker or board.** Delivery work is tracked in these documents and nowhere else.
-- **No CI pipeline exists.** The ten release gates are specified, but none is implemented or running.
-- **M0 has unmet exit criteria.** No skeleton, no `docker compose up`, no served `/capabilities` or preflight.
-- **No release record.** Nothing has been tagged, so [upgrade and rollback](../11-operations/upgrade-and-rollback.md) describes a procedure with no history behind it.
 
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

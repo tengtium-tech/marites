@@ -23,7 +23,7 @@ The documentation uses numbered sections — `01-project` to `14-reference` — 
 | [Security](09-security/README.md) | The [threat model](09-security/threat-model.md), credentials, payload responsibility and operation safeguards |
 | [Testing](10-testing/README.md) | The [verification plan](10-testing/verification-plan.md): levels, 28 cases, eight gates; nothing executed |
 | [Operations](11-operations/README.md) | Adopter prerequisites for all three providers, deployment, upgrade, backup, runbook and milestones |
-| [Delivery](12-delivery/README.md) | The [readiness dashboard](12-delivery/readiness-dashboard.md) and the [documentation review](12-delivery/documentation-review.md) |
+| [Delivery](12-delivery/README.md) | The [readiness dashboard](12-delivery/readiness-dashboard.md), the delivery plan, CI and the project board |
 | [Traceability](13-traceability/README.md) | The operation-to-requirement matrix and the verification crosswalks |
 | [Reference](14-reference/README.md) | The controlled vocabulary |
 
@@ -39,7 +39,6 @@ For a first read: [requirements](02-business/requirements.md) §2, then the [thr
 | API contract | 10 operations served and 15 deferred; both validate as OpenAPI 3.1 |
 | Verification | Planned only: 28 cases, 8 gates, 0 executed — [verification plan](10-testing/verification-plan.md) |
 | Security | Partial. 26 threats, 7 with a planned case; no key-rotation procedure, no penetration test |
-| Review | Three review passes, 69 findings: 68 resolved, 1 withdrawn — [documentation review](12-delivery/documentation-review.md) |
 | Application code and tests | Not started |
 
 ## Authority and interpretation
@@ -81,7 +80,7 @@ When two documents disagree, this table decides which one wins.
 
 ## Document register
 
-Forty-six documents, fourteen section indexes, one contract-folder index and this page. Section indexes are listed in the reading-order table above and are not repeated here.
+Forty-five documents, fourteen section indexes, one contract-folder index and this page. Section indexes are listed in the reading-order table above and are not repeated here.
 
 | Document | Version | Status |
 | --- | --- | --- |
@@ -130,7 +129,6 @@ Forty-six documents, fourteen section indexes, one contract-folder index and thi
 | [operations/backup-and-recovery.md](11-operations/backup-and-recovery.md) | 0.1 | Planned; no restore tested |
 | [operations/runbook.md](11-operations/runbook.md) | 0.1 | Planned; 18 symptoms |
 | [delivery/readiness-dashboard.md](12-delivery/readiness-dashboard.md) | 0.2 | Single status summary |
-| [delivery/documentation-review.md](12-delivery/documentation-review.md) | 0.3 | Three review passes; 69 findings |
 | [traceability/operation-coverage-matrix.md](13-traceability/operation-coverage-matrix.md) | 0.2 | Partial — derived, Planned |
 | [reference/vocabulary.md](14-reference/vocabulary.md) | 0.1 | Controlled — single source for enumerated values |
 

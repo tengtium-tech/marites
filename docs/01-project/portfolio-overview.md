@@ -37,9 +37,9 @@ That is why the requirement traceability reads "TC-014" rather than "verified", 
 
 ### 2.4 Counts that can be checked
 
-Every claim of the form "N operations" or "N decisions" is checkable against the file that owns it, and the [documentation review](../12-delivery/documentation-review.md) re-ran those checks rather than trusting them. The contract is parsed and its references resolved on every change.
+Every claim of the form "N operations" or "N decisions" is checkable against the file that owns it. The contract is parsed and its references resolved on every change.
 
-This sounds like hygiene. It is the mechanism that caught a data model with no `revision` column behind a contract that required `If-Match` ([AUD-032](../12-delivery/documentation-review.md)) — a defect that would have surfaced as a broken update path in the first sprint.
+This sounds like hygiene. It is the mechanism that keeps a data model and a contract from drifting apart — the failure that surfaces as a broken update path in the first sprint, not as a compile error.
 
 ## 3. How to read it in twenty minutes
 
@@ -49,7 +49,6 @@ This sounds like hygiene. It is the mechanism that caught a data model with no `
 | 3–6 | [Architecture overview](../05-architecture/architecture-overview.md) §2–§3 | Why a second queue bound to the exchange is the only non-destructive way to observe AMQP, and why a tap cluster is the wrong answer |
 | 6–10 | [Data model](../07-data-and-contracts/data-model.md) §3 | Counting and storing are separate problems. Exact counts forever, rows for a window |
 | 10–15 | [Contract conventions](../07-data-and-contracts/contract-conventions.md) §3–§4 | The rules, and the one outcome class most APIs get wrong: `Unresolved` is `202`, not `503` |
-| 15–20 | [Documentation review](../12-delivery/documentation-review.md) | What was found wrong, including by a second reviewer, and what the checks actually establish |
 
 If you only read one page, read the [failure modes](../05-architecture/failure-modes.md) §1. A monitoring product's worst output is a plausible number, and that section is the design's answer to it.
 

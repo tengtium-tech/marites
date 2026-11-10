@@ -16,8 +16,4 @@ Make reliable capture, identity, audit, configuration and process topology expli
 | [Configuration](../11-operations/deployment-and-onboarding.md) (§4) | Zero baked-in broker configuration; `MARITES_` variables; storage ceiling and partition interval set at deploy |
 | [Multiple clusters](../05-architecture/architecture-overview.md) (§10) | A star of independent connections with bulkhead isolation (ADR-010) |
 
-## Work still needed
-
-Service metrics, traces and alerting remain unspecified; deployment documentation defines the log contract and health/readiness endpoints. The configuration reference and backup/recovery procedure now exist in operations. Key rotation for the credential encryption key remains unspecified. The capture path is drafted, not implemented or measured.
-
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

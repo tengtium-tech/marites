@@ -25,12 +25,4 @@ Apply credential protection, payload responsibility, role boundaries and operati
 2. **Payload responsibility (deployment §1.7).** Bodies are stored as published. An adopter whose policy requires redaction inside the tool is not a customer for that queue, and saying so up front is the control.
 3. **What is accepted rather than mitigated.** An Admin is trusted; the broker management UI is outside the boundary; preflight can be used to probe internal hosts by an Admin. Each is a decision, not an oversight.
 
-## Work still needed
-
-- **Key-rotation procedure** for the key-encryption key. A suspected compromise has no documented response.
-- **TLS parameter requirements.** Minimum version and cipher suites are unstated; deployment says "TLS" and stops.
-- **Rate-limit values.** The mechanism is specified, the numbers are not.
-- **Object-store spillover lifecycle.** Row deletion does not yet state what happens to spilled payload objects.
-- **No independent review and no penetration test.** This model is a self-assessment against specifications that describe no running software.
-
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

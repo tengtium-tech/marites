@@ -16,7 +16,7 @@ Marites observes message traffic on a broker an adopter already runs — RabbitM
 ## What is in the repository
 
 ```
-docs/                    the specification set: 14 sections, 46 documents, 16 indexes
+docs/                    the specification set: 14 sections, 45 documents, 16 indexes
   01-project/            overview, decisions, risks, standard, structure, changelog
   02-business/           requirements and acceptance criteria
   03-workflows/          capture, recovery, onboarding, retention

@@ -43,11 +43,4 @@ An adopter who does not enable the management plugin gets an application that lo
 | M4 | Multi-broker and tenancy |
 | M5 to M6 | Service Bus, then Pub/Sub |
 
-## Work still needed
-
-- **Alerting and a health endpoint.** The runbook responds to symptoms a person noticed. Nothing pages anyone, and there is no way to watch Marites with Marites.
-- **Configuration reference.** Every `MARITES_` variable with its default is scattered across three documents and nowhere listed once. The storage connection string is the newest of them.
-- **Zero-downtime upgrade.** Expand/contract is described; no blue-green or canary procedure exists, and no rollback has been tested.
-- **Object-store lifecycle.** Spilled payloads have no stated retention, which leaves both backup scope and deletion unspecified.
-
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

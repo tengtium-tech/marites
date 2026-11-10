@@ -4,7 +4,7 @@ Version 0.2 | 09 November 2026 | Status: single summary of documentation readine
 
 ## How to use this page
 
-This is the one place that summarises overall status. The [documentation review](documentation-review.md) keeps its own scope and links here rather than restating totals. Update this page in the same change that alters a status.
+This is the one place that summarises overall status. Update it in the same change that alters a status.
 
 Nothing here reports an executed test, a built service or a verified deployment. Application code does not exist.
 

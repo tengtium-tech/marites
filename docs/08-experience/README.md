@@ -33,11 +33,4 @@ The same rule is why status is never colour-only: a stale queue that looks like 
 
 This section owns presentation and permission, not the numbers. Metric definitions live in [data-model.md](../07-data-and-contracts/data-model.md) §3; if a meaning changes, it changes there first.
 
-## Work still needed
-
-- **Brand beyond the mark.** The ear on its indigo tile exists; there are no variants, no clear-space rules, no monochrome form.
-- **Onboarding copy.** The wizard's wording decides whether an adopter fixes a grant or gives up, and it is unwritten.
-- **Responsive behaviour.** The console assumes desktop width; a phone layout for the reporting view is reasonable and undesigned.
-- **Manual accessibility testing.** No screen-reader pass is planned, and an automated audit finds roughly a third of real problems.
-
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

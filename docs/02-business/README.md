@@ -24,11 +24,4 @@ Support engineers fix stuck message queues. Today that means SSH, the broker's o
 - **Capture is forward-only** (C-002). A binding sees messages published after it exists, so history needs a separate backfill.
 - **The adopter supplies a configured broker** (C-003). A misconfigured broker produces an application that looks broken.
 
-## Work still needed
-
-- **A consolidated rule catalogue.** The business rules are stated in their owning documents (counting in the data model §3.2, the retention invariant in §3.1.1, never auto-purge in NFR-004, replay must not loop in the experience document §3). They are not collected under stable identifiers, and until they are, a rule can only be found by remembering where it lives.
-- **User research.** The actors are inferred from the problem, not from interviews. The four-step loop is a plausible reconstruction, not an observed one.
-- **Personas or journeys.** Three roles and a four-step loop are the whole picture.
-- **A second reader for the criteria.** Each criterion was written by the same person who wrote the requirement, which is the weakest possible review for a testable condition.
-
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

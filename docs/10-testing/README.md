@@ -16,17 +16,9 @@ Trace expected behaviour to implementation evidence without equating document va
 | [Architecture test](../05-architecture/architecture-overview.md) (§6) | One ArchUnitNET test enforcing the project reference rules |
 | [Failure modes](../05-architecture/failure-modes.md) | The component behaviours each case is designed to provoke |
 | [Threat model](../09-security/threat-model.md) | The threats whose controls the security cases assert |
-| [Documentation review](../12-delivery/documentation-review.md) | The mechanical checks actually run on the documents: link resolution, identifier resolution, OpenAPI validity |
 
 ## Why verification got its own document
 
 The section held an index and no other record until 09 November 2026. Adding 24 cases, seven levels and eight gates made the index longer than the material it was indexing, which is the condition the [standard](../01-project/documentation-standard.md) names for creating a separate document. The index now indexes.
-
-## Work still needed
-
-- **Executed evidence.** Nothing is green. Every case in the plan is `Planned`.
-- **Case bodies.** No steps yet — written with the first implementation. The fixtures they need are no longer a gap: [the traffic harness](traffic-harness.md) specifies the scenarios, the rejecting consumer and the manifest, though none of it is built.
-- **Chaos and soak coverage.** No broker restart mid-capture, no database failover, no long soak. Named in the plan as gaps.
-- **Performance envelope below target.** TC-012 asserts the 5,000 msg/s target; where throughput stops scaling is unmeasured.
 
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

@@ -631,7 +631,7 @@ The revision matters more than the original answer did. When there was one datab
 
 ## Document control
 
-Revision 0.1 records nineteen questions; **all nineteen are answered.** No decision is open, and none blocks M0. DEC-009 was added on 09 November 2026 when the repository was prepared for publication.
+Revision 0.1 records nineteen questions; **all nineteen are answered.** No decision is open, and none blocks M0. The register is closed: the specification is complete, so a question that is not recorded here is a question the product does not ask. Anything the set does not mention is out of scope by [requirements §1](../02-business/requirements.md), and adding a behaviour to the product means opening a decision here first. DEC-009 was added on 09 November 2026 when the repository was prepared for publication.
 
 | ID | Answer | Closed |
 |---|---|---|

@@ -19,4 +19,4 @@ The contract is a rendering of the rules in [contract conventions](../contract-c
 
 ## Checking a change
 
-Both files must parse as OpenAPI 3.1, every `$ref` must resolve within its own file, and no operation may be left untagged. The documentation review records the last run of those checks ([review](../../12-delivery/documentation-review.md)).
+Both files must parse as OpenAPI 3.1, every `$ref` must resolve within its own file, and no operation may be left untagged.

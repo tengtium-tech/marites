@@ -25,11 +25,4 @@ How the system is built, why the tap is one hop, what each component does when i
 
 Architecture states boundaries. It does not restate requirements ([business](../02-business/requirements.md)), table structures ([data-and-contracts](../07-data-and-contracts/README.md)) or screen behaviour ([experience](../08-experience/README.md)).
 
-## Work still needed
-
-- **Runtime topology under load.** [Deployment](../11-operations/deployment-and-onboarding.md) §3 covers what ships; the behaviour of API, worker and database under load is unmeasured. TC-012 asserts the target and nothing below it.
-- **Compaction idempotency.** [Failure modes](failure-modes.md) §6 flags a retried compaction over additive upserts as unspecified. It is the most serious open design item in the section: a double aggregation would inflate a total permanently, and totals are never rebuilt from rows.
-- **An MCP server.** [Agent access](mcp-integration.md) specifies the surface; nothing implements it, and no tool has been called.
-- **Quantified thresholds.** "After two missed intervals" and similar statements are illustrative. The real values are implementation constants and are not set.
-
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

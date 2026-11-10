@@ -37,10 +37,4 @@ Workflows sequence behaviour; they do not own it, and they introduce no new rule
 | What does the operator see and confirm? | [experience/dashboard-and-operations.md](../08-experience/dashboard-and-operations.md) |
 | What should an operator do about it? | [operations/runbook.md](../11-operations/runbook.md) |
 
-## Work still needed
-
-- **Multi-cluster interaction.** How two clusters appear in one dashboard is described in prose ([architecture §10](../05-architecture/architecture-overview.md)) and not drawn. A diagram would show the star and the bulkhead, which the prose already does adequately — this is a nice-to-have, not a gap that changes behaviour.
-- **Rendered SVGs.** Only inline Mermaid exists. That is a deliberate trade: a committed image cannot be diffed, and these diagrams change with the specifications.
-- **Timing annotations.** No diagram carries a timeout or threshold, because none are set ([failure modes §10](../05-architecture/failure-modes.md)).
-
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.
