@@ -105,7 +105,7 @@ Identifiers are stable. Do not renumber, reuse or delete one; supersede it and n
 
 An identifier is never reused and never deleted. A withdrawn item is marked `Withdrawn` with its reason; a replaced one is marked `Superseded by <id>`. Both remain readable.
 
-The single example in this repository is [plan-v0.1-superseded.md](plan-v0.1-superseded.md) — the original single-document plan, kept because it records reasoning the specification set no longer repeats.
+The live example in this repository is ADR-004, marked **Superseded by ADR-022** in the [decision register](../05-architecture/decisions.md): the reasoning is still readable, and no one can mistake it for the current answer.
 
 ## Evidence discipline
 

@@ -39,7 +39,6 @@ A folder or index is not a completed specification. Each document lives in exact
 | Requirements | `02-business/requirements.md`, cited as DOC-SRS-001 |
 | Role and capability matrix | `08-experience/dashboard-and-operations.md` §2, cited by `security` |
 | Milestones | `11-operations/deployment-and-onboarding.md` §6; `delivery` links, never restates |
-| Superseded material | `01-project/plan-v0.1-superseded.md` |
 
 The former identifiers `DOC-*` survive as citation keys; the root index carries the mapping.
 

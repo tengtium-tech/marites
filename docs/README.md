@@ -81,7 +81,7 @@ When two documents disagree, this table decides which one wins.
 
 ## Document register
 
-Forty-eight documents, fourteen section indexes, one contract-folder index and this page. Section indexes are listed in the reading-order table above and are not repeated here.
+Forty-six documents, fourteen section indexes, one contract-folder index and this page. Section indexes are listed in the reading-order table above and are not repeated here.
 
 | Document | Version | Status |
 | --- | --- | --- |
@@ -90,8 +90,6 @@ Forty-eight documents, fourteen section indexes, one contract-folder index and t
 | [project/documentation-standard.md](01-project/documentation-standard.md) | 0.1 | Adopted — how this set is maintained |
 | [project/decisions-and-open-questions.md](01-project/decisions-and-open-questions.md) | 0.1 | 17 questions, all answered |
 | [project/assumptions-and-risks.md](01-project/assumptions-and-risks.md) | 0.2 | Drafted — 10 assumptions, 14 risks |
-| [project/documentation-changelog.md](01-project/documentation-changelog.md) | 0.2 | Baselines 0.1 to 0.20 |
-| [project/plan-v0.1-superseded.md](01-project/plan-v0.1-superseded.md) | 0.1 | Superseded |
 | [business/requirements.md](02-business/requirements.md) | 0.1 | Draft; 28 FR and 8 NFR with acceptance criteria |
 | [workflows/capture-lifecycle.md](03-workflows/capture-lifecycle.md) | 0.1 | Draft |
 | [workflows/recovery-lifecycle.md](03-workflows/recovery-lifecycle.md) | 0.1 | Draft |
