@@ -21,7 +21,7 @@ The documentation uses numbered sections — `01-project` to `14-reference` — 
 | [Data and contracts](07-data-and-contracts/README.md) | Tables, the data dictionary, the migration plan, counting semantics, the HTTP contract and error codes |
 | [Experience](08-experience/README.md) | Metric presentation, role capabilities, wireframes and navigation, accessibility |
 | [Security](09-security/README.md) | The [threat model](09-security/threat-model.md), credentials, payload responsibility and operation safeguards |
-| [Testing](10-testing/README.md) | The [verification plan](10-testing/verification-plan.md): levels, 28 cases, eight gates; nothing executed |
+| [Testing](10-testing/README.md) | The [verification plan](10-testing/verification-plan.md): levels, 29 cases, eight gates; nothing executed |
 | [Operations](11-operations/README.md) | Adopter prerequisites for all three providers, deployment, upgrade, backup, runbook and milestones |
 | [Delivery](12-delivery/README.md) | The [readiness dashboard](12-delivery/readiness-dashboard.md), the delivery plan, CI and the project board |
 | [Traceability](13-traceability/README.md) | The operation-to-requirement matrix and the verification crosswalks |
@@ -34,10 +34,10 @@ For a first read: [requirements](02-business/requirements.md) §2, then the [thr
 | Artifact | Status |
 | --- | --- |
 | Shared section structure | Fourteen named sections; one is index-only by design. See the [structure guide](01-project/documentation-structure.md) |
-| Requirements and decisions | Drafted. 28 FR, 8 NFR, each with one acceptance criterion; 19 DEC answered, 23 ADRs (22 accepted, ADR-004 superseded) |
+| Requirements and decisions | Drafted. 29 FR, 8 NFR, each with one acceptance criterion; 19 DEC answered, 24 ADRs (23 accepted, ADR-004 superseded) |
 | Architecture and data model | Drafted. Twelve tables in two stores, twelve source projects, four ports, nine components with failure modes |
 | API contract | 10 operations served and 15 deferred; both validate as OpenAPI 3.1 |
-| Verification | Planned only: 28 cases, 8 gates, 0 executed — [verification plan](10-testing/verification-plan.md) |
+| Verification | Planned only: 29 cases, 8 gates, 0 executed — [verification plan](10-testing/verification-plan.md) |
 | Security | Partial. 26 threats, 7 with a planned case; no key-rotation procedure, no penetration test |
 | Application code and tests | Not started |
 
@@ -89,7 +89,7 @@ Forty-five documents, fourteen section indexes, one contract-folder index and th
 | [project/documentation-standard.md](01-project/documentation-standard.md) | 0.1 | Adopted — how this set is maintained |
 | [project/decisions-and-open-questions.md](01-project/decisions-and-open-questions.md) | 0.1 | 17 questions, all answered |
 | [project/assumptions-and-risks.md](01-project/assumptions-and-risks.md) | 0.2 | Drafted — 10 assumptions, 14 risks |
-| [business/requirements.md](02-business/requirements.md) | 0.1 | Draft; 28 FR and 8 NFR with acceptance criteria |
+| [business/requirements.md](02-business/requirements.md) | 0.1 | Draft; 29 FR and 8 NFR with acceptance criteria |
 | [workflows/capture-lifecycle.md](03-workflows/capture-lifecycle.md) | 0.1 | Draft |
 | [workflows/recovery-lifecycle.md](03-workflows/recovery-lifecycle.md) | 0.1 | Draft |
 | [workflows/onboarding-lifecycle.md](03-workflows/onboarding-lifecycle.md) | 0.1 | Draft |
@@ -101,7 +101,7 @@ Forty-five documents, fourteen section indexes, one contract-folder index and th
 | [architecture/failure-modes.md](05-architecture/failure-modes.md) | 0.1 | Draft; nine components |
 | [architecture/provider-adapters.md](05-architecture/provider-adapters.md) | 0.1 | Draft; three adapters |
 | [architecture/mcp-integration.md](05-architecture/mcp-integration.md) | 0.1 | Draft; agent surface and approval model |
-| [architecture/decisions.md](05-architecture/decisions.md) | 0.1 | 22 accepted, 1 superseded |
+| [architecture/decisions.md](05-architecture/decisions.md) | 0.1 | 23 accepted, 1 superseded |
 | [data-and-contracts/data-model.md](07-data-and-contracts/data-model.md) | 0.1 | Draft |
 | [data-and-contracts/data-dictionary.md](07-data-and-contracts/data-dictionary.md) | 0.1 | Draft; twelve tables, column level |
 | [data-and-contracts/migration-plan.md](07-data-and-contracts/migration-plan.md) | 0.1 | Planned — nothing applied |
@@ -115,7 +115,7 @@ Forty-five documents, fourteen section indexes, one contract-folder index and th
 | [experience/accessibility.md](08-experience/accessibility.md) | 0.1 | Draft; NFR-008 in full |
 | [experience/visual-design.md](08-experience/visual-design.md) | 0.1 | Draft; tokens and contrast, measured |
 | [security/threat-model.md](09-security/threat-model.md) | 0.1 | Draft; 26 threats |
-| [testing/verification-plan.md](10-testing/verification-plan.md) | 0.1 | Planned; 28 cases, 0 executed |
+| [testing/verification-plan.md](10-testing/verification-plan.md) | 0.1 | Planned; 29 cases, 0 executed |
 | [testing/traffic-harness.md](10-testing/traffic-harness.md) | 0.1 | Specified; producer, rejecting consumer, nine scenarios, none built |
 | [operations/configuration-reference.md](11-operations/configuration-reference.md) | 0.1 | Specified; 14 variables, none read by a binary yet |
 | [delivery/delivery-plan.md](12-delivery/delivery-plan.md) | 0.1 | Specified; 8 milestones, 30 packages, nothing scheduled |

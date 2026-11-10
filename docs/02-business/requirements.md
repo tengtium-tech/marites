@@ -89,8 +89,9 @@ Role definitions and their capability grants are owned by [VOCABULARY §2](../14
 | FR-023 | Apply conservative defaults to every storage-affecting setting so the product is safe and functional before any configuration. | Must |
 | FR-024 | Let an AI assistant read through a machine interface and, when its credential carries `CanExecute`, **execute** operations as the person who holds that credential — recorded against that person with the channel noted. A credential without `CanExecute` may only propose. | Should |
 | FR-025 | Allow a queue to be counted without storing any of its messages, so an adopter can keep exact counts and decline message storage entirely. | Should |
-| FR-026 | Let an administrator connect an AI provider — including a local runtime — and give Support a hosted assistant that reads and proposes, never executes. | Should |
+| FR-026 | Let an administrator connect an AI provider — including a local runtime — and give Support a hosted assistant that reads and, when the signed-in user's credential carries `CanExecute`, acts as that user within their role. | Should |
 | FR-028 | Hold the complete bodies durably before issuing a destructive command, and write the audit row only after the broker confirms. A command whose bodies cannot be held is not issued. | Must |
+| FR-029 | Compact a rollup tier by recomputing the target window's absolute totals from the finer tier and assigning them, so a compaction that runs twice for one window produces the same row — and never sweep a tier before the coarser row covering it exists. | Must |
 | FR-027 | Keep **complete** payload evidence for peek, replay, discard and purge — one record per message touched, with the body before and, for a replay, after — retained on the capture clock and never inside the audit row. | Must |
 
 ### 3.1 Acceptance criteria
@@ -126,9 +127,10 @@ Each requirement has exactly one testable criterion and one outcome. A criterion
 | FR-021 | M2 | For a range whose finer tiers have been compacted, availability reports only the tiers that exist, and requesting an unavailable one returns `ERR-MET-001` | TC-016 |
 | FR-022 | M2 | With the ceiling reached, `published` and `deadLettered` keep incrementing while row writes stop, and the queue reports `captureState = capped` | TC-017 |
 | FR-023 | M2 | A fresh install with no capture configuration stores sampled payloads at 1 in 100, keeps rows 72 hours, partitions daily, and applies a ceiling of `min(50 GB, 20% of available disk)` | TC-004, TC-017 |
+| FR-029 | M2 | Compacting the same window twice leaves `published`, `dead_lettered`, `bytes` and `peak_rate` identical to one pass; a process killed after the coarser row is committed and before the sweep, then restarted, produces the same totals; the sweeper refuses to delete a finer tier that has no coarser row covering it | TC-029 |
 | FR-028 | M1 | A discard whose hold cannot be written returns `ERR-OPR-007` and the message is still on the broker, unchanged; a discard that succeeds writes its audit row and evidence only after the acknowledgement; a process killed between the command and the record leaves an intent that reconciliation resolves into exactly one audit row, never zero and never two | TC-028 |
 | FR-027 | M1 | A purge of 10 messages yields 10 evidence rows, each with its own body; a replay whose body was edited returns both `payloadBefore` and `payloadAfter` and the audit row for it reports `payloadEdited` true before the row is expanded; a single-message replay returns its body whole, not truncated; a peek returns the bodies it showed; after the queue's row retention lapses the same call returns `ERR-AUD-001` while `payloadHash` survives; beyond `MARITES_EVIDENCE_MAX_ROWS` the rows stop and `payloadTruncated` is true | TC-027 |
-| FR-026 | M3 | With no provider configured the drawer says so and transmits nothing; once configured, an answer cites queue and count, a proposal is created rather than executed, and a Viewer has no access to the drawer | TC-026 |
+| FR-026 | M3 | With no provider configured the drawer says so and transmits nothing; once configured, an answer cites queue and count; a replay asked for in the drawer is executed only when the signed-in user's credential carries `CanExecute`, and the audit row names that user with `via` set; a Viewer has no access to the drawer | TC-026 |
 | FR-025 | M2 | With `captureMode = counts`, `published` increments for every message and `message_capture` receives no row for that queue; a message search on it returns an empty page, not an error | TC-025 |
 | FR-024 | M3 | A credential without `CanExecute` can read and propose, and every direct mutating call returns `ERR-AUTH-002`; a credential with `CanExecute` executes a replay that the same user could perform in the UI, and the audit row names the user with `via` set; a Support credential with `CanExecute` still cannot purge, and no credential can act for a different user | TC-024 |
 
@@ -206,6 +208,7 @@ Designed verification exists as named cases; no test has been written, no code e
 | FR-025 | DOC-DATA-001 §3; VOCABULARY §16 | TC-025 |
 | FR-026 | DOC-ARCH-004 §9; VOCABULARY §17; DEC-015 | TC-026 |
 | FR-027 | DOC-DATA-001 §2, §4; DEC-017, DEC-018 | TC-027 |
+| FR-029 | DOC-DATA-001 §2.2, §4; ADR-024 | TC-029 |
 
 ## 8. Document control
 

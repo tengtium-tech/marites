@@ -121,6 +121,18 @@ Column-level definitions — type, nullability, default, constraint and the reas
 ### Deliberately not tables
 
 - **Confirm tokens** — stateless HMAC-signed values with a 60-second expiry. A table would add a write per operation plus a cleanup sweeper for no benefit.
+
+  The signed payload is `{actor_id, target, action, params_hash, issued_at}`, and every field is checked on use:
+
+  | Bound to | Why it is in the signature |
+  |---|---|
+  | `actor_id` | A token issued to one person cannot be replayed by another, including a shared service principal |
+  | `target` | The queue the operator read the confirmation from is the queue that is acted on — a token for `orders` is refused on `payments` |
+  | `action` | A `discard` token cannot execute a `purge` against the same target |
+  | `params_hash` | The parameters cannot change between preview and execute; a token is bound to the operation the operator saw |
+  | `issued_at` | 60-second expiry, so a stale confirmation cannot be applied to a queue whose contents have moved |
+
+  A mismatch on any field returns `ERR-OPR-001` and sends nothing. The token is not a session credential and grants no access on its own.
 - **Sessions and refresh tokens** — Entra ID owns them. Storing them locally is a liability.
 - **Payloads over 64 KB** — object store with a row reference.
 - **Schema version** — EF Core migrations history.
@@ -133,7 +145,7 @@ The requirement is exact counts of dead-lettered versus healthy traffic, per que
 
 | Layer | Holds | Coverage | Retention |
 |---|---|---|---|
-| `message_rollup` | Per-queue, per-minute counters: published, dead-lettered, bytes, breakdown by reason | **100%, exact** | Months |
+| `message_rollup` | Per-queue, per-minute counters: published, dead-lettered, bytes, breakdown by reason. Written additively by capture, rolled up by **recomputation** so a retried compaction is harmless (ADR-024) | **100%, exact** | Months |
 | `message_capture` | One row per message: headers, routing key, size, `x-death`, payload per policy | Bounded window | Hours–days |
 
 The rollup is written from the same in-memory batch the capture worker already builds — counters incremented per message, flushed once per second, in the same transaction as the row `COPY`. It costs a few hundred bytes per queue per minute; a hundred queues for a year is single-digit gigabytes. **Exact counts, forever, for almost nothing** (NFR-007). *Exact* means each delivered copy is counted once. A crash between `COMMIT` and `ack` redelivers a batch, and a bounded shadow queue can drop copies; ADR-019 handles both: a ledger absorbs redelivered duplicates, and the capture-gap warning (FR-018) flags dropped copies.

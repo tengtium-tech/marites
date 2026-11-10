@@ -58,7 +58,7 @@ Three questions, thirty seconds. They separate "the product is broken" from "the
 | 17 | Counts disagree between a day and its hours | Compaction wrote a partial or repeated aggregate | **Stop compaction**, snapshot the two tiers, and escalate. A wrong total is permanent once compacted | Product |
 | 18 | Worker restart loop | Broker unreachable at startup, or a queue claim conflict | Check the advisory-lock owner: two workers claiming one queue serialise the rollup upsert (ADR-009) | Product |
 
-**Row 17 is the one that needs a person, not a procedure.** It is the failure mode flagged as unspecified in [failure modes §6](../05-architecture/failure-modes.md): additive upserts plus a retried compaction would double a total. Until that guard is specified, the safe action is to stop compaction and preserve both tiers as evidence.
+**Row 17 needs a person, not a procedure.** A compaction that fails partway is safe to retry, because compaction recomputes the window's totals instead of adding to them ([ADR-024](../05-architecture/decisions.md)). What needs a human is the *lag*: if compaction has not run for a tier that is due to be swept, stop the sweeper and preserve both tiers as evidence — the recomputation cannot read a tier that was already deleted.
 
 ## 4. Diagnostics
 
@@ -112,15 +112,33 @@ If the broker's own numbers match the dashboard, Marites is reporting correctly 
 | Resume a `halted` replay without fixing the consumer | It will halt again, having sent more messages into a queue that cannot drain |
 | Restart workers during a suspected double-count | Restarting does not stop the inflation; stop the writer, then investigate |
 
-## 7. Gaps
+## 7. Thresholds
 
-| Gap | Consequence |
+The symptom table uses words like *stale* and *growing*. These are the numbers behind them, so two operators reading the same screen reach the same conclusion.
+
+| Word | Value | Set by |
+|---|---|---|
+| *stale* | No rollup write for three poll intervals (30 s at the default) | `MARITES_POLL_INTERVAL_SECONDS` |
+| *growing* | Depth increased on five consecutive polls | — |
+| *old* | Older than the queue's row retention, measured from `max(captured_at)` | the capture rule |
+| *lagging* | A tier due to be compacted has no coarser row covering it | `compaction_lag` |
+| *quiet* | No messages published for an hour on a queue whose baseline is non-zero | — |
+
+## 8. Rotating the key-encryption key
+
+A suspected KEK compromise has a documented response, and it does not require downtime.
+
+| Step | Action |
 |---|---|
-| No alerting or paging | Every symptom is discovered by a person. This is the largest operational gap in the product |
-| No metrics or health endpoint | There is no way to watch Marites with Marites. The [platform foundation index](../06-platform-foundation/README.md) records this |
-| No log format specification | Diagnostics in §4 assume structured logs exist; no format is specified |
-| Thresholds unstated | "Minutes old" and "growing margin" are judgement, not values |
+| 1 | Start the service with both keys: `MARITES_KEK` (new) and `MARITES_KEK_PREVIOUS` (old). Unwrapping tries the current key, then the previous one |
+| 2 | Run `marites rotate-kek`. It walks `broker_profile`, unwraps each `credentials_enc` with whichever key succeeds, re-wraps it with the new one, and commits in batches of 100 |
+| 3 | Confirm the report: zero rows left on the previous key. The command is idempotent — a rerun re-wraps nothing |
+| 4 | Remove `MARITES_KEK_PREVIOUS` and restart. A row still on the old key now fails to unwrap, which is why step 3 is a gate and not a check |
 
-## 8. Document control
+**Rotation does not re-encrypt the data key, and does not touch payloads.** The KEK wraps per-row data keys; payloads are encrypted with those, so rotating the KEK rewrites 8-byte-scale keys and nothing else. That is what makes it fast enough to run during an incident.
+
+**If the KEK is believed stolen, rotate first and investigate second.** The old key is in an attacker's hands either way; every minute before rotation is a minute their copy still opens the database.
+
+## 9. Document control
 
 Revision 0.1 records eighteen symptoms with a first check and an action, plus the diagnostics that separate a product defect from an environment problem. Written November 2026 to close the gap named in the [operations index](README.md). No symptom has been observed, because nothing runs.

@@ -77,7 +77,7 @@ If you only read one page, read the [failure modes](../05-architecture/failure-m
 ## 6. What a reviewer should check first
 
 1. **Does the contract actually reflect the decisions?** DEC-002 should produce a flat refusal on message endpoints, not a redacted variant; DEC-005 should produce a default that works unconfigured; DEC-006 should produce base64 of exact bytes and no masking feature anywhere.
-2. **Are the counts right?** 10 served operations, 15 deferred, 23 ADRs, 19 decisions, 28 FR, 8 NFR, 26 error codes, 12 tables. Each is checkable.
+2. **Are the counts right?** 10 served operations, 15 deferred, 24 ADRs, 19 decisions, 29 FR, 8 NFR, 26 error codes, 12 tables. Each is checkable.
 3. **Is anything claimed as verified?** It should not be. Search for "Verified" and expect to find only a vocabulary definition.
 4. **Do the two places that describe the same thing agree?** The review found several that did not. Finding one more is a fair outcome.
 

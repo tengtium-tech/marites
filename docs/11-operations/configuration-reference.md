@@ -18,6 +18,13 @@ Every setting an operator can set, in one table. Five of these names appeared ac
 
 **Secrets are never environment variables.** A credential in `docker-compose.yml` is a credential in a repository. Broker credentials and the provider key are written through the API, encrypted per row, and returned by no endpoint (NFR-003). The one exception is the *message-store* connection string, which is a deployment input and is stored encrypted on first run rather than read on every start.
 
+**The key-encryption key is the second exception, and it has to be.** A key stored in the database it protects is not a key. `MARITES_KEK` comes from the environment or a KMS reference, is required, and is the only secret the product cannot write for you:
+
+| Variable | Type | Default | Required | Effect |
+|---|---|---|---|---|
+| `MARITES_KEK` | base64, 32 bytes, or a KMS URI | — | **Yes**, from first start | Wraps the per-row data keys that encrypt broker credentials (ADR-018) |
+| `MARITES_KEK_PREVIOUS` | same | — | Only during rotation | Tried when the current key does not unwrap a row. Removed after `rotate-kek` reports zero rows remaining ([runbook §8](runbook.md)) |
+
 ## 2. The variables
 
 | Variable | Type | Default | Required | What it does |
@@ -37,6 +44,11 @@ Every setting an operator can set, in one table. Five of these names appeared ac
 | `MARITES_REDELIVERY_WINDOW_SECONDS` | integer | `3600` | No | How long `capture_dedupe` holds an identity. Shorter than the broker's redelivery window under-counts (ADR-019) |
 | `MARITES_CAPTURE_BATCH_ROWS` | integer | `500` | No | Rows per `COPY`. Lowering it costs throughput; raising it costs memory |
 | `MARITES_LOG_LEVEL` | `debug` \| `info` \| `warn` \| `error` | `info` | No | `debug` logs message **headers**, never bodies |
+| `MARITES_POLL_INTERVAL_SECONDS` | integer | `10` | No | How often the broker is polled for depth, rates and consumers. It also sets the definition of *stale*: three intervals with no rollup write |
+| `MARITES_OPERATIONS_PER_MINUTE` | integer | `30` | No | The per-tenant token bucket for mutating operations (THR-015). Exceeding it returns `429` with `Retry-After` |
+| `MARITES_OPERATIONS_CONCURRENT` | integer | `5` | No | Simultaneous mutating operations per tenant. A sixth waits rather than failing |
+| `MARITES_CONFIRMATION_TTL_SECONDS` | integer | `60` | No | How long a confirmation token stays valid. Longer widens the window in which a queue can change between preview and execute |
+| `MARITES_BACKFILL_PER_SECOND` | integer | `20` | No | Ceiling on a backfill's read rate, so a live consumer is not starved. Backfill is opt-in and bounded per run (capture lifecycle §4) |
 
 **Two of these change behaviour rather than tuning it.** `MARITES_MESSAGE_STORE` decides whether the install can look back; `MARITES_AUTH_MODE=none` decides whether it has identity at all. Everything else is a dial.
 

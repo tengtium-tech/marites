@@ -17,7 +17,7 @@ An assumption (ASM) is something the design relies on and has not proven. A risk
 | ASM-007 | A get-and-requeue peek on a quorum queue with a delivery limit may count toward that limit | [architecture overview §2](../05-architecture/architecture-overview.md) | Unverified; tested at M1 |
 | ASM-008 | One PostgreSQL instance and one container serve the single-server profile at the target rate | NFR-006, NFR-001 | Unverified; load test at M2 |
 | ASM-009 | A Service Bus or Pub/Sub identity can be granted subscription management scoped to the watched topics, rather than at project or namespace level | [provider prerequisites §1.2, §2.2](../11-operations/provider-prerequisites.md) | Unverified; no platform has been configured |
-| ASM-010 | Compaction can be made idempotent per window without a schema change | [failure modes §6](../05-architecture/failure-modes.md) | Unverified, and the guard is not specified (RSK-010) |
+| ASM-010 | Compaction can be made idempotent per window without a schema change | [ADR-024](../05-architecture/decisions.md) | Confirmed by design: recomputation and assignment need no new table, and ASM-010's "no schema change" held |
 
 ## Risks
 
@@ -32,12 +32,12 @@ An assumption (ASM) is something the design relies on and has not proven. A risk
 | RSK-007 | Capture on Service Bus or Pub/Sub roughly doubles the adopter's delivery operations and cost | Documented per provider; size before enabling capture on a firehose topic | [deployment §1.5](../11-operations/deployment-and-onboarding.md) |
 | RSK-008 | The in-house dispatcher grows into the framework that was rejected | Keep it near fifty lines; cross-cutting concerns stay explicit decorators | ADR-013 |
 | RSK-009 | A document is mistaken for evidence of implementation | The README and standard state that nothing is built or executed | [documentation standard](documentation-standard.md) |
-| RSK-010 | A retried compaction over additive upserts doubles a window's counts permanently, and totals are never rebuilt from rows | **No guard is specified.** The interim control is operational: stop compaction and preserve both tiers as evidence | [failure modes §6](../05-architecture/failure-modes.md) |
+| RSK-010 | A retried compaction over additive upserts doubles a window's counts permanently, and totals are never rebuilt from rows | **Closed.** Compaction recomputes the window's absolute totals from the finer tier and assigns them, so a retry writes the same numbers; the three orderings that make the recomputation correct are part of the decision (ADR-024) | [ADR-024](../05-architecture/decisions.md) |
 | RSK-011 | Row-level security covers configuration tables but not the capture tables, so isolation depends on query shape | Tenant-scoped keys and API query shape; TC-022 asserts it. Moving capture to RLS changes the write path | [migration plan §4](../07-data-and-contracts/migration-plan.md) |
 | RSK-012 | Nothing alerts. A stopped capture is discovered by a person, and the dashboard may look quiet for hours | Runbook symptoms and `captureState`; the product gap is recorded rather than solved | [runbook §7](../11-operations/runbook.md) |
-| RSK-013 | Spilled payload objects have no lifecycle, so deletion and backup scope are undefined | Recorded as a gap in the migration plan and the backup procedure | [data dictionary §6](../07-data-and-contracts/data-dictionary.md) |
+| RSK-013 | Spilled payload objects have no lifecycle, so deletion and backup scope are undefined | **Closed.** The bucket layout is content-addressed, the sweeper deletes an object when no capture row references its hash, the bucket is named in the backup scope, and a failed spill degrades to a recorded truncation rather than blocking capture | [data dictionary §6](../07-data-and-contracts/data-dictionary.md) |
 | RSK-014 | Two accepted ADRs (011, 019) carry the "exact counts" promise and neither has an executed test | TC-013 and TC-014 are milestone gates, not optional tests | [verification plan §3](../10-testing/verification-plan.md) |
 
-**Owners are decision identifiers, not people** — the project has one author and no external commitment, so a delivery constraint is recorded only when one exists. RSK-002 and ASM-007 are re-read when their tests run; RSK-010 and ASM-010 when the compaction guard is specified.
+**Owners are decision identifiers, not people** — the project has one author and no external commitment, so a delivery constraint is recorded only when one exists. The risks that remain open are the ones a test can settle rather than a decision: RSK-002 and ASM-007 when their tests run, RSK-008 and RSK-011 when the code exists.
 
 Use the [documentation structure](documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

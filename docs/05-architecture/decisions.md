@@ -4,7 +4,7 @@ title: Architecture Decision Register
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — 22 accepted, 1 superseded, none proposed
+status: Draft — 23 accepted, 1 superseded, none proposed
 ---
 
 # Architecture Decision Register
@@ -63,6 +63,7 @@ status: Draft — 22 accepted, 1 superseded, none proposed
 | ADR-012 | `message_capture` is range-partitioned by day on `captured_at` | Accepted |
 | ADR-019 | Capture counting is redelivery-safe: redelivered messages are checked against a short-lived ledger before they enter rollups, and a gap between observed and broker-reported publish counts is surfaced, never absorbed | Accepted |
 | ADR-023 | Destructive operations are staged, not transactional: the bodies are committed to `operation_intent` before the broker command, and the audit row is written only after the broker confirms | Accepted |
+| ADR-024 | Compaction is a **recomputation**, not an accumulation: a coarser tier is written from the absolute totals of the finer tier, so running the same window twice produces the same row — and a finer tier is never swept until the coarser row covering it exists | Accepted |
 
 **ADR-004 — rationale.** The data layer depends on binary `COPY`, native partitioning, `JSONB`, and GIN indexes — all Postgres-specific and all load-bearing. A second provider means two code paths for the most performance-critical component, and the "lightweight" profile would silently lose partitioning. **Consequence:** local installs run PostgreSQL in a container rather than a file database.
 
@@ -88,6 +89,26 @@ What *is* achievable is a pair of invariants, each enforceable on its own side:
 **Why not simply write the audit row first with `result = pending`.** Because the audit is append-only, a `pending` row can never become a success — it can only be joined by a second row. Two rows for one operation in a log that humans read is a worse cost than one staging table that they never see.
 
 **Consequence.** A twelfth table, swept in minutes rather than days; a reconciliation pass on the operations executor; `ERR-OPR-007` when the hold cannot be written, because then the command is not issued at all. Purge is the weakest case: once a queue is emptied, "was this message in there?" cannot be asked of the broker, so reconciliation falls back to depth and the operation's own count. **Decision (November 2026): Accepted.**
+
+**ADR-024 — rationale.** The counting tier is written additively — the capture worker increments a minute bucket per message (ADR-007, ADR-019) — and compaction rolls minute rows up into hours, hours into days. If compaction *adds* what it computes to whatever the coarser row already holds, then a compaction that runs twice for the same window doubles that window permanently, and nothing can repair it: rollups are never rebuilt from rows, so there is no source of truth to re-derive from. That was the one unresolved item in the whole design, and it is a correctness problem rather than a tuning problem.
+
+The guard is not a marker table. It is the arithmetic: **compaction computes the target window's absolute totals from the finer tier and writes them**, so the operation is idempotent by construction. Running it once, twice, or after a crash halfway through leaves the same row, because the second run overwrites the first with the same numbers rather than adding to them.
+
+| Step | What it does |
+|---|---|
+| **1. Closed windows only** | A window is compacted only once `bucket_end` is behind a safety margin, so no increment can still arrive for it |
+| **2. Recompute** | `SUM(published)`, `SUM(dead_lettered)`, `SUM(bytes)`, `MAX(peak_rate)`, and `death_reasons_json` merged by key, over the finer rows inside the window |
+| **3. Overwrite** | `ON CONFLICT … DO UPDATE SET published = EXCLUDED.published, …` — assignment, never `published + EXCLUDED.published`. This is the whole decision |
+| **4. Sweep only what is covered** | The finer tier is deleted only after the coarser row is committed, and only `WHERE NOT EXISTS` a coarser row covering it. A tier cannot be swept out from under a compaction that has not run |
+| **5. One writer per key** | A lease on `(queue_ref_id, granularity)`, so two compactions — or a compaction and a sweep — cannot interleave |
+
+**Why `peak_rate` fits without special handling.** It is the one non-additive column, merged with `GREATEST` on capture upsert. `MAX` over the finer rows is its absolute value, so step 2 treats it the same way as the sums rather than as an exception.
+
+**What this forbids.** Compaction never reads its own target tier, and it never compacts the finest tier into itself — minute rows are written by capture, which ADR-019's ledger protects, not by this rule. Compaction moves strictly upward: minute → hour → day.
+
+**Why it is cheap.** Minute → hour is sixty rows per queue per hour; hour → day is twenty-four. The recomputation reads a handful of rows and writes one, which is why the guard costs nothing measurable and needed no schema change — the assumption in ASM-010 held.
+
+**What it does not fix, and the honest residue.** Recomputing makes a *duplicate* impossible. It cannot make a *partial* read correct, so the ordering in steps 1, 4 and 5 is load-bearing rather than defensive: an open window, a swept tier, or two writers would each produce an undercount instead of a double count. That is why the sweep predicate is part of this decision and not of the sweeper's own design. **Consequence:** no new table; a lease; a `compaction_lag` value the operator can see; `TC-029` asserts the retry and the sweep refusal; RSK-010 closes and ASM-010 is confirmed. **Decision (November 2026): Accepted.**
 
 ---
 
@@ -170,4 +191,4 @@ The decisive constraint is not licence cost but **distribution model and code ow
 
 ## Document control
 
-Revision 0.1 records eighteen decisions, all Accepted; a review in November 2026 added ADR-019, the agent-access work in November 2026 added ADR-020 and ADR-021, the storage decision superseded ADR-004 with ADR-022, and the operation-ordering decision added ADR-023. No decision remains Proposed: every question they depended on has been answered in [DECISION-LOG](../01-project/decisions-and-open-questions.md). Changing an accepted decision requires a superseding ADR rather than an edit.
+Revision 0.1 records eighteen decisions, all Accepted; a review in November 2026 added ADR-019, the agent-access work in November 2026 added ADR-020 and ADR-021, the storage decision superseded ADR-004 with ADR-022, the operation-ordering decision added ADR-023, and the counting decision added ADR-024. No decision remains Proposed: every question they depended on has been answered in [DECISION-LOG](../01-project/decisions-and-open-questions.md). Changing an accepted decision requires a superseding ADR rather than an edit.

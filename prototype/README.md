@@ -74,7 +74,9 @@ Signing out returns to this screen. The session is kept in `sessionStorage`, so 
 | Screen | Route | Shows |
 |---|---|---|
 | Sign in | `/` | Three demo accounts, an email form, and the Entra caveat |
-| Queues | `#queues` | Queue list with depth, rate, dead letters and `captureState`; the banner for queues that cannot report failures |
+| Queues | `#queues` | Queue list with depth, rate, dead letters and `captureState`; the two banners |
+| Queues, filtered | `#queues-dlq` | The list filtered to queues with no dead-letter routing |
+| Queues, filtered | `#queues-capture` | The list filtered to the stopped and capped queues |
 | Queue detail | `#queue` | Metric strip, the action bar, capture policy and failure-reason breakdown |
 | Replay dialog | `#replay` | The selection's count and reasons, an **editable JSON payload** when one message is selected, the warning that replaying will dead-letter again, and the typed environment confirmation |
 | Peek | `#peek` | Live messages, the `redelivered` flag, and the get-and-requeue caveat |

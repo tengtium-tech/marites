@@ -43,10 +43,12 @@ bash screens/shoot.sh http://127.0.0.1:4331/index.html
 
 | File | Shows | Wireframes |
 |---|---|---|
-| `01-queues.png` | Queue list: depth, rate, dead letters, `captureState`, the no-DL-routing banner | §3.3 |
+| `01-queues.png` | Queue list: depth, rate, dead letters, `captureState`, and the two banners | §3.1 |
+| `01b-queues-filter-dlq.png` | The table filtered to the queues with no dead-letter routing | §3.1 |
+| `01c-queues-filter-capture.png` | The table filtered to the stopped and capped queues | §3.1 |
 | `02-queue-detail.png` | Metric strip, the action bar in the table header, capture policy, reason breakdown | §3.6 |
 | `14b-live-only.png` | Live-only: the banner, the empty history state, the capture card reading *off* | §3.10 |
-| `14c-live-only-queues.png` | The queue list in live-only, where the banner first appears | §3.1 |
+| `14c-live-only-queues.png` | The queue list in live-only: capture reads `off` everywhere, and neither warning banner applies | §3.1 |
 | `06-dark.png` | The queue detail in dark | §5 |
 
 ### Dialogs
@@ -120,4 +122,4 @@ bash screens/shoot.sh http://127.0.0.1:4331/index.html
 
 ## 4. Document control
 
-Revision 0.1, November 2026. Thirty-seven images, captured from build `dist` in November 2026 after the agent-access and two-store revisions, replacing a set of thirty-three that had drifted. The capture script is part of the record: a screenshot with no reproducible route to it is an illustration, not evidence.
+Revision 0.1, November 2026. Thirty-nine images, captured from build `dist` in November 2026 after the agent-access and two-store revisions, replacing a set of thirty-three that had drifted. The capture script is part of the record: a screenshot with no reproducible route to it is an illustration, not evidence.

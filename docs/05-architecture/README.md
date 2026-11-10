@@ -12,8 +12,8 @@ How the system is built, why the tap is one hop, what each component does when i
 | [Architecture overview](architecture-overview.md) | Capture strategies, the one-hop tap, counting versus storing, contract-first boundary, module map, four ports, capability record, read and capture paths, identity, process topology, multiple clusters |
 | [Component failure modes](failure-modes.md) | Nine components, what each does when it fails, and what the operator sees while it is failing |
 | [Provider adapter design](provider-adapters.md) | How RabbitMQ, Service Bus and Pub/Sub each satisfy the four ports, and the five places they deliberately differ |
-| [Agent access](mcp-integration.md) | The MCP tool surface, why the credential rather than the tool list is the boundary, and the propose-and-approve model |
-| [Architecture decision register](decisions.md) | ADR-001 to ADR-019, all accepted, each with rationale and alternatives rejected |
+| [Agent access](mcp-integration.md) | The MCP tool surface, why the credential rather than the tool list is the boundary, and the `CanExecute` grant that decides whether an assistant acts or only proposes |
+| [Architecture decision register](decisions.md) | ADR-001 to ADR-024, 23 accepted and ADR-004 superseded, each with rationale and alternatives rejected |
 
 ## The three arguments worth reading first
 

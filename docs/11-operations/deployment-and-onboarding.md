@@ -176,8 +176,12 @@ Once §1 is satisfied, the application deploys on **the adopter's own server** a
 | Contents | Timestamp, level, operation id, queue, actor id — **never a message body**, at any level |
 | Correlation | The `Idempotency-Key` and the audit row id appear on every line for an operation, so a log and the audit can be joined |
 | `debug` | Adds headers and payload **sizes**, still never bodies |
+| Retention | Not Marites'. Logs go to stdout and the platform rotates them; the product sets no schedule and deletes nothing |
+| Access | Whoever can read the container's stdout — normally the platform's operators. The audit is the record for everyone else, and it is read through the product |
 
 **The logs and the audit are different records and must not converge.** The audit is permanent and answers *who did what*; the logs are rotated and answer *why it was slow*. A body in the logs would be a copy of the evidence with none of its retention rules.
+
+**Retention is delegated on purpose.** Marites cannot rotate a file it does not own, and a self-hosted product that tried would fight the platform's log driver. What it can do is guarantee that the logs contain no payload bodies, which is what makes handing them to the platform safe.
 
 ## 4. Pointing at a broker (FR-012)
 

@@ -148,4 +148,4 @@ The key is a credential, so it inherits NFR-003: encrypted per row, write-only, 
 
 ## 10. Document control
 
-Revision 0.1 records the agent surface and, from November 2026, its second host (DEC-015) after the prototype demonstrated the propose-and-approve flow. No MCP server exists, no tool has been called, and the threat entries it depends on (THR-025, THR-026) are the mitigation of record.
+Revision 0.1 records the agent surface and, from November 2026, its second host (DEC-015) after the prototype demonstrated the flow in both directions: a credential that proposes, and one granted `CanExecute` that acts. No MCP server exists, no tool has been called, and the threat entries it depends on (THR-025, THR-026) are the mitigation of record.

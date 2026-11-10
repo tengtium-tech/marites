@@ -21,7 +21,7 @@ docs/                    the specification set: 14 sections, 45 documents, 16 in
   02-business/           requirements and acceptance criteria
   03-workflows/          capture, recovery, onboarding, retention
   04-domains/            five documentation areas and their handoffs
-  05-architecture/       the one-hop tap, failure modes, adapters, 23 decisions
+  05-architecture/       the one-hop tap, failure modes, adapters, 24 decisions
   06-platform-foundation/ capture, identity, audit, configuration (index)
   07-data-and-contracts/ tables, dictionary, migrations, the OpenAPI contract
   08-experience/         metric rules, wireframes, screenshots, accessibility

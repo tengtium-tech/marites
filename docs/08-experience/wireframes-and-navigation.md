@@ -71,6 +71,8 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 │ Marites   [prod ▾]                          Support · A. Reyes      │
 ├──────────────────────────────────────────────────────────────────────┤
 │ ⚠ 2 queues cannot report failures — no dead-letter routing  [view]   │
+│ ⚠ 1 capture has stopped — figures frozen · 1 capped — counts         │
+│   continue, no new rows stored                              [view]   │
 ├───────────────────────────┬──────────┬────────┬────────┬────────────┤
 │ Queue                     │ Depth    │ Rate   │ DLQ    │ Capture    │
 ├───────────────────────────┼──────────┼────────┼────────┼────────────┤
@@ -84,21 +86,30 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 | Element | Behaviour |
 |---|---|
 | Broker switcher | Changes the profile for every figure on the screen. Never mixed: one screen, one profile |
-| Banners | Two, and they are different problems. *"2 queues cannot report failures"* is a configuration gap — those queues will never show a dead-letter count. *"1 queue's capture is stale and 1 is capped"* is a freshness problem — the figures exist but are older than they look. Both name the count, and neither appears when the count is zero |
+| Banners | Two, and they are different problems. *"2 queues cannot report failures"* is a **configuration** gap — those queues will never show a dead-letter count, and waiting does not fix it. *"1 capture has stopped · 1 capped"* is a **state** problem, and the two halves have opposite consequences: a stopped capture freezes the figures, while a capped one keeps counting and stops storing. Saying "both are old" would be false for the second, and the footnote below the table says so. Both name the count, and neither appears when the count is zero |
+| **A banner that names a count must be able to show it** | `View` filters the table to the queues the banner counted, and turns into `Show all`. A chip reads *"Showing 2 of 5 — no dead-letter routing"* with a clear action. A summary with no way to reach its subject is a dead end, and it is also unverifiable: the operator cannot check that the count is right |
 | **Status appears when it changes, not permanently** | A green "capture health: passing" badge that sits in the sidebar all day is a badge people stop reading — and this one contradicted itself, showing *passing* while listing one stale and one capped queue. The state belongs in a banner that appears when it is true, and in the queue's own row |
 | Watched count | *"5 queues watched"* is in the page header, in words. It was previously a permanent counter in the sidebar, which is where a number goes when nobody has decided what it is for |
-| Banner | Appears when any queue in the profile cannot report failures, and links to the filtered list |
 | Dead-letter column | Shows `unavailable` where there is no routing, never `0` (`ERR-QUE-002`) |
 | Capture column | The five states of VOCABULARY §15, each with a distinct icon **and** a word |
+| **Live-only changes the column, not just the banner** | With no message store, capture is not running — so every queue reads `off`, both banners are absent, and the footnote explains `off` instead of `stale`/`capped`. Showing `live` beside a live-only banner would claim a state the install cannot be in |
 | Row | Opens the queue detail. Rows are keyboard-reachable and the whole row is the target |
 
 ![01-queues](../../prototype/screens/01-queues.png)
 
 *The queue list. Depth, rate and dead letters per queue, `captureState` as a word beside the number rather than a colour, and the two banners that appear when something needs attention — never a permanent status badge.*
 
+![01b-queues-filter-dlq](../../prototype/screens/01b-queues-filter-dlq.png)
+
+*`View` on the first banner: the table filtered to the two queues that cannot report failures, the count in the chip, and the link turned into `Show all`.*
+
+![01c-queues-filter-capture](../../prototype/screens/01c-queues-filter-capture.png)
+
+*`View` on the second: the stopped queue and the capped one, side by side — which is where the difference between them is visible, since one has frozen figures and the other is still counting.*
+
 ![14c-live-only-queues](../../prototype/screens/14c-live-only-queues.png)
 
-*The same list in live-only. The banner appears where the gap is felt, and says what still works — recovery and the audit — rather than implying the console is degraded.*
+*The same list in live-only. The banner appears where the gap is felt and says what still works — recovery and the audit. The capture column reads `off` for every queue and both warning banners are absent, because capture is not running at all.*
 
 ### 3.2 Queue detail (`/queues/:id`)
 
@@ -291,15 +302,28 @@ The list is not a preview of a *sample*: every message the confirmation will act
 
 *The same body in preview, opened from the confirmation: no hash and no retention date, because neither exists until the operation runs.*
 
-### 3.8 Agent proposals
+### 3.8 The assistant on the queue screen
 
-An agent may read every queue, message and metric, and may **propose** an action. It cannot execute one ([agent access](../05-architecture/mcp-integration.md)).
+What appears here depends on one thing: whether the credential the assistant holds carries `CanExecute` ([agent access](../05-architecture/mcp-integration.md), DEC-010). It is not a preference and not a per-request choice.
+
+**With the grant — the action is already done.** The banner reports it, and offers to show what was touched. It is a notice, not a request.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│ 🤖 Claude suggested replaying 3 messages            [AGENT]          │
+│ 🤖 Claude replayed 3 messages                   [VIA ASSISTANT]      │
 │    "All three were rejected by the same consumer, which was          │
 │     redeployed at 14:31. They should succeed now."                   │
+│    14:29 as a.reyes@company.com · recorded in the audit              │
+│                                                        [ Show 3 ]    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+**Without it — the action is a proposal.** Same reasoning, different ending: a person decides.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ 🤖 Claude suggested replaying 3 messages        [PROPOSAL]           │
+│    "…they should succeed now."                                       │
 │    proposed 2 min ago on behalf of a.reyes@company.com               │
 │                                            [ Review 3 ]  [ Dismiss ] │
 └──────────────────────────────────────────────────────────────────────┘
@@ -307,15 +331,19 @@ An agent may read every queue, message and metric, and may **propose** an action
 
 | Property | Why |
 |---|---|
-| The reasoning is shown | A proposal you cannot evaluate is worse than no proposal |
-| It is a suggestion, not an alert | Indigo, not amber: nothing is wrong with the queue |
-| Review selects exactly those messages and opens the normal dialog | The agent gets no shortcut through the guard chain — it gets a pre-filled form |
-| The dialog states who is recorded as the actor | *Approving this records you as the actor. The proposal stays in the audit log beside it* |
+| The reasoning is shown in both | A proposal you cannot evaluate, or an action you cannot explain, is worse than neither |
+| The executed form is a notice | No Review, no Dismiss — there is nothing left to decide, and offering a decision that has already happened is a lie about the state |
+| The actor is the person, never the model | *14:29 as a.reyes@company.com* — the assistant is the channel, and `via` records that it was |
+| `Show 3` selects exactly those messages | The same list the operator would have built by hand, which is what makes the action checkable |
+| The proposal form keeps the guard chain | `Review` pre-fills the normal dialog; the agent gets no shortcut, only a form someone else must sign |
 | Dismissal is recorded | A pattern of dismissed proposals is how you learn the agent's judgement is off |
+| The two forms never appear together | One credential, one of the two — a screen showing both would be asking the operator to work out which one applies |
 
 ![10-agent-executed](../../prototype/screens/10-agent-executed.png)
 
-*An assistant's replay, already done. Attributed to the person whose credential carried it, with no approval step — and the reasoning kept with it.*
+*The granted case: an assistant's replay, already done, attributed to the person whose credential carried it — with no approval step, and the reasoning kept with it.*
+
+**The proposal form has no screenshot**, deliberately. The prototype's demo credential carries `CanExecute`, so the drawer and the queue screen act rather than propose; the propose path is shown where it leaves a permanent trace, as the `proposal` row in the audit (§3.11). Capturing a screen the prototype cannot reach would be an illustration of a design, not evidence of one.
 
 ### 3.9 The assistant drawer
 

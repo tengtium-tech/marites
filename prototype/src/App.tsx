@@ -340,6 +340,8 @@ export default function App() {
     if (h === "report") return { email: "viewer@company.com", role: "viewer" }
     if (
       h === "queues" ||
+      h === "queues-dlq" ||
+      h === "queues-capture" ||
       h === "queue" ||
       h === "publish" ||
       h === "audit" ||
@@ -374,6 +376,7 @@ export default function App() {
       h === "storage"
     )
       return h
+    if (h === "queues-dlq" || h === "queues-capture") return "queues"
     return "queues"
   })
   /* Deep links are read on mount; this makes them work when the hash changes
@@ -387,7 +390,7 @@ export default function App() {
         return setScreen("queue")
       if (h === "audit-payload" || h === "audit-bulk" || h === "audit-expired" || h.startsWith("payload-"))
         return setScreen("audit")
-      if (["report", "setup", "queue", "publish", "audit", "ai", "storage"].includes(h))
+      if (["report", "setup", "queue", "publish", "audit", "ai", "storage", "queues", "queues-dlq", "queues-capture"].includes(h))
         return setScreen(h as Screen)
     }
     window.addEventListener("hashchange", onHash)
@@ -684,6 +687,19 @@ function Topbar({
 /* ------------------------------------------------------------------ */
 
 function QueuesScreen({ onOpen, liveOnly }: { onOpen: () => void; liveOnly?: boolean }) {
+  /* The two banners are summaries of the rows below them, so they must be able
+     to show those rows. A summary that names a count and cannot point at the
+     two queues it counted is a dead end. */
+  const [filter, setFilter] = React.useState<null | "dlq" | "capture">(() => {
+    const h = window.location.hash
+    return h === "#queues-dlq" ? "dlq" : h === "#queues-capture" ? "capture" : null
+  })
+  const noDeadLetter = QUEUES.filter((q) => q.dead === null)
+  const degraded = QUEUES.filter((q) => q.state !== "live")
+  const stale = QUEUES.filter((q) => q.state === "stale")
+  const capped = QUEUES.filter((q) => q.state === "capped")
+  const rows = filter === "dlq" ? noDeadLetter : filter === "capture" ? degraded : QUEUES
+  const toggle = (f: "dlq" | "capture") => setFilter((cur) => (cur === f ? null : f))
   return (
     <div className="animate-in fade-in slide-in-from-bottom-1 duration-300">
       <div className="mb-5 flex items-end gap-4">
@@ -710,21 +726,57 @@ function QueuesScreen({ onOpen, liveOnly }: { onOpen: () => void; liveOnly?: boo
         </div>
       )}
 
-      <div className="mb-4 flex items-center gap-2.5 rounded-lg border border-warning/25 bg-warning/[0.07] px-3.5 py-2.5 text-[13px] text-warning">
+      <div
+        className={cn(
+          "mb-4 flex items-center gap-2.5 rounded-lg border border-warning/25 bg-warning/[0.07] px-3.5 py-2.5 text-[13px] text-warning",
+          liveOnly && "hidden"
+        )}
+      >
         <AlertTriangle className="h-4 w-4 shrink-0" />
         <span>
-          2 queues cannot report failures — no dead-letter routing configured.{" "}
-          <button className="font-semibold underline underline-offset-2">View</button>
+          {noDeadLetter.length} queues cannot report failures — no dead-letter routing configured.{" "}
+          <button
+            onClick={() => toggle("dlq")}
+            className="font-semibold underline underline-offset-2"
+          >
+            {filter === "dlq" ? "Show all" : "View"}
+          </button>
         </span>
       </div>
 
-      <div className="mb-4 flex items-center gap-2.5 rounded-lg border border-warning/25 bg-warning/[0.07] px-3.5 py-2.5 text-[13px] text-warning">
+      <div
+        className={cn(
+          "mb-4 flex items-center gap-2.5 rounded-lg border border-warning/25 bg-warning/[0.07] px-3.5 py-2.5 text-[13px] text-warning",
+          liveOnly && "hidden"
+        )}
+      >
         <AlertTriangle className="h-4 w-4 shrink-0" />
         <span>
-          1 queue's capture is stale and 1 is capped — their figures are older than they look.{" "}
-          <button className="font-semibold underline underline-offset-2">View</button>
+          {stale.length} queue&apos;s capture has stopped — its figures are frozen.{" "}
+          {capped.length} is capped — it keeps counting, but stores no new messages.{" "}
+          <button
+            onClick={() => toggle("capture")}
+            className="font-semibold underline underline-offset-2"
+          >
+            {filter === "capture" ? "Show all" : "View"}
+          </button>
         </span>
       </div>
+
+      {filter && (
+        <div className="mb-3 flex items-center gap-2 text-[12px] text-muted-foreground">
+          <span>
+            Showing {rows.length} of {QUEUES.length} —{" "}
+            {filter === "dlq" ? "no dead-letter routing" : "capture needs attention"}
+          </span>
+          <button
+            onClick={() => setFilter(null)}
+            className="rounded border px-1.5 py-0.5 text-[11px] font-medium hover:bg-secondary"
+          >
+            Clear
+          </button>
+        </div>
+      )}
 
       <Card className="overflow-hidden">
         <Table>
@@ -738,7 +790,7 @@ function QueuesScreen({ onOpen, liveOnly }: { onOpen: () => void; liveOnly?: boo
             </TableRow>
           </TableHeader>
           <TableBody>
-            {QUEUES.map((q) => (
+            {rows.map((q) => (
               <TableRow
                 key={q.name}
                 tabIndex={0}
@@ -751,7 +803,7 @@ function QueuesScreen({ onOpen, liveOnly }: { onOpen: () => void; liveOnly?: boo
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <span className="font-medium tracking-[-0.01em]">{q.name}</span>
-                    {q.state === "stale" && (
+                    {q.state === "stale" && !liveOnly && (
                       <span className="text-[11px] text-warning">capture stopped</span>
                     )}
                   </div>
@@ -771,18 +823,37 @@ function QueuesScreen({ onOpen, liveOnly }: { onOpen: () => void; liveOnly?: boo
                   )}
                 </TableCell>
                 <TableCell>
-                  <Status state={q.state} />
+                  {liveOnly ? (
+                    <span className="text-[11.5px] text-muted-foreground">off</span>
+                  ) : (
+                    <Status state={q.state} />
+                  )}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+        {rows.length === 0 && (
+          <p className="px-4 py-10 text-center text-[12.5px] text-muted-foreground">
+            No queue matches this filter.
+          </p>
+        )}
       </Card>
 
       <p className="mt-3.5 text-[12px] text-muted-foreground">
-        <b className="text-foreground/80">stale</b> means depth is growing while capture has stopped
-        advancing. <b className="text-foreground/80">capped</b> means rows paused at the storage ceiling —
-        counts continue. Neither is ever rendered as zero.
+        {liveOnly ? (
+          <>
+            <b className="text-foreground/80">off</b> means capture is not running, because there is
+            no message store to write to. Depth and rate still come from the broker, so the console
+            works — there is simply nothing recorded to look back at.
+          </>
+        ) : (
+          <>
+            <b className="text-foreground/80">stale</b> means depth is growing while capture has
+            stopped advancing. <b className="text-foreground/80">capped</b> means rows paused at the
+            storage ceiling — counts continue. Neither is ever rendered as zero.
+          </>
+        )}
       </p>
 
       <div className="mt-6 flex items-center gap-3 border-t pt-3 text-[11.5px] text-muted-foreground">

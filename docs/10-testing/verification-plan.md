@@ -58,8 +58,9 @@ Every case is `Planned`. None has been written, and no result exists. A case ass
 | TC-023 | Integration | M4 | One unreachable cluster leaves the others' figures and health unchanged | FR-014 |
 | TC-024 | Integration | M3 | A credential without `CanExecute` reads and creates a proposal, and a direct mutating call returns `ERR-AUTH-002`; a credential with `CanExecute` executes a replay and the audit row names the user with `via` set; a Support credential with `CanExecute` is refused on purge; no credential can act for a different user | FR-024 |
 | TC-025 | Integration | M2 | With `captureMode = counts`, `published` increments for every message, `message_capture` stays empty for that queue, and a message search on it returns an empty page rather than an error | FR-025 |
-| TC-026 | Integration | M3 | With no provider configured the drawer transmits nothing; configured, an answer cites a queue and a count and a proposal is created rather than executed; a Viewer cannot open it | FR-026 |
+| TC-026 | Integration | M3 | With no provider configured the drawer transmits nothing; configured, an answer cites a queue and a count; a replay asked for in the drawer executes only under `CanExecute` and is audited against the signed-in user with `via`; a Viewer cannot open it | FR-026 |
 | TC-028 | Integration | M1 | With the database made read-only, a discard returns `ERR-OPR-007` and the message is still on the broker; with the process killed between the acknowledgement and the audit write, restart reconciliation produces exactly one audit row for the operation; a command the broker rejects leaves an `abandoned` intent and no success row | FR-028 |
+| TC-029 | Integration | M2 | Compaction of one window run twice leaves every column identical to a single pass; a crash between the coarser commit and the finer sweep, then a restart, produces the same totals; the sweeper refuses to drop a finer tier with no coarser row covering it | FR-029 |
 | TC-027 | Integration | M1 | A purge of 10 messages yields 10 evidence rows with their bodies; an edited replay returns `payloadBefore` and `payloadAfter`, and its audit row reports `payloadEdited` while an unedited replay's does not; a single-message replay returns its body whole, byte for byte; a peek returns what it showed; after retention lapses the call returns `ERR-AUD-001` while `payloadHash` and `payloadEdited` survive; beyond the row bound `payloadTruncated` is true | FR-027 |
 
 ## 3. Milestone gates
@@ -72,7 +73,7 @@ A milestone does not exit until its gate passes. Each gate names the cases that 
 | Deployment smoke | TC-004 | M0 | NFR-006 or the default set is wrong; fix before M1 builds on it |
 | Live console | TC-006, TC-007, TC-008, TC-009, TC-010 | M1 | M1's exit criteria are unmet: Support cannot complete a recovery |
 | Capture | TC-012, TC-013, TC-014, TC-018, TC-019 | M2 | **ADR-011 or ADR-019 is wrong.** A failure here invalidates the counting claim, so it needs a superseding ADR, not a patch |
-| Retention and reporting | TC-015, TC-016, TC-017 | M2 | The two-tier design or the degradation order is wrong; DOC-DATA-001 §3–§4 changes first |
+| Retention and reporting | TC-015, TC-016, TC-017, TC-029 | M2 | The two-tier design or the degradation order is wrong; DOC-DATA-001 §3–§4 changes first |
 | Explorer | TC-020, TC-021 | M3 | The message contract is wrong |
 | Agent access | TC-024 | M3 | **ADR-021 is wrong.** If a credential can exceed the role of the person it was issued to, `CanExecute` is a global switch wearing a per-user costume |
 | Tenancy | TC-022, TC-023 | M4 | ADR-010 or ADR-014 is wrong |

@@ -92,13 +92,13 @@ Recovery from `Capped` is automatic: once the sweeper frees space, rows resume w
 
 | Failure | Consequence | Status |
 |---|---|---|
-| Compaction retried for one window | Additive upserts double that window's counts, permanently | **Unspecified.** The most serious open item in the design ([failure modes §6](../05-architecture/failure-modes.md)) |
+| Compaction retried for one window | Additive upserts would double that window's counts, permanently | Prevented by recomputing and assigning the window's totals rather than adding to them ([ADR-024](../05-architecture/decisions.md)) |
 | Row retention above rollup retention | A period shows zero counts that an operator can still browse | Prevented in application code, not by a constraint ([data dictionary](../07-data-and-contracts/data-dictionary.md) §4) |
 | Partition dropped for the wrong queue | One queue's short retention deletes another's window | Prevented by reading the minimum retention across rules ([migration plan](../07-data-and-contracts/migration-plan.md) §3) |
 | Ledger swept before redelivery completes | A redelivery is counted twice | Prevented by the window; not asserted by a test |
-| Spilled objects orphaned | The object store grows while rows do not | Prevented only if the sweeper's delete step is implemented ([backup and recovery](../11-operations/backup-and-recovery.md) §6) |
+| Spilled objects orphaned | The object store grows while rows do not | Prevented by the sweeper's delete step, which removes an object only when no remaining row carries its hash ([data dictionary](../07-data-and-contracts/data-dictionary.md) §6) |
 
-Four of the five have a designed guard. The first does not, and it is the one that damages the number the product exists to produce.
+Every one of them has a designed guard. The first was the last to get one, and it is the one that would have damaged the number the product exists to produce.
 
 ## 6. What an operator can and cannot change
 

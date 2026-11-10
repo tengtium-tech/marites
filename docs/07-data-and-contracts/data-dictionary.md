@@ -111,7 +111,9 @@ The counting tier. Small, permanent, never derived from rows.
 
 Primary key `(queue_ref_id, granularity, bucket_start)`. No surrogate key: the natural key is the identity, and a surrogate would allow two rows for one bucket, which is how a total doubles.
 
-`peak_rate` is the one non-additive metric. Every other column sums on compaction; this one takes the maximum. A compaction that summed it would report a peak of 4,800 msg/s for an hour whose busiest second was 200.
+`peak_rate` is the one non-additive metric. Every other column sums *within a tier*; this one takes the maximum. A compaction that summed it would report a peak of 4,800 msg/s for an hour whose busiest second was 200.
+
+**"Additive" describes capture, not compaction.** The capture worker increments a bucket per message (ADR-007, ADR-019). Compaction does **not** add what it computes to the coarser row — it recomputes that window's absolute totals from the finer tier and assigns them (ADR-024). That is what makes a retried compaction harmless: the second run overwrites the first with the same numbers instead of doubling them. The `Default` column above is `0` for a fresh bucket written by capture; it is not a starting value for compaction to accumulate onto.
 
 ## 6. `message_capture`
 
@@ -146,6 +148,20 @@ The investigation tier. Partitioned by day; the only table whose size is a probl
 Primary key `(id, captured_at)`, because a partitioned table's primary key must include the partition key.
 
 **Two payload columns, not one.** An inline body and an object-store key are different types with different lifecycles: the row owns the first, the sweeper must also delete the second. A single `payload_ref` column could not carry both without a discriminator, and the discriminator would be `payload_size` — a value that already has a meaning. The check constraint is that at most one of the two is present, and that neither is present when the queue's policy stored no body.
+
+### The object store
+
+A body above the 64 KB inline threshold is written to an object store, and the row keeps its key.
+
+| Property | Value |
+|---|---|
+| Key | `{tenant_id}/{content_hash[0:2]}/{content_hash}` — content-addressed, so an identical body is stored once however many rows reference it |
+| Backend | The adopter's bucket (S3-compatible, Azure Blob or GCS), named once per install. Not Marites' own store: bodies are the same size problem the message store exists for |
+| Lifecycle | The sweeper deletes an object in the same pass that drops the partitions referencing it, and only when no remaining row carries that `content_hash` — one query, because the key *is* the hash |
+| Backup | The bucket is in backup scope alongside `message_capture`. A row without its object is a body that cannot be read |
+| Failure at write | The spill is attempted before the row is committed. If the store refuses it, the row is written with no body, `payload_size` records the true length, and the capture-gap warning counts it — capture degrades to truncation rather than stopping |
+
+**Content addressing is what makes the lifecycle simple.** Because the key is the hash the row already carries, "is this object still referenced?" is a lookup rather than a join table, and writing the same body twice costs one object.
 
 ## 7. `replay_job`
 
@@ -242,7 +258,7 @@ Payload evidence for the four operations that need it (DEC-017). Written in the 
 
 **Both bodies for a replay.** `payload_before` is what the message held; `payload_after` is what went out. When they differ, the replay was edited (DEC-011) and the pair is the only complete record of the change.
 
-**Payloads above 64 KB.** `payload_before` and `payload_after` are `bytea`; a body larger than the inline threshold is stored whole only if the object store is configured — otherwise it is truncated at the threshold with `payload_size` recording the true length. That is the same unresolved gap as `message_capture.payload_ref`, recorded in [DOC-DATA-001 §2](../07-data-and-contracts/data-model.md).
+**Payloads above 64 KB.** `payload_before` and `payload_after` are `bytea` and hold the body whole. The evidence for an operation is small — one row per message the operator chose to act on, never a whole queue — so it stays inline and takes the same object-store path only when an individual body exceeds the threshold (§6). `payload_size` always records the true length, and `payload_truncated` on the audit row says when the body is not the whole one.
 
 ## 12. `operation_intent`
 

@@ -83,10 +83,20 @@ One connection per queue shard, prefetch above the batch size, manual ack.
 | Sweeper stops running | No partition dropped in a window longer than retention | Partitions accumulate; storage grows | Storage tile rising with no retention effect; a health check on the sweeper itself |
 | Sweeper drops a partition early | Counts change for a period that had rows | Should be impossible: the sweeper cannot see `message_rollup` | A defect, not a state. TC-015 is the assertion |
 | Compaction fails partway | Aggregation error | Finer rows are deleted only after the coarser row is committed | The tier count is unchanged; retry is safe because compaction sums |
-| Compaction runs twice for a window | Duplicate aggregation | Upsert on `(queue_ref_id, granularity, bucket_start)` with additive increments would double-count | Guard: compaction writes a marker per window, or aggregates from a snapshot. **Not yet specified** — recorded as a gap |
+| Compaction runs twice for a window | Duplicate aggregation | **Cannot double-count:** compaction writes the window's absolute totals recomputed from the finer tier, overwriting rather than adding (ADR-024), so a retry writes the same numbers | Nothing visible. The tier count is unchanged, which is the point |
 | Ceiling reached | Free space below the ceiling | Row writes pause; rollups continue | `captureState: capped` (DOC-DATA-001 §4.1) |
 
-The double-compaction row is the most serious open item in this document. Additive upserts plus a retried compaction would inflate a total permanently, and totals are never rebuilt from rows. It needs a specified guard before M2.
+**Compaction is idempotent by arithmetic, not by bookkeeping (ADR-024).** The row above used to be the most serious open item here: an additive upsert plus a retried compaction would inflate a total permanently, and totals are never rebuilt from rows, so nothing could repair it. The answer is not a marker table — it is that compaction computes the target window's totals from the finer tier and **assigns** them. Run it twice and the second run writes the same numbers over the first.
+
+Three orderings make the recomputation correct, and each is a failure if broken:
+
+| Ordering | If it breaks |
+|---|---|
+| Compact only closed windows | An increment arrives after the recomputation and is lost — an undercount |
+| Never sweep a tier until the coarser row covering it exists | The recomputation reads a partial tier — an undercount |
+| One writer per `(queue_ref_id, granularity)` | Two runs interleave with a sweep — an undercount |
+
+So the guard trades a *double* count for an *under* count if any ordering is violated, and the orderings are therefore part of the decision rather than of the sweeper's own design. `compaction_lag` is the operator's signal that a tier is falling behind; TC-029 asserts the retry and the sweep refusal.
 
 ## 7. Replay executor
 
@@ -142,4 +152,4 @@ Every discard, purge, replay and publish passes through the same three steps (AD
 
 ## 11. Document control
 
-Revision 0.1 records designed failure behaviour for nine components. Written November 2026 to close the gap named in the [architecture index](README.md). One item is flagged as unspecified rather than designed: compaction idempotency (§6). Nothing here has been observed against a running system.
+Revision 0.1 records designed failure behaviour for nine components. Written November 2026 to close the gap named in the [architecture index](README.md). Every row is designed rather than deferred: compaction idempotency, the last one left open, is specified by ADR-024 and asserted by TC-029. Nothing here has been observed against a running system.

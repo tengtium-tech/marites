@@ -181,4 +181,4 @@ Defaults are chosen to work without configuration: `sampled` means an operator i
 
 ## 6. Document control
 
-Revision 0.1 records metric presentation, capability mapping, and operation safety. DEC-002 governs §2 and the payload endpoint. Wireframes are not written; they follow DEC-002 and the M0 contract.
+Revision 0.1 records metric presentation, capability mapping, and operation safety. DEC-002 governs §2 and the payload endpoint. Wireframes are a separate record ([wireframes and navigation](wireframes-and-navigation.md)) and follow DEC-002 and the M0 contract.

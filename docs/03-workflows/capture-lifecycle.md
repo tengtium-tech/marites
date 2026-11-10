@@ -67,9 +67,23 @@ The `x-death` header arrives with the message, so the reason is recorded at capt
 
 The last two are the reason `captureState` exists as a field rather than being inferred from a count of zero.
 
-## 4. What this lifecycle does not cover
+## 4. Backfill, and why it is not part of this path
 
-Backfill of messages that were already in a queue before the binding existed. That is a separate, rate-limited, user-initiated operation — `peek` in [data-and-contracts/api-catalog.md](../07-data-and-contracts/api-catalog.md) — not part of continuous capture.
+Capture is forward-only (C-002). A binding added today sees only what is published next, so the messages already sitting in a queue are invisible to it — and those are exactly the ones an operator wants to look at on day one.
+
+**Backfill reuses peek rather than adding a second mechanism.** It is `get-and-requeue` on a dedicated channel with `prefetch = 1`, bounded by a count the operator enters, rate-limited per queue, and run only when a person asks for it.
+
+| Property | Value | Why |
+|---|---|---|
+| Mechanism | `POST /api/queues/{vhost}/{name}/get` with `reject_requeue_true` | The only way to read a message without consuming it, on all three providers |
+| Bound | The operator's count, defaulting to 100 and capped at 1,000 | A backfill is an investigation, not a migration |
+| Rate | `MARITES_BACKFILL_PER_SECOND`, default 20 | Slow enough that a live consumer is not starved |
+| Opt-in | Per queue, never automatic, never at setup | It has side effects on the queue, and consent must precede them |
+| Stop condition | Any `nack`, any connection error, or the operator cancelling | Partial is fine; a backfill that keeps going after a failure is not |
+
+**What it costs, stated where the operator starts it.** `reject_requeue_true` sets `redelivered` and, on a quorum queue with a delivery limit, a requeue may count toward that limit (ASM-007). Repeated backfills could therefore push a message into the dead-letter exchange. That is why the rate is bounded and why the dialog says *not side-effect free* rather than *read-only*.
+
+**Backfilled messages are counted and stored exactly like live ones.** They enter the same batch path, so they are subject to ADR-019's ledger and ADR-024's compaction and need no special case. What they do not get is a claim about traffic before the binding: the rollup records them at the time they were read, not the time they were published, so a backfilled day is a day of investigation, not a day of traffic. The queue stays `live` throughout — backfill is a read, and `captureState` describes the tap, not the operator's reading of it.
 
 ## 5. References
 

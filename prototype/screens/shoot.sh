@@ -24,6 +24,8 @@ echo "Screens"
 shoot 00-login            ""
 shoot 00-login-dark       "?dark=1"
 shoot 01-queues           "#queues"
+shoot 01b-queues-filter-dlq      "#queues-dlq"
+shoot 01c-queues-filter-capture  "#queues-capture"
 shoot 02-queue-detail     "#queue" 1120
 shoot 05-reporting        "#report"
 shoot 09-publish          "#publish"

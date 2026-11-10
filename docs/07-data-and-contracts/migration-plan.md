@@ -109,9 +109,8 @@ The fourth check is the one that catches a natural key implemented as a surrogat
 |---|---|
 | Online index creation | Indexes are created on empty tables here, which is free. A later index on `message_capture` at volume will need `CREATE INDEX CONCURRENTLY` outside a transaction — no procedure exists |
 | Zero-downtime migration | Every step assumes the service can stop. No expand/contract pattern is documented, because there is no released version to upgrade from |
-| Object-store schema | Spilled payloads live in an object store whose bucket layout, lifecycle rule and deletion path are unspecified. `payload_ref` names a key; nothing defines the key format |
 | Retention floor enforcement | The "rollup retention ≥ row retention" guard is application code, not a constraint. A direct SQL update could violate it |
 
 ## 9. Document control
 
-Revision 0.1 records the first migration plan, written November 2026 to close the gap named in the [data-and-contracts index](README.md). Nothing has been applied. The four gaps in §8 are recorded rather than resolved; the object-store schema is the one most likely to be needed before M2.
+Revision 0.1 records the first migration plan, written November 2026 to close the gap named in the [data-and-contracts index](README.md). Nothing has been applied. The three items in §8 are operational procedures that a released version makes necessary, not unspecified behaviour: the object-store schema was specified in the [data dictionary](data-dictionary.md) §6 and is no longer among them.

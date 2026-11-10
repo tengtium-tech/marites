@@ -10,9 +10,9 @@ Connect requirements, decisions, operations, milestones and verification using s
 | --- | --- |
 | [Requirement traceability](../02-business/requirements.md) (§7) | Each requirement group tied to its owning specification and to the cases that would prove it |
 | [Operation coverage matrix](operation-coverage-matrix.md) | Every operation tied to its requirement, role, milestone, verification level and cases |
-| [Verification plan](../10-testing/verification-plan.md) | The 28 cases and eight milestone gates the crosswalks cite |
+| [Verification plan](../10-testing/verification-plan.md) | The 29 cases and eight milestone gates the crosswalks cite |
 | [Decision register](../01-project/decisions-and-open-questions.md) | DEC-001 to DEC-019 and what each constrains |
-| [Architecture decision register](../05-architecture/decisions.md) | ADR-001 to ADR-023 (22 accepted, 1 superseded) |
+| [Architecture decision register](../05-architecture/decisions.md) | ADR-001 to ADR-024 (23 accepted, 1 superseded) |
 | [Identifier register](../01-project/documentation-standard.md) | Every identifier prefix and its canonical document |
 
 ## The three crosswalks, and which one is authoritative
