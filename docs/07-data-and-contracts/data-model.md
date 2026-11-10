@@ -55,7 +55,7 @@ operation_payload (id, audit_id, message_id, content_hash,
                    payload_before, payload_after, payload_size,
                    retained_until, created_at)
                    -- DEC-018: one row per message an operation touched
-                   -- DEC-017: swept on the evidence clock — max(row retention, evidence retention)
+                   -- DEC-017: swept on the evidence clock — max(row retention, the evidence retention)
 
 operation_intent  (id, tenant_id, actor_id, actor_kind, on_behalf_of, proposal_id,
                    action, target, params_json, bodies_json, state,
@@ -215,7 +215,7 @@ Counting everything requires shadow bindings on **exchanges**, not only on DLXs.
 | Rollup compaction | Minute → hour after 7 days; hour → day after 90 days. Sums only, never samples |
 | Storage ceiling | Operator setting, **defaulting to `min(50 GB, 20% of available disk)`** — never unlimited |
 | Audit retention | Append-only; never deleted by an automated process |
-| Payload evidence retention | **Its own setting**, `MARITES_EVIDENCE_RETENTION_DAYS`, default 90, ceiling 365. `operation_payload.retained_until` is set at write to `max(row retention, this)`, so evidence never dies before the messages it describes and never sooner than the term the audit promised (DEC-017) |
+| Payload evidence retention | **Its own setting**, `MARITES_EVIDENCE_RETENTION_DAYS`, default 90, ceiling 365. `operation_payload.retained_until` is set at write to `max(row retention, the evidence retention)`, so evidence never dies before the messages it describes and never sooner than the term the audit promised (DEC-017) |
 | Redelivery ledger | Written in the same transaction as the batch. `capture_dedupe` rows older than the redelivery window (default 1 hour) are swept with the partitions; sweeping it never changes a count |
 
 The two retention settings are deliberately separate controls in the admin UI, not one number. Collapsing them is how a routine "reduce disk usage" change silently deletes a year of executive reporting.
