@@ -540,7 +540,7 @@ The revision matters more than the original answer did. When there was one datab
 
 ## DEC-017 — Payload evidence in the audit
 
-**Status:** **Answered** November 2026 — kept beside the audit, on the capture retention clock · **Was constraining:** M1
+**Status:** **Answered** November 2026 — kept beside the audit, on the capture retention clock · **Partly superseded** by [DEC-018](#dec-018--complete-payload-evidence) · **Was constraining:** M1
 
 **The question, in plain terms.** The audit records *that* a replay happened. Should it also keep the message body, so history can show *what* was sent or destroyed?
 
@@ -551,7 +551,7 @@ The revision matters more than the original answer did. When there was one datab
 | **Peek** | A reference to the captured messages | Nothing is destroyed; the bodies are still there |
 | **Replay** | A snapshot of the body **actually sent** | If it was edited, the original is not what went out |
 | **Discard** | A snapshot of each discarded body | The capture row is deleted *by the action*, so a reference dangles immediately |
-| **Purge** | The count, plus a **sample of up to 10** | 1,204 bodies is not evidence, it is a second copy of the queue |
+| **Purge** | A snapshot of **every** purged body, one row per message | ~~The count, plus a sample of up to 10~~ — superseded by [DEC-018](#dec-018--complete-payload-evidence): a sample cannot answer *was this message in there* |
 
 **Why not in the audit row.** The audit is append-only and never deleted. A payload there would become the longest-lived copy of the most sensitive data in the system — 72-hour rows, retained forever — which silently repeals the retention promise (DEC-006, DOC-DATA-001 §3.1.1).
 
@@ -561,7 +561,7 @@ The revision matters more than the original answer did. When there was one datab
 
 **What history looks like after expiry.** The audit row keeps `payloadHash` and the count; the bodies are gone. The screen says *"payload no longer retained · hash abc3f1…"* rather than showing an empty panel. The audit still proves **that** it happened; it proves **what** only for as long as the message would have existed anyway.
 
-**Consequence.** An eleventh table, `operation_payload`, written in the same transaction as the audit row. `GET /audit/{id}/payloads` reads it; `ERR-AUD-001` when the evidence has expired. THR-008 extended: this is a second place payloads can outlive their window, and the sweeper must cover both.
+**Consequence.** A twelfth table, `operation_payload`, written in the same transaction as the audit row. `GET /audit/{id}/payloads` reads it; `ERR-AUD-001` when the evidence has expired. THR-008 extended: this is a second place payloads can outlive their window, and the sweeper must cover both.
 
 **Resolution owner:** technical. **Recorded in:** DOC-DATA-001 §2, §4; DOC-API-002 §7; DOC-UX-003 §3.11.
 
