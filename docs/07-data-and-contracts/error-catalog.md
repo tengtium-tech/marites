@@ -108,7 +108,7 @@ Every error body is `application/problem+json`:
 
 | Code | HTTP | Outcome | Retryable | Meaning | Remedy |
 |---|---|---|---|---|---|
-| `ERR-AUD-001` | 422 | Rejected | no | The payload evidence for this operation has expired, or none was captured | The audit row keeps `payloadHash`; the bodies were retained on the same clock as the messages and are gone |
+| `ERR-AUD-001` | 422 | Rejected | no | The payload evidence for this operation has expired, or none was captured | The audit row keeps `payloadHash`; the bodies were retained for the evidence term (90 days by default) and are gone |
 
 **`ERR-AUD-001` is not a failure.** The audit is permanent; the evidence is not. Returning `404` would suggest the operation never happened, which is the one thing the audit exists to prevent.
 

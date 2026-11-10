@@ -315,7 +315,7 @@ Storage is asked for at first run (§3.5, step 2) and can be **skipped**, which 
 
 ### 3.11 Audit history and payload evidence
 
-Each audit row expands to show what the operation actually carried. The evidence is a snapshot taken when the operation ran — the bodies sent, or the bodies destroyed — and it lives on the **capture retention clock**, not the audit's (DEC-017). Two shapes, because a single message and a batch answer different questions.
+Each audit row expands to show what the operation actually carried. The evidence is a snapshot taken when the operation ran — the bodies sent, or the bodies destroyed — and it lives on **its own retention clock** — 90 days by default, never shorter than the message rows — rather than the audit's (DEC-017). Two shapes, because a single message and a batch answer different questions.
 
 **One message: what was sent, and did it change.** The panel shows the body **in full**, not a preview, and when the operator edited it before replaying, both versions sit side by side with the changed lines marked. The row itself carries an `edited` flag, so an administrator scanning the log sees that a replay was not a plain resend without opening anything.
 
@@ -332,6 +332,7 @@ Each audit row expands to show what the operation actually carried. The evidence
 | **Peek stores what it showed** | The operator saw those bodies; the record should hold what they saw |
 | **Truncation is visible** | Beyond `MARITES_EVIDENCE_MAX_ROWS` the rows stop and the row says `evidence truncated at 10,000 of N` — never a silent partial record |
 | Expiry names the date and the rule | "No longer retained" alone invites the reader to think the record is broken. The panel says when it was swept, which retention applied, and that the hash is what survives — so the answer to *where is the payload* is a fact, not a shrug |
+| **Evidence outlives the message on purpose, and says so** | Ninety days by default, never shorter than the queue's rows (DEC-017). This is the one place in the product where a payload outlives its message, and the panel states it in words rather than leaving the operator to work out why a discard from August still has a body when the queue only keeps three days |
 
 ![11-audit](../../prototype/screens/11-audit.png)
 
@@ -347,7 +348,7 @@ Each audit row expands to show what the operation actually carried. The evidence
 
 ![11h-audit-expired](../../prototype/screens/11h-audit-expired.png)
 
-*Evidence past retention. When it was swept, which retention applied, and the hash that remains.*
+*Evidence past retention. An operation from 07 August, its 90-day evidence term elapsed on 05 November: the row says when it was swept, why that term applied, and that the hash is what remains.*
 
 ### 3.11.1 The body itself
 

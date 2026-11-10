@@ -40,7 +40,8 @@ The order is the contract. Each step is idempotent, so a crash mid-pass resumes 
 ```mermaid
 sequenceDiagram
     participant S as Sweeper
-    participant D as PostgreSQL
+    participant M as Marites store (SQLite)
+    participant D as Message store (PostgreSQL)
     participant O as Object store
 
     S->>D: ensure partitions exist for the next N days
@@ -51,8 +52,11 @@ sequenceDiagram
     S->>D: drop partitions older than the tightest row retention
     S->>O: delete spilled payload objects for dropped rows
     S->>D: delete capture_dedupe rows older than the redelivery window
-    S->>D: record pass result (counts compacted, partitions dropped)
+    S->>M: delete operation_payload rows past retained_until
+    S->>M: record pass result (counts compacted, partitions dropped, evidence swept)
 ```
+
+**Two stores, one pass.** Everything against `D` and `O` is traffic and belongs to the adopter; the last two lines are Marites' own bookkeeping. They are in the same pass because they are one schedule to reason about, not because they share a transaction — and the evidence sweep is the *only* thing that deletes `operation_payload`, which is why it is listed rather than assumed.
 
 | Step | If it is skipped | If it runs twice |
 |---|---|---|
@@ -61,8 +65,9 @@ sequenceDiagram
 | Drop partitions | Rows outlive their retention | Idempotent |
 | Delete spilled objects | The object store grows while rows do not | Idempotent |
 | Sweep the ledger | The ledger grows without bound | Idempotent, and **only** after the redelivery window — sweeping early reopens the double-count ADR-019 closes |
+| Sweep payload evidence | The bookkeeping store grows without bound, and bodies outlive the term the audit promised | Idempotent — a delete on `retained_until`, which is written once and never moved |
 
-**The last row is the subtle one.** The ledger's window must exceed the longest possible redelivery delay. A sweep that runs early deletes the entry that would have absorbed a redelivery, and the message is counted twice — with no error and no gap.
+**The ledger row is the subtle one.** Its window must exceed the longest possible redelivery delay. A sweep that runs early deletes the entry that would have absorbed a redelivery, and the message is counted twice — with no error and no gap.
 
 ## 4. The storage ceiling
 

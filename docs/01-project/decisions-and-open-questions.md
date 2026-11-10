@@ -540,11 +540,11 @@ The revision matters more than the original answer did. When there was one datab
 
 ## DEC-017 — Payload evidence in the audit
 
-**Status:** **Answered** November 2026 — kept beside the audit, on the capture retention clock · **Partly superseded** by [DEC-018](#dec-018--complete-payload-evidence) · **Was constraining:** M1
+**Status:** **Answered** November 2026 · **Revised** — the evidence has its own retention, not the message rows' · **Partly superseded** by [DEC-018](#dec-018--complete-payload-evidence) · **Was constraining:** M1
 
 **The question, in plain terms.** The audit records *that* a replay happened. Should it also keep the message body, so history can show *what* was sent or destroyed?
 
-**Answer: yes, as a separate snapshot store on the capture retention clock — never inside the audit row.**
+**Answer: yes, as a separate snapshot store on its own retention clock — never inside the audit row.**
 
 | Operation | Evidence kept | Why |
 |---|---|---|
@@ -557,11 +557,35 @@ The revision matters more than the original answer did. When there was one datab
 
 **Why not a reference alone.** Discard and purge destroy the row they would point at. The snapshot has to exist *before* the deletion, in the same transaction.
 
-**Retention: the same clock as the rows it came from.** `operation_payload.retained_until` is written at capture time as the queue's row retention, and the same sweeper deletes it. An Admin may extend it — 30 days is the sensible ceiling — and the screen states the cost: payloads in the audit then outlive the message rows they came from.
+**Retention: its own clock, because it is Marites' record and not the adopter's traffic.**
+
+The first answer put the evidence on the capture retention clock — the queue's row retention — and that was a category error. `operation_payload` lives in **Marites' own bookkeeping store** ([DEC-012](#dec-012--storage-which-database-and-who-creates-it)), beside the audit, in a database the adopter may never have connected. Expiring it on a `capture_rule` value means a row in Marites' store is deleted because of a policy about a different database, set by a different person, for a different purpose. The two stores were split precisely so those decisions stop touching each other.
+
+It also produced the wrong answer to the only question that matters. For peek and replay the evidence is a duplicate — the message is still in the queue. For **discard and purge the body is destroyed**, so the audit copy is the last one anywhere. Tying it to a 72-hour row retention meant that three days after a purge, the log still said *"m.cruz purged 500 from payments"* — permanently — while every body was gone.
+
+**The rule.** `operation_payload.retained_until` is written at insert as:
+
+```
+max(queue row retention at the time of the operation,
+    MARITES_EVIDENCE_RETENTION_DAYS)
+```
+
+The `max` matters in both directions. Evidence never expires before the messages it describes — so a queue with a year of rows does not lose its evidence in ninety days. And evidence never expires *sooner than the evidence retention*, so a queue with three days of rows still keeps its destructive-operation evidence for the full term.
+
+| Property | Value |
+|---|---|
+| Default | **90 days** — a quarter, which is the shortest window that survives a quarter-end reconciliation or a post-incident review |
+| Ceiling | 365 days |
+| Set by | An Admin, once per install. Not per queue: this is a property of the audit, and the audit is not per queue |
+| Applies to | Every `operation_payload` row, all four operations. One rule rather than two, because the evidence table has one meaning |
+
+**What it costs, and where the operator is told.** Payloads in the audit now outlive the message rows they came from — that is the point, and it is the one place in the product where a payload outlives its message. An operator who discovers it afterwards concludes the product kept something it said it deleted, so it is stated where they meet it: the expanded audit row names the term and the reason, and the payload dialog carries the expiry date beside the body. The storage screen says nothing about it, because the message store holds no evidence — that absence is the whole point of the split.
+
+**What it does not change.** The audit row is still permanent and the evidence is still swept; only the clock is different. The row keeps `payloadHash` after the bodies go, so a specific message can still be checked against a claim.
 
 **What history looks like after expiry.** The audit row keeps `payloadHash` and the count; the bodies are gone. The screen says *"payload no longer retained · hash abc3f1…"* rather than showing an empty panel. The audit still proves **that** it happened; it proves **what** only for as long as the message would have existed anyway.
 
-**Consequence.** A twelfth table, `operation_payload`, written in the same transaction as the audit row. `GET /audit/{id}/payloads` reads it; `ERR-AUD-001` when the evidence has expired. THR-008 extended: this is a second place payloads can outlive their window, and the sweeper must cover both.
+**Consequence.** A twelfth table, `operation_payload`, written in the same transaction as the audit row. `GET /audit/{id}/payloads` reads it; `ERR-AUD-001` when the evidence has expired. THR-008 extended: this is a second place payloads can outlive their window, and the sweeper must cover both — with the second window now longer than the first, which is why THR-008 names it rather than assuming it away.
 
 **Resolution owner:** technical. **Recorded in:** DOC-DATA-001 §2, §4; DOC-API-002 §7; DOC-UX-003 §3.11.
 
@@ -594,7 +618,7 @@ The revision matters more than the original answer did. When there was one datab
 
 **Why not refuse the operation instead.** Refusing a purge because the evidence cannot be stored turns a recovery action into a support ticket at the worst possible moment. Truncation is a documented loss; a blocked purge is an outage.
 
-**What does not change from DEC-017.** The evidence is still a separate table, written in the same transaction, swept on the capture clock, and never inside the audit row. The audit stays permanent and small; the bodies stay temporary and complete.
+**What does not change from DEC-017.** The evidence is still a separate table, written in the same transaction, swept on its own clock, and never inside the audit row. The audit stays permanent and small; the bodies stay temporary and complete.
 
 **Consequence.** `operation_payload` gains `payload_before` and `payload_after`; one row per message rather than a sample; `AuditPayload` returns both; `operation_audit` gains `payload_edited`; the truncation flag appears on the audit row. FR-027 is amended.
 
@@ -651,7 +675,7 @@ Revision 0.1 records nineteen questions; **all nineteen are answered.** No decis
 | DEC-014 | Migrations run as a separate step with the migration credential, never at startup | November 2026 |
 | DEC-015 | Marites hosts an AI assistant on an adopter-supplied model; local runtime first-class; payloads off by default | November 2026 |
 | DEC-016 | Storage may be skipped; the install then runs live-only with recovery disabled; history begins at enablement | November 2026 |
-| DEC-017 | The audit keeps payload evidence in a separate store on the capture retention clock, never inside the audit row | November 2026 |
+| DEC-017 | The audit keeps payload evidence in a separate store, never inside the audit row — and it expires on its own clock, `max(row retention, 90 days)`, because it is Marites' record rather than the adopter's traffic | November 2026 |
 | DEC-018 | Evidence is complete, not sampled: one row per message, `before` and `after` for replay, truncated at a stated bound | November 2026 |
 | DEC-019 | An operation is not atomic across the broker and the store: the bodies are held durably first, the audit row is written only after the broker confirms, and reconciliation closes the one window | November 2026 |
 

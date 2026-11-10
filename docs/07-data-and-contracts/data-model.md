@@ -54,7 +54,8 @@ app_user          (id, tenant_id, entra_object_id, email, role,
 operation_payload (id, audit_id, message_id, content_hash,
                    payload_before, payload_after, payload_size,
                    retained_until, created_at)
-                   -- DEC-018: one row per message an operation touched; swept on the capture clock
+                   -- DEC-018: one row per message an operation touched
+                   -- DEC-017: swept on the evidence clock — max(row retention, 90 days)
 
 operation_intent  (id, tenant_id, actor_id, actor_kind, on_behalf_of, proposal_id,
                    action, target, params_json, bodies_json, state,
@@ -94,7 +95,7 @@ Column-level definitions — type, nullability, default, constraint and the reas
 
 **One row per message, not a sample.** A purge of 1,204 messages writes 1,204 evidence rows (DEC-018). A sample answers *"what kind of message"* but not *"was this message in there?"*, and the second question is the one a dispute asks. Replay writes `before` and `after`; the other three write `before` only.
 
-**Whether a body was edited is recorded on the audit row, not derived from the evidence.** `operation_audit.payload_edited` is set at write time when any evidence row carries a `payload_after` that differs from its `payload_before`. It could be computed from `operation_payload`, but that table is swept on the capture clock, and *"this replay was not a plain resend"* is a fact about the operation that has to outlive the bodies it describes.
+**Whether a body was edited is recorded on the audit row, not derived from the evidence.** `operation_audit.payload_edited` is set at write time when any evidence row carries a `payload_after` that differs from its `payload_before`. It could be computed from `operation_payload`, but that table is swept on the evidence clock, and *"this replay was not a plain resend"* is a fact about the operation that has to outlive the bodies it describes — permanently, since the audit row never expires.
 
 **A proposal is an audit row, not a table.** `action = proposal` with `result = pending` records that an agent asked for something; the operation that follows carries `proposal_id`. Two rows, one decision, no eleventh table — and the proposal survives the approval, which is the point (DEC-010).
 

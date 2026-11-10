@@ -41,6 +41,7 @@ Every setting an operator can set, in one table. Five of these names appeared ac
 | `MARITES_STORAGE_CEILING_BYTES` | integer | `53687091200` (50 GiB) | No | The ceiling `ERR-QUE-003` enforces and the sweeper pauses at |
 | `MARITES_PARTITION_INTERVAL` | `daily` \| `hourly` | `daily` | No | Partition width for `message_capture`. Changing it affects new partitions only |
 | `MARITES_EVIDENCE_MAX_ROWS` | integer | `10000` | No | The per-operation evidence bound. Beyond it the audit row records `payloadTruncated` (DEC-018) |
+| `MARITES_EVIDENCE_RETENTION_DAYS` | integer | `90` | No | How long payload evidence is kept, ceiling 365. `retained_until` is `max(this, the queue's row retention)`, so evidence never dies before the messages it describes (DEC-017) |
 | `MARITES_REDELIVERY_WINDOW_SECONDS` | integer | `3600` | No | How long `capture_dedupe` holds an identity. Shorter than the broker's redelivery window under-counts (ADR-019) |
 | `MARITES_CAPTURE_BATCH_ROWS` | integer | `500` | No | Rows per `COPY`. Lowering it costs throughput; raising it costs memory |
 | `MARITES_LOG_LEVEL` | `debug` \| `info` \| `warn` \| `error` | `info` | No | `debug` logs message **headers**, never bodies |
@@ -60,7 +61,6 @@ Some things look configurable and deliberately are not:
 |---|---|
 | Schema name | Fixed at `marites` in the message store; a configurable schema breaks every grant in [storage prerequisites](storage-prerequisites.md) |
 | Migration order | Applied from the embedded set, in order, exactly once (DEC-014) |
-| Evidence retention | Tied to the capture clock by decision, not by setting (DEC-017) |
 | Audit retention | Permanent. There is no setting that shortens it, and that is the point |
 | Tenant model | One implicit tenant in single-broker mode, row-level policy in multi-tenant (ADR-014) |
 
@@ -75,6 +75,7 @@ The service validates its configuration **before** it binds a port, and refuses 
 | `MARITES_MESSAGE_STORE` present but unreachable | Starts, **live-only**, and says so on every degraded screen — a store that is down must not stop recovery |
 | `MARITES_MESSAGE_STORE` present with a schema version older than the binary | Refuses to start; `ERR-MIG-001`, naming the version |
 | `MARITES_BOOKKEEPING_PATH` unwritable | Refuses to start. There is no audit without it, and no recovery without an audit |
+| `MARITES_EVIDENCE_RETENTION_DAYS` above 365, or below 1 | Refuses to start. A retention longer than the ceiling is a payload kept for a term the product never promised, and a value of zero would delete evidence as it is written |
 
 **The asymmetry is deliberate.** A missing message store degrades; a missing bookkeeping store is fatal. One is history, the other is the record that the product exists to keep.
 

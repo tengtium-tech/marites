@@ -2130,13 +2130,13 @@ const AUDIT: AuditRow[] = [
     action: "proposal — replay", target: "orders", result: "dismissed by human", tone: "idle", count: "5",
   },
   {
-    id: "a5b", time: "13:52:44",
+    id: "a5b", time: "07 Aug",
     actor: { kind: "human", name: "a.reyes@company.com", role: "support" },
     action: "discard", target: "orders", result: "applied", tone: "ok", count: "3",
     payload: {
       count: 3,
-      retainedUntil: "expired 06 Nov",
-      retention: "3-day",
+      retainedUntil: "expired 05 Nov",
+      retention: "90",
       hash: "4b7d02…",
       bodies: [],
       expired: true,
@@ -2491,10 +2491,10 @@ function AuditScreen() {
                           </span>
                         </div>
                         <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
-                          {r.payload.count} {r.payload.count === 1 ? "body was" : "bodies were"} kept
-                          on the same clock as the messages {r.payload.count === 1 ? "it came" : "they came"}{" "}
-                          from — this queue's {r.payload.retention ?? "row"} row retention — and were
-                          deleted with them. The operation and its hash survive; the content does not.
+                          {r.payload.count} {r.payload.count === 1 ? "body was" : "bodies were"} kept for{" "}
+                          {r.payload.retention ?? "90"} days — the evidence retention, which outlives
+                          the message rows on purpose — and then swept. The operation and its hash
+                          survive; the content does not.
                         </p>
                       </div>
                     ) : r.payload.count === 1 && r.payload.bodies[0] ? (

@@ -206,7 +206,7 @@ Append-only. No column is ever updated, and no endpoint can delete a row.
 
 `params_json` excludes payload bodies on purpose. The audit row records that a message was published and its payload hash; storing the body again would double the exposure and defeat the retention rule.
 
-`payload_edited` is written at the same time as the evidence rows, inside the same transaction. It is not derived on read: `operation_payload` is swept on the capture clock, and *"this replay was not a plain resend"* has to outlive the bodies that prove it.
+`payload_edited` is written at the same time as the evidence rows, inside the same transaction. It is not derived on read: `operation_payload` is swept, and *"this replay was not a plain resend"* has to outlive the bodies that prove it.
 
 ## 9. `app_user`
 
@@ -236,7 +236,7 @@ The redelivery ledger (ADR-019). Short-lived, swept with the partitions.
 
 ## 11. `operation_payload`
 
-Payload evidence for the four operations that need it (DEC-017). Written in the same transaction as the audit row, and swept on the same clock as the rows it came from.
+Payload evidence for the four operations that need it (DEC-017). Written in the same transaction as the audit row, and swept on **its own clock** — this table lives in Marites' bookkeeping store, so it does not expire on a policy about the adopter's message store.
 
 | Column | Type | Null | Default | Constraint / note |
 |---|---|---|---|---|
@@ -247,12 +247,14 @@ Payload evidence for the four operations that need it (DEC-017). Written in the 
 | `payload_before` | bytea | no | — | the body as it existed when the operation ran — what was peeked, discarded or purged, and what a replay replaced |
 | `payload_after` | bytea | yes | — | the body **as sent**; null when a replay did not edit it, and for every other operation |
 | `payload_size` | integer | no | — | bytes as sent, or as destroyed when nothing was sent |
-| `retained_until` | timestamptz | no | — | **set at write** to the queue's row retention; the sweeper deletes on this column |
+| `retained_until` | timestamptz | no | — | **set at write** to `max(queue row retention, MARITES_EVIDENCE_RETENTION_DAYS)`; the sweeper deletes on this column |
 | `created_at` | timestamptz | no | `now()` | — |
 
 **Why a snapshot rather than a pointer.** Discard and purge delete the `message_capture` row the audit would point at, so the copy has to exist before the deletion. A reference would be valid for peek and replay and dangling for the other two — and a column that means different things per row is how a schema stops being readable.
 
-**Why `retained_until` is not a duration.** It is computed once, at write, from the queue's policy at that moment. A later change to the queue's retention must not retroactively extend or delete evidence about an operation that already happened.
+**Why `retained_until` is not a duration.** It is computed once, at write, from the queue's policy and the install's evidence retention at that moment. A later change to either must not retroactively extend or delete evidence about an operation that already happened.
+
+**Why the evidence does not share the rows' clock.** It did, and that was wrong. This table is in Marites' own store (DEC-012), so expiring it on `capture_rule` meant a row here was deleted because of a policy about a different database. It also meant the one case that matters — discard and purge, where the audit copy is the last copy anywhere — expired in three days on a queue with three days of rows. The rule is `max(row retention, MARITES_EVIDENCE_RETENTION_DAYS)`, default 90 days, ceiling 365, set once per install by an Admin.
 
 **One row per message, and no sample.** A purge of 1,204 messages writes 1,204 rows, because a sample cannot answer *"was this message in there?"* (DEC-018). The bound is `MARITES_EVIDENCE_MAX_ROWS` (default 10,000 per operation); beyond it the rows stop and the audit row records `evidence truncated at 10,000 of N`.
 
