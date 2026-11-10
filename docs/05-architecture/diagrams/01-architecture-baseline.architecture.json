@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Marites — architecture baseline",
+    "output": "01-architecture-baseline.html",
+    "visual_preset": "signal-flow"
+  },
+  "components": [
+    {
+      "id": "book",
+      "type": "database",
+      "label": "Bookkeeping store",
+      "sublabel": "SQLite · always present",
+      "pos": [
+        110,
+        130
+      ],
+      "size": [
+        190,
+        90
+      ]
+    },
+    {
+      "id": "spa",
+      "type": "frontend",
+      "label": "React SPA",
+      "sublabel": "generated API client",
+      "pos": [
+        400,
+        20
+      ],
+      "size": [
+        180,
+        70
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API layer",
+      "sublabel": "ASP.NET Core · .NET 9",
+      "pos": [
+        360,
+        165
+      ],
+      "size": [
+        260,
+        100
+      ]
+    },
+    {
+      "id": "capture",
+      "type": "backend",
+      "label": "Capture workers",
+      "sublabel": "consume · batch · COPY",
+      "pos": [
+        330,
+        280
+      ],
+      "size": [
+        170,
+        70
+      ]
+    },
+    {
+      "id": "poller",
+      "type": "backend",
+      "label": "Management poller",
+      "sublabel": "depth · rates",
+      "pos": [
+        520,
+        280
+      ],
+      "size": [
+        160,
+        70
+      ]
+    },
+    {
+      "id": "ops",
+      "type": "backend",
+      "label": "Ops executor",
+      "sublabel": "hold · act · audit",
+      "pos": [
+        700,
+        280
+      ],
+      "size": [
+        160,
+        70
+      ]
+    },
+    {
+      "id": "broker",
+      "type": "messagebus",
+      "label": "RabbitMQ broker",
+      "sublabel": "adopter's · 1..N",
+      "pos": [
+        330,
+        420
+      ],
+      "size": [
+        530,
+        80
+      ]
+    },
+    {
+      "id": "msgstore",
+      "type": "database",
+      "label": "Message store",
+      "sublabel": "PostgreSQL · optional",
+      "pos": [
+        900,
+        410
+      ],
+      "size": [
+        190,
+        90
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Marites service",
+      "wraps": [
+        "api",
+        "capture",
+        "poller",
+        "ops"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "Adopter-supplied",
+      "wraps": [
+        "broker",
+        "msgstore"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "from": "spa",
+      "to": "api",
+      "label": "HTTPS + SSE",
+      "variant": "emphasis",
+      "labelAt": [
+        490,
+        110
+      ]
+    },
+    {
+      "id": "c6",
+      "from": "api",
+      "to": "book",
+      "label": "config · audit",
+      "labelAt": [
+        300,
+        255
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "capture",
+      "to": "broker",
+      "label": "AMQP 0-9-1",
+      "labelAt": [
+        415,
+        370
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "poller",
+      "to": "broker",
+      "label": "management HTTP",
+      "labelAt": [
+        600,
+        370
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "ops",
+      "to": "broker",
+      "label": "AMQP",
+      "labelAt": [
+        780,
+        370
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "capture",
+      "to": "msgstore",
+      "label": "COPY",
+      "variant": "dashed",
+      "labelAt": [
+        730,
+        248
+      ]
+    }
+  ]
+}
