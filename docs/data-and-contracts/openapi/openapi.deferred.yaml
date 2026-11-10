@@ -1,0 +1,904 @@
+openapi: 3.1.0
+
+info:
+  title: Marites API — deferred operations
+  version: 0.2.0-deferred
+  summary: Operations designed but not part of the v0.1 delivery slice
+  description: |
+    **This document is a holding area, not a served contract.**
+
+    These thirteen operations were designed in revision 0.1 of `openapi.yaml` and removed
+    from it to keep the delivery slice readable. They are preserved here so the design work
+    is not lost, and they are promoted into `openapi.yaml` as their milestones arrive:
+
+    | Milestone | Operations |
+    |---|---|
+    | M2 | `setCapturePolicy` |
+    | M3 | `searchMessages`, `getMessage`, `getMetricSummary`, `getMetricSeries`, `getMetricAvailability` |
+    | M4 | `peekQueue`, `discardMessages`, `purgeQueue`, `replayMessages`, `publishMessage`, `getOperation` |
+    | M5 | `listAudit` |
+
+    Behaviour is specified in DOC-UX-001 §3 and DOC-DATA-001 §3–§5. Conventions are the same
+    as `openapi.yaml` and owned by DOC-API-001. Error codes are owned by DOC-API-003.
+
+    Promoting an operation means moving its path and the schemas it needs into
+    `openapi.yaml` and updating DOC-API-002 — a move, not a rewrite. Nothing here is served
+    by any implementation yet.
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  /queues/{queueId}/capture-policy:
+    parameters:
+      - $ref: '#/components/parameters/QueueId'
+    put:
+      operationId: setCapturePolicy
+      tags: [Queues]
+      summary: Set what is stored for this queue
+      description: |
+        Admin only. `payloadPolicy` controls payload retention and never affects counting.
+        Returns the projected daily storage cost at the observed rate, so an expensive choice
+        is visible before it is saved. Requires `If-Match`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CapturePolicy' }
+      responses:
+        '200':
+          description: Applied policy and projected impact
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CapturePolicyResult' }
+        '422':
+          description: Policy would exceed the storage ceiling — ERR-QUE-003
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /messages:
+    get:
+      operationId: searchMessages
+      tags: [Messages]
+      summary: Search captured messages
+      description: |
+        Support and Admin only; Viewer receives 403 (DEC-002). Drawn from the bounded capture
+        window — older periods are available as counts only, via the metrics operations.
+      parameters:
+        - { name: queueId, in: query, schema: { type: string, format: uuid } }
+        - { name: brokerId, in: query, schema: { type: string, format: uuid } }
+        - { name: routingKey, in: query, schema: { type: string } }
+        - { name: correlationId, in: query, schema: { type: string } }
+        - { name: isDeadLetter, in: query, schema: { type: boolean } }
+        - { name: deathReason, in: query, schema: { $ref: '#/components/schemas/DeathReason' } }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        '200':
+          description: Page of messages
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessagePage' }
+
+  /messages/{messageId}:
+    parameters:
+      - $ref: '#/components/parameters/MessageId'
+    get:
+      operationId: getMessage
+      tags: [Messages]
+      summary: Message detail including payload
+      description: |
+        Support and Admin only. `payload` is base64 of the exact bytes published; no masking
+        or redaction is applied (DEC-006).
+      parameters:
+        - { name: includePayload, in: query, schema: { type: boolean, default: true } }
+      responses:
+        '200':
+          description: Message detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageDetail' }
+        '422':
+          description: Payload not stored under this queue's policy — ERR-MSG-002
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /metrics/summary:
+    get:
+      operationId: getMetricSummary
+      tags: [Metrics]
+      summary: Volume and dead-letter totals for a window
+      description: |
+        Reads pre-aggregated rollups only, never captured rows. `published` and
+        `deadLettered` are separate series and must not be summed — a dead letter is a
+        published message observed a second time.
+      parameters:
+        - { name: brokerId, in: query, schema: { type: string, format: uuid } }
+        - { name: queueId, in: query, schema: { type: string, format: uuid } }
+        - { name: from, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date-time } }
+      responses:
+        '200':
+          description: Totals for the window
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MetricSummary' }
+
+  /metrics/timeseries:
+    get:
+      operationId: getMetricSeries
+      tags: [Metrics]
+      summary: Volume over time at a chosen granularity
+      description: |
+        `granularity` must be one of those reported available by `/metrics/availability`.
+        Requesting an unavailable granularity returns ERR-MET-001 rather than an empty series,
+        so a retained gap is never rendered as zero traffic.
+      parameters:
+        - { name: brokerId, in: query, schema: { type: string, format: uuid } }
+        - { name: queueId, in: query, schema: { type: string, format: uuid } }
+        - { name: from, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: granularity, in: query, required: true, schema: { $ref: '#/components/schemas/QueryGranularity' } }
+      responses:
+        '200':
+          description: Series points
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MetricSeries' }
+        '422':
+          description: Granularity not available for this range — ERR-MET-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /metrics/availability:
+    get:
+      operationId: getMetricAvailability
+      tags: [Metrics]
+      summary: Which granularities exist for a range
+      description: |
+        Minute rollups compact into hourly after 7 days and daily after 90. The client offers
+        only what is returned here.
+      parameters:
+        - { name: from, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date-time } }
+      responses:
+        '200':
+          description: Available granularities
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/GranularityAvailability' }
+
+  /operations/peek:
+    post:
+      operationId: peekQueue
+      tags: [Operations]
+      summary: Read messages still sitting in a queue
+      description: |
+        Requires `canPeek`. Non-destructive on providers with true peek; on RabbitMQ this uses
+        get-with-requeue and briefly blocks the queue, so it is rate limited and
+        user-initiated only. `PeekResult.destructive` tells the client which it is doing.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PeekRequest' }
+      responses:
+        '200':
+          description: Peeked messages
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PeekResult' }
+        '422':
+          description: Provider cannot peek — ERR-CAP-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /operations/discard:
+    post:
+      operationId: discardMessages
+      tags: [Operations]
+      summary: Remove specific messages
+      description: |
+        Requires `canDiscard`. Destructive: requires a typed confirmation naming the queue.
+        Supports a dry run that reports what would be removed without removing it.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ApprovalId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DiscardRequest' }
+      responses:
+        '200':
+          description: Result, or dry-run preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationResult' }
+        '422':
+          description: Confirmation does not match — ERR-OPR-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /operations/purge:
+    post:
+      operationId: purgeQueue
+      tags: [Operations]
+      summary: Remove every message in a queue
+      description: |
+        Admin only. Never scheduled, never automatic. Requires a typed confirmation of the
+        queue name, and the environment tag when the target is production.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ApprovalId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PurgeRequest' }
+      responses:
+        '200':
+          description: Result, or dry-run preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationResult' }
+        '422':
+          description: Confirmation does not match — ERR-OPR-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /operations/replay:
+    post:
+      operationId: replayMessages
+      tags: [Operations]
+      summary: Re-send dead-lettered messages to their origin
+      description: |
+        Requires `canReplay`. The mechanism differs per provider and is reported in
+        `ProviderCapabilities.replayModel`. The dry run returns death reasons so the operator
+        sees whether replay will simply dead-letter again. Execution is rate limited and
+        auto-halts if the target queue grows faster than it drains.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ApprovalId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReplayRequest' }
+      responses:
+        '200':
+          description: Dry-run preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReplayResult' }
+        '202':
+          description: |
+            Either an accepted replay job (`ReplayResult`), or — as `application/problem+json` —
+            a replay that failed partway and may have published some messages (ERR-OPR-004,
+            outcome `Unresolved`). Reconcile through `GET /operations/{operationId}`; never retry blindly.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReplayResult' }
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '409':
+          description: A replay is already running for this queue — ERR-OPR-002
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /operations/publish:
+    post:
+      operationId: publishMessage
+      tags: [Operations]
+      summary: Publish a new message to an exchange
+      description: |
+        Requires `canPublish`. Highest-risk operation: it injects data into a live business
+        flow. Requires an idempotency key so a retry cannot produce two messages.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ApprovalId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublishRequest' }
+      responses:
+        '200':
+          description: Published
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationResult' }
+
+  /operations/proposals:
+    post:
+      operationId: createProposal
+      tags: [Operations]
+      summary: Propose an operation for a human to approve
+      description: |
+        The path for a credential that may not act. Requires `CanPropose`; creates an audit row
+        with result `pending` and returns a proposal id and an expiry. Nothing is executed. The
+        person named on the proposal submits the operation with `Approval-Id`, and the server
+        verifies it was issued to them (ADR-021, DEC-010).
+
+        A credential carrying `CanExecute` does not use this operation — it calls the four
+        mutating operations directly, authorised against the role of the person it was issued to.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProposalRequest' }
+      responses:
+        '201':
+          description: Proposal recorded, awaiting a human
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProposalResult' }
+
+  /operations/{operationId}:
+    parameters:
+      - $ref: '#/components/parameters/OperationId'
+    get:
+      operationId: getOperation
+      tags: [Operations]
+      summary: Progress of a long-running operation
+      responses:
+        '200':
+          description: Job state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReplayJob' }
+
+  /audit:
+    get:
+      operationId: listAudit
+      tags: [Audit]
+      summary: Append-only record of mutating actions
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+        - { name: action, in: query, schema: { type: string } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        '200':
+          description: Page of audit entries
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuditPage' }
+
+  /audit/{auditId}/payloads:
+    parameters:
+      - $ref: '#/components/parameters/AuditId'
+    get:
+      operationId: listAuditPayloads
+      tags: [Audit]
+      summary: Payload evidence for one audited operation
+      description: |
+        Returns the bodies snapshotted when the operation ran — the ones actually sent, or the ones
+        destroyed. Retention is the queue's row retention, fixed at write time; after it lapses the
+        evidence is gone and this returns `ERR-AUD-001`, while the audit row keeps its hash.
+      responses:
+        '200':
+          description: Snapshot bodies, with the expiry they were given
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuditPayloadPage' }
+        '422':
+          description: Evidence expired or was never captured — ERR-AUD-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    QueueId:
+      { name: queueId, in: path, required: true, schema: { type: string, format: uuid } }
+    MessageId:
+      { name: messageId, in: path, required: true, schema: { type: string, format: uuid } }
+    OperationId:
+      { name: operationId, in: path, required: true, schema: { type: string, format: uuid } }
+    AuditId:
+      { name: auditId, in: path, required: true, schema: { type: string, format: uuid } }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Repeating it returns the recorded outcome as `AlreadyApplied`.
+      schema: { type: string, maxLength: 128 }
+    ApprovalId:
+      name: Approval-Id
+      in: header
+      required: false
+      description: |
+        Present only on the propose path, when a human is approving an operation raised for them.
+        The server verifies it was issued to the caller's own identity; a shared credential cannot
+        approve on someone else's behalf (ADR-021).
+      schema: { type: string, format: uuid }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: The `revision` last read. A stale value returns ERR-CMN-006.
+      schema: { type: integer, minimum: 1 }
+
+  schemas:
+
+    Problem:
+      type: object
+      required: [type, title, status, code, outcome, retryable]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        code: { type: string }
+        outcome:
+          type: string
+          enum: [Applied, AlreadyApplied, Rejected, Denied, Conflict, Unresolved, Unavailable]
+        retryable: { type: boolean }
+        detail: { type: string }
+        instance: { type: string }
+        remedy: { type: string }
+
+    CapturePolicy:
+      type: object
+      required: [captureMode, payloadPolicy, rowRetentionHours]
+      properties:
+        captureMode:
+          type: string
+          enum: [rows, counts]
+          default: rows
+          description: |
+            `counts` stores no message rows at all — the rollup counter increments and nothing else
+            is written (DEC-013, VOCABULARY §16). `rowRetentionHours` is inert in that mode.
+        payloadPolicy: { type: string, enum: [full, sampled, none] }
+        sampleRate: { type: integer, minimum: 1, default: 100 }
+        rowRetentionHours: { type: integer, minimum: 1, default: 72 }
+        maxRows: { type: integer, format: int64 }
+        maxBytes: { type: integer, format: int64 }
+
+    CapturePolicyResult:
+      type: object
+      required: [policy, projection]
+      properties:
+        policy: { $ref: '#/components/schemas/CapturePolicy' }
+        projection:
+          type: object
+          properties:
+            messagesPerDay: { type: integer, format: int64 }
+            estimatedBytesPerDay: { type: integer, format: int64 }
+            estimatedTotalBytes: { type: integer, format: int64 }
+            exceedsCeiling: { type: boolean }
+
+    DeathReason:
+      type: string
+      description: Open enum — a new provider may add a reason. Clients display unknown values verbatim.
+      enum: [rejected, expired, maxlen, delivery_limit, convention, unknown]
+
+    DeathInfo:
+      type: object
+      required: [isDeadLetter, reason]
+      properties:
+        isDeadLetter: { type: boolean }
+        reason: { $ref: '#/components/schemas/DeathReason' }
+        nativeReason:
+          type: string
+          description: The provider's own wording, preserved verbatim for debugging.
+        deathCount: { type: integer }
+        firstDeadAt: { type: string, format: date-time }
+        originSource: { type: string }
+
+    MessageSummary:
+      type: object
+      required: [id, queueId, capturedAt, size, death]
+      properties:
+        id: { type: string, format: uuid }
+        queueId: { type: string, format: uuid }
+        brokerId: { type: string, format: uuid }
+        exchange: { type: string }
+        routingKey: { type: string }
+        messageId: { type: string }
+        correlationId: { type: string }
+        size: { type: integer, format: int64 }
+        contentType: { type: string }
+        capturedAt: { type: string, format: date-time }
+        death: { $ref: '#/components/schemas/DeathInfo' }
+        hasPayload: { type: boolean }
+
+    MessageDetail:
+      allOf:
+        - $ref: '#/components/schemas/MessageSummary'
+        - type: object
+          properties:
+            headers: { type: object, additionalProperties: true }
+            payload:
+              type: string
+              contentEncoding: base64
+              description: Exact bytes published. No masking is applied (DEC-006).
+            payloadTruncated: { type: boolean }
+            contentHash: { type: string, description: HMAC-SHA256, keyed per tenant }
+            originCaptureId:
+              type: string
+              format: uuid
+              description: For a dead letter, the publish it came from. Best-effort and nullable.
+
+    MessagePage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/MessageSummary' }
+        nextCursor: { type: string }
+
+    QueryGranularity:
+      type: string
+      description: |
+        Week, month, quarter and year are summed from daily rollups at query time and are
+        never stored.
+      enum: [minute, hour, day, week, month, quarter, year]
+
+    MetricSummary:
+      type: object
+      required: [published, deadLettered, deadLetterRate, granularity, countingModel]
+      properties:
+        published: { type: integer, format: int64 }
+        deadLettered: { type: integer, format: int64 }
+        deadLetterRate: { type: number, description: deadLettered divided by published. }
+        peakRate: { type: number }
+        bytes: { type: integer, format: int64 }
+        deathReasons:
+          type: object
+          properties:
+            rejected: { type: integer, format: int64 }
+            expired: { type: integer, format: int64 }
+            maxlen: { type: integer, format: int64 }
+            deliveryLimit: { type: integer, format: int64 }
+            convention: { type: integer, format: int64 }
+            unknown: { type: integer, format: int64 }
+        granularity: { $ref: '#/components/schemas/QueryGranularity' }
+        countingModel:
+          type: string
+          description: Not `exact` means the client must render values with `≈`.
+          enum: [exact, approximate, derived]
+
+    MetricSeries:
+      type: object
+      required: [granularity, points]
+      properties:
+        granularity: { $ref: '#/components/schemas/QueryGranularity' }
+        countingModel: { type: string, enum: [exact, approximate, derived] }
+        points:
+          type: array
+          items:
+            type: object
+            required: [bucketStart, published, deadLettered]
+            properties:
+              bucketStart: { type: string, format: date-time }
+              published: { type: integer, format: int64 }
+              deadLettered: { type: integer, format: int64 }
+
+    GranularityAvailability:
+      type: object
+      required: [granularity, available]
+      properties:
+        granularity: { $ref: '#/components/schemas/QueryGranularity' }
+        available: { type: boolean }
+        availableFrom: { type: string, format: date-time }
+
+    PeekRequest:
+      type: object
+      required: [queueId]
+      properties:
+        queueId: { type: string, format: uuid }
+        limit: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        includePayload: { type: boolean, default: true }
+
+    PeekResult:
+      type: object
+      required: [messages, destructive]
+      properties:
+        messages:
+          type: array
+          items: { $ref: '#/components/schemas/MessageDetail' }
+        destructive:
+          type: boolean
+          description: |
+            True where peeking requires consuming and requeueing, as on RabbitMQ. The client
+            warns before calling, since it briefly blocks the queue.
+
+    DiscardRequest:
+      type: object
+      required: [messageIds, dryRun]
+      properties:
+        messageIds:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items: { type: string, format: uuid }
+        dryRun: { type: boolean }
+        confirmation:
+          type: string
+          description: Queue name typed by the operator. Required when `dryRun` is false.
+
+    PurgeRequest:
+      type: object
+      required: [queueId, dryRun]
+      properties:
+        queueId: { type: string, format: uuid }
+        dryRun: { type: boolean }
+        confirmation:
+          type: string
+          description: Queue name typed by the operator. Required when `dryRun` is false.
+        environmentConfirmation:
+          type: string
+          description: Environment tag, required when the target environment is `prod`.
+
+    ReplayRequest:
+      type: object
+      required: [dryRun]
+      properties:
+        messageIds:
+          type: array
+          maxItems: 1000
+          items: { type: string, format: uuid }
+          description: Mutually exclusive with `filter`.
+        filter:
+          type: object
+          properties:
+            queueId: { type: string, format: uuid }
+            deathReason: { $ref: '#/components/schemas/DeathReason' }
+            from: { type: string, format: date-time }
+            to: { type: string, format: date-time }
+        body:
+          type: string
+          contentEncoding: base64
+          description: |
+            Optional override of the stored payload. Permitted only when exactly one message is
+            selected (DEC-011). The audit row records the hash of what is sent, so an edited replay
+            is a new message on the same routing key, not provably the one that failed.
+        dryRun: { type: boolean }
+        maxPerMinute: { type: integer, minimum: 1, maximum: 6000, default: 60 }
+        target:
+          type: object
+          description: Optional override. Defaults to the original exchange and routing key.
+          properties:
+            exchange: { type: string }
+            routingKey: { type: string }
+        environmentConfirmation: { type: string }
+
+    ReplayResult:
+      type: object
+      properties:
+        dryRun: { type: boolean }
+        wouldReplay: { type: integer, format: int64 }
+        deathReasons:
+          type: object
+          description: Shown in the preview so the operator sees whether replay will dead-letter again.
+          additionalProperties: { type: integer, format: int64 }
+        warnings:
+          type: array
+          items: { type: string }
+        job: { $ref: '#/components/schemas/ReplayJob' }
+
+    ReplayJob:
+      type: object
+      required: [id, state, total, processed, failed]
+      properties:
+        id: { type: string, format: uuid }
+        state: { type: string, enum: [pending, running, halted, completed, failed] }
+        total: { type: integer, format: int64 }
+        processed: { type: integer, format: int64 }
+        failed: { type: integer, format: int64 }
+        haltReason: { type: string }
+        createdBy: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    PublishRequest:
+      type: object
+      required: [exchange, routingKey, payload]
+      properties:
+        exchange: { type: string }
+        routingKey: { type: string }
+        payload: { type: string, contentEncoding: base64 }
+        contentType: { type: string, default: application/json }
+        headers: { type: object, additionalProperties: true }
+        environmentConfirmation:
+          type: string
+          description: Environment tag, required when the target environment is `prod`.
+
+    OperationResult:
+      type: object
+      required: [operationId, dryRun, affected]
+      properties:
+        operationId: { type: string, format: uuid }
+        dryRun: { type: boolean }
+        affected: { type: integer, format: int64 }
+        sample:
+          type: array
+          description: Up to ten affected messages, so a preview is inspectable.
+          items: { $ref: '#/components/schemas/MessageSummary' }
+        warnings:
+          type: array
+          items: { type: string }
+
+    AuditEntry:
+      type: object
+      required: [id, actor, actorKind, action, result, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        actor:
+          type: string
+          description: |
+            The email of the human. A service principal appears here only on proposal rows, where
+            the assistant itself is the proposer and no operation ran.
+        actorKind:
+          type: string
+          enum: [human, agent]
+          description: |
+            The actor of an executed operation is always the person whose credential carried it.
+            An assistant is the channel, recorded in `via`, never the actor — so `agent` appears
+            only on proposal rows, which execute nothing.
+        onBehalfOf:
+          type: string
+          description: Present when `actorKind` is `agent` — the human the proposal was made for.
+        proposalId:
+          type: string
+          format: uuid
+          description: The proposal that prompted this operation, when one did.
+        via:
+          type: string
+          description: |
+            Present when a human's action arrived through an assistant rather than the UI — the
+            assistant's name. The actor is still the human whose credential carried the request
+            (ADR-021); this field records the channel, not a second party.
+        action:
+          type: string
+          description: |
+            Every operation that touches the broker or changes configuration, including the
+            read-like ones — `peek` briefly removes a message, `preflight` declares and deletes a
+            probe queue. Reads of Marites' own data are not audited.
+          enum: [peek, discard, purge, replay, publish, broker_create, broker_update,
+                 broker_delete, preflight, capture_policy_set, proposal]
+        target: { type: string }
+        result:
+          type: string
+          enum: [success, failure, denied, pending, dismissed]
+          description: |
+            `pending` and `dismissed` belong to proposals only. A proposal is never "failed" —
+            it either awaits a human or was declined by one.
+        messageCount: { type: integer, format: int64 }
+        payloadCount:
+          type: integer
+          description: |
+            Evidence rows held for this operation — one per message it touched, so this normally
+            equals `messageCount` (DEC-018).
+        payloadTruncated:
+          type: boolean
+          description: |
+            True when the operation touched more messages than `MARITES_EVIDENCE_MAX_ROWS`. The
+            operation still ran; the evidence stops at the bound and this flag says so, because a
+            silently partial record is worse than a stated one.
+        payloadHash:
+          type: string
+          description: HMAC of the body as sent. Survives the evidence, and is all that remains after it expires.
+        payloadEdited:
+          type: boolean
+          description: |
+            True when at least one body was edited before the operation ran, i.e. some evidence row
+            has a `payloadAfter` that differs from its `payloadBefore`. Lets the audit list mark an
+            edited replay without fetching every body — an edited replay and a plain resend are
+            otherwise indistinguishable in a list.
+        payloadRetainedUntil:
+          type: string
+          format: date-time
+          description: Fixed at write to the queue's row retention. Never extended by a later policy change.
+        createdAt: { type: string, format: date-time }
+        ip: { type: string }
+
+    ProposalRequest:
+      type: object
+      required: [operation, target, rationale]
+      properties:
+        operation:
+          type: string
+          enum: [replay, discard, publish, purge]
+        target:
+          type: object
+          properties:
+            queueId: { type: string, format: uuid }
+            exchange: { type: string }
+            routingKey: { type: string }
+        messageIds:
+          type: array
+          maxItems: 1000
+          items: { type: string, format: uuid }
+        body:
+          type: string
+          contentEncoding: base64
+          description: The proposed payload, for `replay` and `publish`.
+        rationale:
+          type: string
+          maxLength: 500
+          description: Why the agent proposes this. Shown to the approver, never omitted.
+
+    ProposalResult:
+      type: object
+      required: [proposalId, approveUrl, expiresAt]
+      properties:
+        proposalId: { type: string, format: uuid }
+        approveUrl:
+          type: string
+          description: Where a human reviews the dry run and approves. Nothing executes until then.
+        expiresAt:
+          type: string
+          format: date-time
+          description: A stale suggestion about a changed queue is worse than none.
+
+    AuditPayload:
+      type: object
+      required: [id, contentHash, size, payloadBefore]
+      properties:
+        id: { type: string, format: uuid }
+        messageId: { type: string }
+        contentHash: { type: string }
+        size: { type: integer, format: int64 }
+        payloadBefore:
+          type: string
+          contentEncoding: base64
+          description: |
+            The body as it existed when the operation ran — what was peeked, discarded or purged, or
+            what a replay replaced.
+        payloadAfter:
+          type: string
+          contentEncoding: base64
+          description: |
+            The body as sent. Present only for a replay, and only when it differed from
+            `payloadBefore` — the pair is the record of an edit (DEC-011, DEC-018).
+
+    AuditPayloadPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/AuditPayload' }
+        retainedUntil: { type: string, format: date-time }
+
+    AuditPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/AuditEntry' }
+        nextCursor: { type: string }

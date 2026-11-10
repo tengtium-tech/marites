@@ -1,0 +1,614 @@
+openapi: 3.1.0
+
+info:
+  title: Marites API
+  version: 0.2.0
+  summary: RabbitMQ, Azure Service Bus and Google Pub/Sub message monitoring
+  description: |
+    Marites observes message traffic crossing an adopter-supplied messaging platform.
+
+    **Scope of this document — v0.1 delivery slice.** Ten operations covering onboarding
+    end to end: register a broker, verify it is usable, and read its queues. This is what
+    M0 and the read half of M1 require.
+
+    Message inspection, metrics, replay, discard, publish and audit are designed but not
+    part of this revision. They live in `openapi.deferred.yaml` and are promoted here as
+    their milestones arrive. See DOC-API-002 for the full catalogue and which revision owns
+    each operation.
+
+    Rules this document follows — outcome classes, idempotency, revision guards, paging,
+    versioning — are owned by DOC-API-001, not by this file. Error codes are owned by
+    DOC-API-003. Where the contract and a convention disagree, the convention wins.
+
+servers:
+  - url: /api/v1
+    description: Same-origin API
+
+tags:
+  - name: Capabilities
+    description: What this backend and each provider can do
+  - name: Brokers
+    description: Connection profiles and readiness checks
+  - name: Queues
+    description: Live metadata
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  /capabilities:
+    get:
+      tags: [Capabilities]
+      operationId: getBackendCapabilities
+      summary: Feature set of this backend implementation
+      description: |
+        Lets the client adapt to a partially complete backend. A feature absent here is not
+        rendered, rather than attempted and failed.
+      responses:
+        '200':
+          description: Backend capability set
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BackendCapabilities' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /brokers:
+    get:
+      tags: [Brokers]
+      operationId: listBrokers
+      summary: List broker connection profiles
+      parameters:
+        - name: environment
+          in: query
+          schema: { type: string }
+        - name: providerKind
+          in: query
+          schema: { $ref: '#/components/schemas/ProviderKind' }
+      responses:
+        '200':
+          description: Broker profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/BrokerProfile' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Brokers]
+      operationId: createBroker
+      summary: Register a broker profile
+      description: |
+        Credentials are write-only. They are encrypted at rest and never returned by any
+        endpoint, in any form. The response contains `credentialKind` and
+        `credentialsUpdatedAt` only.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateBrokerRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrokerProfile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: A profile with this name already exists — ERR-CMN-003
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          description: Credential fields do not match the declared kind — ERR-BRK-003
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /brokers/{brokerId}:
+    parameters:
+      - $ref: '#/components/parameters/BrokerId'
+    get:
+      tags: [Brokers]
+      operationId: getBroker
+      summary: Retrieve one broker profile
+      responses:
+        '200':
+          description: Broker profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrokerProfile' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Brokers]
+      operationId: updateBroker
+      summary: Update a broker profile
+      description: |
+        Supplying `credentials` replaces the stored secret and rotates it. Requires
+        `If-Match` with the revision last read — a stale value returns ERR-CMN-006.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateBrokerRequest' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BrokerProfile' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Stale revision — ERR-CMN-006. Re-read and re-apply.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+    delete:
+      tags: [Brokers]
+      operationId: deleteBroker
+      summary: Remove a broker profile
+      description: |
+        Removes the profile and any observation objects Marites created in that broker —
+        shadow queues, bindings or subscriptions. The adopter's own topology is untouched.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '204': { description: Removed }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /brokers/{brokerId}/preflight:
+    parameters:
+      - $ref: '#/components/parameters/BrokerId'
+    post:
+      tags: [Brokers]
+      operationId: runPreflight
+      summary: Verify the broker is usable before enabling capture
+      description: |
+        Runs the readiness checks and records the result on the profile. Each failed check
+        names a remedy — "your user lacks configure on marites." rather than an empty
+        dashboard. A failing result does not itself fail the request: the result is the
+        answer, and the caller decides what to do with it.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Preflight result, passing or failing
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PreflightResult' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503':
+          description: The broker could not be reached — ERR-BRK-002
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /brokers/{brokerId}/capabilities:
+    parameters:
+      - $ref: '#/components/parameters/BrokerId'
+    get:
+      tags: [Capabilities]
+      operationId: getProviderCapabilities
+      summary: What this provider can do
+      description: |
+        Read by the client to decide which controls exist. Where `canReplay` is false the
+        replay control is omitted, not disabled.
+      responses:
+        '200':
+          description: Provider capabilities
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProviderCapabilities' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /queues:
+    get:
+      tags: [Queues]
+      operationId: listQueues
+      summary: Watched queues with live metadata
+      description: |
+        Metadata comes from the provider poller, not from stored rows. `captureState` and
+        `deadLetterConfigured` are the two fields that stop an empty dashboard being mistaken
+        for a healthy one.
+      parameters:
+        - name: brokerId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: isDeadLetter
+          in: query
+          schema: { type: boolean }
+        - name: search
+          in: query
+          description: Matches queue name
+          schema: { type: string }
+      responses:
+        '200':
+          description: Queue list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/QueueSummary' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /queues/{queueId}:
+    parameters:
+      - $ref: '#/components/parameters/QueueId'
+    get:
+      tags: [Queues]
+      operationId: getQueue
+      summary: One queue with metadata and capture policy
+      responses:
+        '200':
+          description: Queue detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QueueDetail' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Entra ID access token. Roles arrive as App Roles in the `roles` claim and map to
+        capability policies: Viewer, Support, Admin.
+
+  parameters:
+    BrokerId:
+      name: brokerId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    QueueId:
+      name: queueId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: |
+        Client-generated, unique per logical request. Repeating it returns the recorded
+        outcome with `outcome: AlreadyApplied`. Reusing it with different parameters returns
+        ERR-CMN-005 and creates no second effect.
+      schema: { type: string, maxLength: 128 }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: |
+        The `revision` the caller last read. A stale value returns ERR-CMN-006; the client
+        re-reads and re-applies rather than blind-retrying.
+      schema: { type: integer, minimum: 1 }
+
+  responses:
+    BadRequest:
+      description: Malformed request — ERR-CMN-001
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unauthorized:
+      description: Missing or invalid token — ERR-AUTH-001
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: Role lacks the capability policy for this action — ERR-AUTH-002
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Not found, or outside the caller's tenant — ERR-CMN-002
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+
+    Problem:
+      type: object
+      description: |
+        RFC 9457 problem detail. `code` is a stable identifier owned by DOC-API-003 —
+        clients branch on it and never on `detail` text.
+      required: [type, title, status, code, outcome, retryable]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        code:
+          type: string
+          description: Stable catalog identifier
+          examples: [ERR-CAP-001]
+        outcome:
+          type: string
+          description: |
+            Outcome class, returned so a client never has to infer it from the status code.
+            `Unresolved` means the effect may or may not have happened — reconcile through
+            the operation record, never retry as a new effect.
+          enum: [Applied, AlreadyApplied, Rejected, Denied, Conflict, Unresolved, Unavailable]
+        retryable:
+          type: boolean
+          description: Whether the identical request may be repeated unchanged. Always false for Rejected.
+        detail: { type: string }
+        instance: { type: string }
+        remedy:
+          type: string
+          description: What the operator should do. Present whenever the cause is actionable.
+
+    ProviderKind:
+      type: string
+      description: Closed enum. Adding a provider is a major-version change.
+      enum: [rabbitmq, azure_service_bus, google_pubsub]
+
+    SupportTier:
+      type: string
+      enum: [full, observational, metadata_only]
+
+    AddressingModel:
+      type: string
+      enum: [exchange_routing, topic_subscription, queue_only, log_offset]
+
+    DeadLetterModel:
+      type: string
+      enum: [dlx, dlq_subqueue, redrive_policy, dead_letter_topic, convention, none]
+
+    CountingModel:
+      type: string
+      description: Where not `exact`, the client must render counts with a `≈` prefix.
+      enum: [exact, approximate, derived]
+
+    ReplayModel:
+      type: string
+      enum: [republish, offset_reset, seek, redrive, none]
+
+    DiscardModel:
+      type: string
+      enum: [delete_one, truncate, purge_entity, none]
+
+    CredentialKind:
+      type: string
+      description: Open enum — a new provider may add a kind. Clients display unknown values verbatim.
+      enum: [basic, http_basic, mtls, sas_key, entra_service_principal,
+             service_account_json, managed_identity, workload_identity]
+
+    PayloadPolicy:
+      type: string
+      description: Governs payload retention only. Counting is never affected.
+      enum: [full, sampled, none]
+
+    Environment:
+      type: string
+      description: Conventionally prod, staging, dev or test. `prod` requires typed confirmation for destructive operations.
+      examples: [prod]
+
+    BackendCapabilities:
+      type: object
+      required: [apiVersion, features, providerKinds]
+      properties:
+        apiVersion: { type: string, examples: ['0.2'] }
+        features:
+          type: array
+          description: Feature flags for this implementation. Absent means unsupported.
+          items:
+            type: string
+            enum: [brokers, preflight, queues, capture, rollups, messages, peek,
+                   discard, purge, replay, publish, audit]
+        providerKinds:
+          type: array
+          items: { $ref: '#/components/schemas/ProviderKind' }
+
+    ProviderCapabilities:
+      type: object
+      required:
+        [kind, displayName, supportTier, canTap, canPeek, canPublish, canDiscard,
+         canPurge, canReplay, canDeclareShadow, addressingModel, deadLetterModel,
+         countingModel, replayModel, discardModel]
+      properties:
+        kind: { $ref: '#/components/schemas/ProviderKind' }
+        displayName: { type: string }
+        supportTier: { $ref: '#/components/schemas/SupportTier' }
+        canTap: { type: boolean }
+        canPeek: { type: boolean }
+        canPublish: { type: boolean }
+        canDiscard: { type: boolean }
+        canPurge: { type: boolean }
+        canReplay: { type: boolean }
+        canDeclareShadow: { type: boolean }
+        addressingModel: { $ref: '#/components/schemas/AddressingModel' }
+        deadLetterModel: { $ref: '#/components/schemas/DeadLetterModel' }
+        countingModel: { $ref: '#/components/schemas/CountingModel' }
+        replayModel: { $ref: '#/components/schemas/ReplayModel' }
+        discardModel: { $ref: '#/components/schemas/DiscardModel' }
+        supportsHeaders: { type: boolean }
+        maxPayloadBytes: { type: integer, format: int64 }
+
+    BrokerProfile:
+      type: object
+      required:
+        [id, name, providerKind, environment, isDefault, credentialKind, preflightState, revision]
+      properties:
+        id: { type: string, format: uuid }
+        revision:
+          type: integer
+          minimum: 1
+          description: Increments on every change. Send it back as `If-Match` when updating.
+        name: { type: string }
+        providerKind: { $ref: '#/components/schemas/ProviderKind' }
+        environment: { $ref: '#/components/schemas/Environment' }
+        endpoint:
+          type: string
+          description: AMQP URI, namespace or project identifier, with credentials redacted
+        adminUri:
+          type: string
+          description: Management API base, where the provider has one
+        namespaceOrVhost: { type: string }
+        isDefault: { type: boolean }
+        credentialKind: { $ref: '#/components/schemas/CredentialKind' }
+        credentialsUpdatedAt: { type: string, format: date-time }
+        preflightState:
+          type: string
+          enum: [unknown, passing, failing, degraded]
+        preflightAt: { type: string, format: date-time }
+
+    CreateBrokerRequest:
+      type: object
+      required: [name, providerKind, environment, credentialKind, credentials]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 64 }
+        providerKind: { $ref: '#/components/schemas/ProviderKind' }
+        environment: { $ref: '#/components/schemas/Environment' }
+        endpoint: { type: string }
+        adminUri: { type: string }
+        namespaceOrVhost: { type: string }
+        credentialKind: { $ref: '#/components/schemas/CredentialKind' }
+        credentials:
+          type: object
+          additionalProperties: { type: string }
+          description: |
+            Shape depends on `credentialKind`. Write-only; never echoed. RabbitMQ accepts two
+            named slots, `amqp` and `admin`, which may differ.
+        tls:
+          type: object
+          properties:
+            caBundlePem: { type: string }
+            verifyHostname: { type: boolean, default: true }
+
+    UpdateBrokerRequest:
+      type: object
+      properties:
+        name: { type: string }
+        environment: { $ref: '#/components/schemas/Environment' }
+        endpoint: { type: string }
+        adminUri: { type: string }
+        namespaceOrVhost: { type: string }
+        credentialKind: { $ref: '#/components/schemas/CredentialKind' }
+        credentials:
+          type: object
+          additionalProperties: { type: string }
+          description: Supplying this rotates the stored secret.
+        tls:
+          type: object
+          properties:
+            caBundlePem: { type: string }
+            verifyHostname: { type: boolean }
+
+    PreflightResult:
+      type: object
+      required: [state, checks]
+      properties:
+        state:
+          type: string
+          enum: [passing, failing, degraded]
+        checks:
+          type: array
+          items: { $ref: '#/components/schemas/PreflightCheck' }
+        checkedAt: { type: string, format: date-time }
+
+    PreflightCheck:
+      type: object
+      required: [id, label, state]
+      properties:
+        id:
+          type: string
+          enum:
+            - management_api_reachable
+            - vhost_visible
+            - topology_write_permitted
+            - dead_letter_configured
+            - shadow_declarable
+            - clock_skew
+        label: { type: string }
+        state:
+          type: string
+          enum: [pass, fail, warn, skipped]
+        detail: { type: string }
+        remedy:
+          type: string
+          description: Named corrective action. Present when `state` is `fail`.
+
+    QueueSummary:
+      type: object
+      required:
+        [id, brokerId, name, sourceKind, isDeadLetter, captureState, deadLetterConfigured]
+      properties:
+        id: { type: string, format: uuid }
+        brokerId: { type: string, format: uuid }
+        name: { type: string }
+        vhost: { type: string }
+        sourceKind:
+          type: string
+          enum: [queue, exchange, topic, subscription]
+        isDeadLetter: { type: boolean }
+        depth: { type: integer, format: int64 }
+        consumers: { type: integer }
+        unacked: { type: integer, format: int64 }
+        rates:
+          type: object
+          properties:
+            publish: { type: number }
+            deliver: { type: number }
+            ack: { type: number }
+        lastSeenAt:
+          type: string
+          format: date-time
+          description: Last captured message. Absent when nothing has been captured.
+        captureState:
+          type: string
+          enum: [live, stale, capped, disabled, unavailable]
+          description: |
+            `stale` means depth is growing while capture has stopped advancing. `capped` means
+            the storage ceiling was reached and rows paused while counting continued. Neither
+            may render as zero traffic.
+        deadLetterConfigured:
+          type: boolean
+          description: |
+            False means the queue has no dead-letter routing, so failures cannot be observed.
+            The client must show "dead-letter monitoring unavailable" (ERR-QUE-002), never `0`.
+
+    QueueDetail:
+      allOf:
+        - $ref: '#/components/schemas/QueueSummary'
+        - type: object
+          required: [revision]
+          properties:
+            revision:
+              type: integer
+              minimum: 1
+              description: Increments when the capture policy changes. Send it back as `If-Match`.
+            capturePolicy: { $ref: '#/components/schemas/CapturePolicy' }
+            deadLetterSource: { type: string }
+            boundAt: { type: string, format: date-time }
+
+    CapturePolicy:
+      type: object
+      required: [payloadPolicy, rowRetentionHours]
+      properties:
+        payloadPolicy:
+          allOf:
+            - $ref: '#/components/schemas/PayloadPolicy'
+            - description: Defaults to `sampled`. Affects payload retention only, never counting.
+        sampleRate:
+          type: integer
+          minimum: 1
+          default: 100
+          description: One payload stored per N messages when `payloadPolicy` is `sampled`.
+        rowRetentionHours: { type: integer, minimum: 1, default: 72 }
+        maxRows: { type: integer, format: int64 }
+        maxBytes: { type: integer, format: int64 }

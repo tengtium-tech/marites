@@ -1,0 +1,121 @@
+# Retention and compaction lifecycle
+
+Version 0.1 | 09 November 2026 | Status: Draft
+
+Counts are kept; rows expire. This document draws the machine that does that, because the order of its steps is the difference between a total that is right and a total that quietly doubles.
+
+Every threshold below is **configured**, and the defaults are owned by [data model §3.1.2 and §4](../data-and-contracts/data-model.md). They are written here as `T1`, `T2` and `T3` rather than repeated as numbers, so this document cannot drift from the one that owns them.
+
+## 1. The invariant this lifecycle protects
+
+> Admin-set retention applies to `message_capture` only. It never changes a count.
+
+Owned by [data model §3.1.1](../data-and-contracts/data-model.md). Everything below exists to keep it true: the sweeper cannot see `message_rollup`, and compaction only ever merges counts into coarser counts.
+
+## 2. Tier lifecycle
+
+Three tiers, each aggregated from the one above it and then deleted. Nothing is derived from `message_capture` — that is the whole design.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Minute: capture writes a minute bucket
+    Minute --> Hour: age > T1<br/>sum published, dead_lettered, bytes<br/>max peak_rate
+    Hour --> Day: age > T2<br/>same merge
+    Day --> Retained: no further compaction
+    Retained --> [*]: age > rollup retention
+    Minute --> [*]: age > T1 (after Hour exists)
+    Hour --> [*]: age > T2 (after Day exists)
+```
+
+Three properties, each a correctness requirement:
+
+- **A coarser row must exist before a finer row is deleted.** Otherwise a day's total is derived from hours that were already dropped.
+- **Counts sum; `peak_rate` takes the maximum.** Summing a peak reports an hourly peak that never occurred.
+- **Compaction never samples.** A sample would make a day row unequal to the sum of its hours, and the two would then disagree forever.
+
+## 3. One sweeper pass
+
+The order is the contract. Each step is idempotent, so a crash mid-pass resumes rather than corrupts.
+
+```mermaid
+sequenceDiagram
+    participant S as Sweeper
+    participant D as PostgreSQL
+    participant O as Object store
+
+    S->>D: ensure partitions exist for the next N days
+    S->>D: aggregate minute → hour where age > T1
+    S->>D: delete minute rows whose hour exists
+    S->>D: aggregate hour → day where age > T2
+    S->>D: delete hour rows whose day exists
+    S->>D: drop partitions older than the tightest row retention
+    S->>O: delete spilled payload objects for dropped rows
+    S->>D: delete capture_dedupe rows older than the redelivery window
+    S->>D: record pass result (counts compacted, partitions dropped)
+```
+
+| Step | If it is skipped | If it runs twice |
+|---|---|---|
+| Ensure partitions | Capture stalls when the last partition fills | Idempotent |
+| Compaction | Finer tiers grow without bound | **A total doubles.** Needs a per-window marker — see §5 |
+| Delete finer rows | Storage grows | Idempotent, provided the coarser row exists |
+| Drop partitions | Rows outlive their retention | Idempotent |
+| Delete spilled objects | The object store grows while rows do not | Idempotent |
+| Sweep the ledger | The ledger grows without bound | Idempotent, and **only** after the redelivery window — sweeping early reopens the double-count ADR-019 closes |
+
+**The last row is the subtle one.** The ledger's window must exceed the longest possible redelivery delay. A sweep that runs early deletes the entry that would have absorbed a redelivery, and the message is counted twice — with no error and no gap.
+
+## 4. The storage ceiling
+
+The ceiling is the only part of this lifecycle that changes behaviour rather than data.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Live: free space above the ceiling
+    Live --> Capped: free space below the ceiling
+    Capped --> Live: sweeper frees space
+    Live --> Degraded: database volume full (not the ceiling)
+    Degraded --> [*]: infrastructure action required
+```
+
+| State | Rows | Rollups | Reads | What the operator sees |
+|---|---|---|---|---|
+| `Live` | Written | Written | Normal | Normal figures |
+| `Capped` | **Paused** | **Written** | Normal | "Capped" — counts continue, payload inspection stops |
+| Volume full | Fail | Fail | Degraded | An infrastructure error, **not** `capped` |
+
+**`Capped` and a full disk must not share a label.** The first is the product making a decision it was configured to make; the second is the environment failing. Collapsing them hides an infrastructure incident behind a product setting ([failure modes §5](../architecture/failure-modes.md)).
+
+Recovery from `Capped` is automatic: once the sweeper frees space, rows resume without an operator action. Recovery from a full volume is not.
+
+## 5. Where this can still go wrong
+
+| Failure | Consequence | Status |
+|---|---|---|
+| Compaction retried for one window | Additive upserts double that window's counts, permanently | **Unspecified.** The most serious open item in the design ([failure modes §6](../architecture/failure-modes.md)) |
+| Row retention above rollup retention | A period shows zero counts that an operator can still browse | Prevented in application code, not by a constraint ([data dictionary](../data-and-contracts/data-dictionary.md) §4) |
+| Partition dropped for the wrong queue | One queue's short retention deletes another's window | Prevented by reading the minimum retention across rules ([migration plan](../data-and-contracts/migration-plan.md) §3) |
+| Ledger swept before redelivery completes | A redelivery is counted twice | Prevented by the window; not asserted by a test |
+| Spilled objects orphaned | The object store grows while rows do not | Prevented only if the sweeper's delete step is implemented ([backup and recovery](../operations/backup-and-recovery.md) §6) |
+
+Four of the five have a designed guard. The first does not, and it is the one that damages the number the product exists to produce.
+
+## 6. What an operator can and cannot change
+
+| Control | Owner | Effect |
+|---|---|---|
+| Row retention per queue | Admin | How long rows stay inspectable. **Never** changes a count |
+| Rollup retention | Admin | How far back counts go. Must exceed the reporting horizon |
+| Payload policy per queue | Admin | What is stored. **Never** changes a count |
+| Partition interval | Operator at deploy | Daily or hourly. Structural; changing it later is a migration |
+| Storage ceiling | Operator at deploy | When rows pause |
+
+The split is deliberate: an Admin can change what is inspectable, and an Operator decides how much disk that is allowed to cost. Collapsing the two is how a routine "reduce disk usage" change deletes a year of executive reporting ([data model §4](../data-and-contracts/data-model.md)).
+
+## 7. References
+
+- Retention invariant and tiers: [data model §3.1](../data-and-contracts/data-model.md)
+- Degradation order: [data model §4.1](../data-and-contracts/data-model.md)
+- Column definitions and indexes: [data dictionary](../data-and-contracts/data-dictionary.md)
+- Sweeper and partition DDL: [migration plan](../data-and-contracts/migration-plan.md) §3
+- Component behaviour: [failure modes §6](../architecture/failure-modes.md)
