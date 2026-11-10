@@ -29,7 +29,7 @@ An adopter who does not enable the management plugin gets an application that lo
 | Number | Where it is | Why |
 |---|---|---|
 | Retention: 72 hours of rows, 3 years of counts | [Data model §4](../07-data-and-contracts/data-model.md) | An operator who expects 90 days of messages will report a bug that is a setting |
-| **Evidence: 90 days, longer than the rows it describes** | [DEC-017](../01-project/decisions-and-open-questions.md) | The one place a payload outlives its message, on purpose. An operator who finds a purged body from August on a 3-day queue will otherwise report a retention bug that is the design |
+| **Evidence: the longer of the row retention and the evidence setting** — 90 days by default, settable to 365 | [DEC-017](../01-project/decisions-and-open-questions.md) | The one place a payload can outlive its message, on purpose. An operator who finds a purged body from August on a 3-day queue will otherwise report a retention bug that is the design |
 | Ceiling: `min(50 GB, 20% of disk)` by default | [Data model §4.1](../07-data-and-contracts/data-model.md) | Reaching it stops rows and keeps counts. It must never read as zero traffic |
 | Backup: proposed 1 hour of counts, 4 hours to usable | [Backup and recovery §3](backup-and-recovery.md) | Not agreed with anyone; proposed, and stated as such |
 

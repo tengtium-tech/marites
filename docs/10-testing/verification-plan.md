@@ -86,4 +86,4 @@ A green document check is not an application test. Link resolution, identifier r
 
 ## 5. Document control
 
-Revision 0.1 establishes the level vocabulary, 28 planned cases and eight milestone gates. Cases are added, never renumbered; a case that stops being relevant is marked `Withdrawn` with its reason. No case has a result, and no level has been exercised.
+Revision 0.1 establishes the level vocabulary, 29 planned cases and eight milestone gates. Cases are added, never renumbered; a case that stops being relevant is marked `Withdrawn` with its reason. No case has a result, and no level has been exercised.

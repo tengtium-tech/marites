@@ -21,7 +21,7 @@ A folder or index is not a completed specification. Each document lives in exact
 | [data-and-contracts](../07-data-and-contracts/README.md) | Tables, counting semantics, the HTTP contract, error codes | Drafted, including a column-level data dictionary and the first migration plan |
 | [experience](../08-experience/README.md) | What the numbers mean on screen and who may act on them | Rules, wireframes, navigation, accessibility and visual design documented; no independent design review |
 | [security](../09-security/README.md) | Credentials, payload responsibility, roles, confirmations and trust boundaries | Threat model drafted: 26 threats, six stated residuals, key rotation and TLS parameters specified; no penetration test |
-| [testing](../10-testing/README.md) | Verification the specification requires, and the gates added by review | Verification plan with 28 planned cases; nothing executed |
+| [testing](../10-testing/README.md) | Verification the specification requires, and the gates added by review | Verification plan with 29 planned cases; nothing executed |
 | [operations](../11-operations/README.md) | Adopter prerequisites, deployment, first run and milestones | All three providers' prerequisites drafted; runbook, upgrade and backup written |
 | [delivery](../12-delivery/README.md) | Readiness summary, review records and milestone ownership | Dashboard and one review written |
 | [traceability](../13-traceability/README.md) | Requirement, operation, milestone and verification crosswalks | Operation matrix carries levels and cases; requirement crosswalk in requirements §7 |

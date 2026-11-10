@@ -675,7 +675,7 @@ Revision 0.1 records nineteen questions; **all nineteen are answered.** No decis
 | DEC-014 | Migrations run as a separate step with the migration credential, never at startup | November 2026 |
 | DEC-015 | Marites hosts an AI assistant on an adopter-supplied model; local runtime first-class; payloads off by default | November 2026 |
 | DEC-016 | Storage may be skipped; the install then runs live-only with recovery disabled; history begins at enablement | November 2026 |
-| DEC-017 | The audit keeps payload evidence in a separate store, never inside the audit row — and it expires on its own clock, `max(row retention, 90 days)`, because it is Marites' record rather than the adopter's traffic | November 2026 |
+| DEC-017 | The audit keeps payload evidence in a separate store, never inside the audit row — and it expires on its own clock, `max(row retention, the evidence retention)`, because it is Marites' record rather than the adopter's traffic | November 2026 |
 | DEC-018 | Evidence is complete, not sampled: one row per message, `before` and `after` for replay, truncated at a stated bound | November 2026 |
 | DEC-019 | An operation is not atomic across the broker and the store: the bodies are held durably first, the audit row is written only after the broker confirms, and reconciliation closes the one window | November 2026 |
 

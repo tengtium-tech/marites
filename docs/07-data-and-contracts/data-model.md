@@ -55,7 +55,7 @@ operation_payload (id, audit_id, message_id, content_hash,
                    payload_before, payload_after, payload_size,
                    retained_until, created_at)
                    -- DEC-018: one row per message an operation touched
-                   -- DEC-017: swept on the evidence clock — max(row retention, 90 days)
+                   -- DEC-017: swept on the evidence clock — max(row retention, evidence retention)
 
 operation_intent  (id, tenant_id, actor_id, actor_kind, on_behalf_of, proposal_id,
                    action, target, params_json, bodies_json, state,

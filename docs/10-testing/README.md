@@ -8,7 +8,7 @@ Trace expected behaviour to implementation evidence without equating document va
 
 | Record | Shared coverage |
 | --- | --- |
-| [Verification plan](verification-plan.md) | Seven verification levels, 28 planned cases (TC-001 to TC-028) and eight milestone gates |
+| [Verification plan](verification-plan.md) | Seven verification levels, 29 planned cases (TC-001 to TC-029) and eight milestone gates |
 | [Traffic harness](traffic-harness.md) | The producer, the rejecting consumer, the nine scenarios and the manifest every assertion reads |
 | [Requirement acceptance criteria](../02-business/requirements.md) (§3.1, §4.1) | One testable criterion per FR and NFR, with the milestone at which it can pass |
 | [Operation coverage matrix](../13-traceability/operation-coverage-matrix.md) | Each of the 25 operations tied to its requirement, role, milestone, level and cases |
