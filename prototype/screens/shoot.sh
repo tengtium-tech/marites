@@ -25,6 +25,8 @@ shoot 09-publish          "#publish"
 shoot 12-ai-settings      "#ai"
 shoot 14-storage          "#storage"
 shoot 14b-live-only       "?live=1#queue" 1120
+shoot 14c-live-only-queues "?live=1#queues"
+shoot 14d-live-only-report "?live=1#report"
 shoot 15b-storage-add     "?live=1#storage"
 shoot 06-dark             "?dark=1#queue" 1120
 

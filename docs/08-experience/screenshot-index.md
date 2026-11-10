@@ -46,6 +46,7 @@ bash screens/shoot.sh http://127.0.0.1:4331/index.html
 | `01-queues.png` | Queue list: depth, rate, dead letters, `captureState`, the no-DL-routing banner | §3.3 |
 | `02-queue-detail.png` | Metric strip, the action bar in the table header, capture policy, reason breakdown | §3.6 |
 | `14b-live-only.png` | Live-only: the banner, the empty history state, the capture card reading *off* | §3.10 |
+| `14c-live-only-queues.png` | The queue list in live-only, where the banner first appears | §3.1 |
 | `06-dark.png` | The queue detail in dark | §5 |
 
 ### Dialogs
@@ -85,6 +86,7 @@ bash screens/shoot.sh http://127.0.0.1:4331/index.html
 |---|---|---|
 | `09-publish.png` | Composer, target summary, payload hash, typed environment | §3.6 |
 | `05-reporting.png` | Four tiles, the trend, the per-queue table | §4 |
+| `14d-live-only-report.png` | Reporting with no history: em-dash tiles and an explanation instead of a chart | §4 |
 | `11-audit.png` | Human actions and assistant actions side by side, `via Claude` on the executed one | §3.11 |
 | `11b-audit-payload.png` | A single replay expanded: the body whole, before and after | §3.11 |
 | `11c-audit-bulk.png` | A purge of ten expanded: ten rows, one per message | §3.11 |
@@ -118,4 +120,4 @@ bash screens/shoot.sh http://127.0.0.1:4331/index.html
 
 ## 4. Document control
 
-Revision 0.1, November 2026. Thirty-five images, captured from build `dist` in November 2026 after the agent-access and two-store revisions, replacing a set of thirty-three that had drifted. The capture script is part of the record: a screenshot with no reproducible route to it is an illustration, not evidence.
+Revision 0.1, November 2026. Thirty-seven images, captured from build `dist` in November 2026 after the agent-access and two-store revisions, replacing a set of thirty-three that had drifted. The capture script is part of the record: a screenshot with no reproducible route to it is an illustration, not evidence.

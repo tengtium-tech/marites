@@ -93,6 +93,10 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 
 *The queue list. Depth, rate and dead letters per queue, `captureState` as a word beside the number rather than a colour, and the banner for queues that cannot report failures.*
 
+![14c-live-only-queues](../../prototype/screens/14c-live-only-queues.png)
+
+*The same list in live-only. The banner appears where the gap is felt, and says what still works — recovery and the audit — rather than implying the console is degraded.*
+
 ### 3.2 Queue detail (`/queues/:id`)
 
 ```
@@ -557,6 +561,10 @@ The only thing this document adds is **layout**: tiles in a single row, trend be
 ![05-reporting](../../prototype/screens/05-reporting.png)
 
 *Reporting. Four tiles, a trend, and the per-queue table last — with no message bodies and no operation controls anywhere on it.*
+
+![14d-live-only-report](../../prototype/screens/14d-live-only-report.png)
+
+*Reporting in live-only. The tiles read `—` rather than `0`, and the trend is replaced by an explanation: a zero would be a measurement, and nothing was measured.*
 
 ## 5. Authentication states
 

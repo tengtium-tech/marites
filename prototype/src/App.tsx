@@ -501,7 +501,7 @@ export default function App() {
               onSaved={(cfg) => setAi({ configured: true, ...cfg })}
             />
           )}
-          {screen === "report" && <ReportScreen />}
+          {screen === "report" && <ReportScreen liveOnly={!storage.configured} />}
           {screen === "setup" && (
             <SetupScreen
               onDone={() => setScreen("queues")}
@@ -2490,9 +2490,19 @@ function AuditScreen() {
 /* Reporting                                                           */
 /* ------------------------------------------------------------------ */
 
-function ReportScreen() {
+function ReportScreen({ liveOnly }: { liveOnly?: boolean }) {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-1 duration-300">
+      {liveOnly && (
+        <div className="mb-4 flex flex-wrap items-center gap-2.5 rounded-lg border border-warning/30 bg-warning/[0.08] px-3.5 py-2.5 text-[13px] text-warning">
+          <Database className="h-4 w-4 shrink-0" />
+          <span>
+            <b>Live only.</b> Nothing has been counted — this screen draws history, and there is
+            none. Counts begin the moment a message store is connected.
+          </span>
+          <span className="ml-auto text-[11.5px] opacity-80">Admin → Storage</span>
+        </div>
+      )}
       <div className="mb-5 flex items-end gap-4">
         <div>
           <h1 className="text-[22px] font-semibold tracking-[-0.025em]">Volume &amp; failures</h1>
@@ -2507,12 +2517,20 @@ function ReportScreen() {
       </div>
 
       <div className="mb-4 grid grid-cols-4 gap-3 max-[900px]:grid-cols-2">
-        {[
-          { k: "Messages published", v: "41.2M", d: "+6.4% vs previous 30 days" },
-          { k: "Dead letters", v: "118,402", d: "−2.1% vs previous 30 days" },
-          { k: "Dead-letter rate", v: "0.29%", d: "of published, same window" },
-          { k: "Peak rate", v: "4,800 /s", d: "highest second in the window" },
-        ].map((t) => (
+        {(liveOnly
+          ? [
+              { k: "Messages published", v: "—", d: "not counted" },
+              { k: "Dead letters", v: "—", d: "not counted" },
+              { k: "Dead-letter rate", v: "—", d: "not computed" },
+              { k: "Peak rate", v: "—", d: "not measured" },
+            ]
+          : [
+              { k: "Messages published", v: "41.2M", d: "+6.4% vs previous 30 days" },
+              { k: "Dead letters", v: "118,402", d: "−2.1% vs previous 30 days" },
+              { k: "Dead-letter rate", v: "0.29%", d: "of published, same window" },
+              { k: "Peak rate", v: "4,800 /s", d: "highest second in the window" },
+            ]
+        ).map((t) => (
           <Card key={t.k} className="px-4 py-3.5">
             <div className="text-[11px] uppercase tracking-[0.07em] text-muted-foreground">{t.k}</div>
             <div className="num mt-1.5 text-[26px] font-semibold tracking-[-0.035em]">{t.v}</div>
@@ -2521,6 +2539,17 @@ function ReportScreen() {
         ))}
       </div>
 
+      {liveOnly ? (
+        <Card className="px-6 py-16 text-center">
+          <p className="text-[13px] font-medium">No history to draw</p>
+          <p className="mx-auto mt-1.5 max-w-[440px] text-[12px] leading-relaxed text-muted-foreground">
+            Every figure on this screen is read from the message store. Connect one and the
+            trend, the per-queue breakdown and the totals all begin from that moment — the
+            period before it cannot be reconstructed.
+          </p>
+        </Card>
+      ) : (
+        <>
       <Card className="mb-4 px-4 pb-2 pt-4">
         <div className="mb-1 flex items-baseline gap-2.5">
           <h3 className="text-[13px] font-semibold">Daily totals</h3>
@@ -2599,6 +2628,8 @@ function ReportScreen() {
           </TableBody>
         </Table>
       </Card>
+        </>
+      )}
     </div>
   )
 }
