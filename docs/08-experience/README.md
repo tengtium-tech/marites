@@ -1,6 +1,6 @@
 # Experience
 
-Version 0.5 | 09 November 2026 | Status: shared documentation section and coverage index.
+Version 0.5 | November 2026 | Status: shared documentation section and coverage index.
 
 What the numbers mean on screen, where a user moves between screens, and who may act on what.
 

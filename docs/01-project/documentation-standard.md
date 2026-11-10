@@ -1,6 +1,6 @@
 # Documentation standard
 
-Version 0.1 | 07 November 2026 | Status: adopted
+Version 0.1 | November 2026 | Status: adopted
 
 How this documentation set is organised and maintained. It is a working rule, not a manifesto: everything below exists because its absence caused a specific problem.
 
@@ -14,7 +14,7 @@ The fourteen sections, what each owns and what is present versus planned are def
 
 ## Index-only sections
 
-`platform-foundation` holds an index and no other document, because its content is owned by documents in other sections and a second copy would drift. The index states what is covered, by which document, and what is unwritten. A separate document is created only when its content outgrows its owner — which is what happened to `security` and `testing` on 09 November 2026, when a threat model and a verification plan respectively were written. No section holds a blank template.
+`platform-foundation` holds an index and no other document, because its content is owned by documents in other sections and a second copy would drift. The index states what is covered, by which document, and what is unwritten. A separate document is created only when its content outgrows its owner — which is what happened to `security` and `testing` in November 2026, when a threat model and a verification plan respectively were written. No section holds a blank template.
 
 ## Naming
 
@@ -29,7 +29,7 @@ Two forms, by document type.
 **Section indexes and the root index** open with a single line:
 
 ```
-Version 0.2 | 07 November 2026 | Status: current
+Version 0.2 | November 2026 | Status: current
 ```
 
 **Specifications** carry YAML front matter, so the version, date and status are machine-readable rather than only readable:
@@ -39,7 +39,7 @@ Version 0.2 | 07 November 2026 | Status: current
 document_id: DOC-API-001
 title: Contract Conventions
 version: 0.1
-date: 2026-11-07
+date: 2026-11
 status: Draft — binding on the contract
 ---
 ```

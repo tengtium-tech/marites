@@ -1,6 +1,6 @@
 # Delivery management
 
-Version 0.3 | 10 November 2026 | Status: Partial; readiness, review and the delivery plan written; no code.
+Version 0.3 | November 2026 | Status: Partial; readiness, review and the delivery plan written; no code.
 
 Keep the documentation baseline, milestone ownership and review evidence traceable.
 

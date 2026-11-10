@@ -1,6 +1,6 @@
 # Portfolio overview
 
-Version 0.1 | 09 November 2026 | Status: current
+Version 0.1 | November 2026 | Status: current
 
 What this repository is, what it is meant to demonstrate, and what it deliberately does not prove. Written for a reader who has twenty minutes and wants to know whether the thinking is sound.
 
@@ -83,4 +83,4 @@ If you only read one page, read the [failure modes](../05-architecture/failure-m
 
 ## 7. Document control
 
-Revision 0.1 records the portfolio framing, written 09 November 2026. It makes no claim about quality beyond what the linked documents support, and it is the only document in the set written primarily for a reader outside the project.
+Revision 0.1 records the portfolio framing, written November 2026. It makes no claim about quality beyond what the linked documents support, and it is the only document in the set written primarily for a reader outside the project.

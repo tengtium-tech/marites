@@ -1,6 +1,6 @@
 # Operation coverage matrix
 
-Version 0.2 | 09 November 2026 | Status: Partial; a derived trace of Planned verification, not execution evidence.
+Version 0.2 | November 2026 | Status: Partial; a derived trace of Planned verification, not execution evidence.
 
 Counts: 25 operations, 10 served, 15 deferred, 25 tied to a requirement and at least one case, 0 with an executed verification
 

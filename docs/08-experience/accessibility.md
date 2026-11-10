@@ -3,7 +3,7 @@ document_id: DOC-UX-002
 title: Accessibility Requirements
 product: Marites
 version: 0.1
-date: 2026-11-09
+date: 2026-11
 status: Draft — requirements only; nothing built or audited
 ---
 
@@ -93,4 +93,4 @@ TC-011 is necessary and not sufficient. A manual screen-reader pass over the que
 
 ## 7. Document control
 
-Revision 0.1 records the accessibility requirements behind NFR-008, written 09 November 2026. NFR-008 was added the same day because the [experience index](README.md) had listed accessibility as a gap with no requirement behind it, which meant nothing could fail. Nothing has been built or audited.
+Revision 0.1 records the accessibility requirements behind NFR-008, written November 2026. NFR-008 was added at the same time because the [experience index](README.md) had listed accessibility as a gap with no requirement behind it, which meant nothing could fail. Nothing has been built or audited.

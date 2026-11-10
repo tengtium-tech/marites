@@ -1,6 +1,6 @@
 # Architecture
 
-Version 0.4 | 09 November 2026 | Status: shared documentation section and coverage index.
+Version 0.4 | November 2026 | Status: shared documentation section and coverage index.
 
 How the system is built, why the tap is one hop, what each component does when it fails, and the decisions behind all three.
 

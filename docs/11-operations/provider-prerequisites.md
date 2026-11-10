@@ -3,7 +3,7 @@ document_id: DOC-OPS-002
 title: Provider Prerequisites
 product: Marites
 version: 0.1
-date: 2026-11-09
+date: 2026-11
 status: Draft — least-privilege sets designed; no provider has been configured
 ---
 
@@ -11,7 +11,7 @@ status: Draft — least-privilege sets designed; no provider has been configured
 
 **Source:** [deployment and onboarding](deployment-and-onboarding.md) §1.5–§1.6, §2. Owning document for the permissions Service Bus and Pub/Sub adopters must grant, and the commands that prove they were granted.
 
-RabbitMQ's grants are in [deployment §1.2](deployment-and-onboarding.md) because that document carries the reference implementation. This document carries the other two providers, which the deployment document held as a draft table until 09 November 2026.
+RabbitMQ's grants are in [deployment §1.2](deployment-and-onboarding.md) because that document carries the reference implementation. This document carries the other two providers, which the deployment document held as a draft table until November 2026.
 
 **What Marites creates in each platform is owned by [deployment §4.1](deployment-and-onboarding.md); the cost of a capture stream by [§1.5](deployment-and-onboarding.md).** This document adds only the identity, the roles and the verification.
 
@@ -145,4 +145,4 @@ No numeric quota is quoted here on purpose: the values change, and a stale numbe
 
 ## 6. Document control
 
-Revision 0.1 promotes the draft table in deployment §1.6 into a document with identities, rights, verification commands and preflight mapping. Written 09 November 2026. No Service Bus namespace or Pub/Sub project has been configured, no command above has been run against a real platform, and every permission list is a design intent derived from the platforms' documented role models.
+Revision 0.1 promotes the draft table in deployment §1.6 into a document with identities, rights, verification commands and preflight mapping. Written November 2026. No Service Bus namespace or Pub/Sub project has been configured, no command above has been run against a real platform, and every permission list is a design intent derived from the platforms' documented role models.

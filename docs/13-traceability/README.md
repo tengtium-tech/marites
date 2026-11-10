@@ -1,6 +1,6 @@
 # Traceability and review
 
-Version 0.2 | 09 November 2026 | Status: Partial; two derived crosswalks, both Planned.
+Version 0.2 | November 2026 | Status: Partial; two derived crosswalks, both Planned.
 
 Connect requirements, decisions, operations, milestones and verification using stable identifiers.
 

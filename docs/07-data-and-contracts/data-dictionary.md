@@ -3,7 +3,7 @@ document_id: DOC-DATA-002
 title: Data Dictionary
 product: Marites
 version: 0.1
-date: 2026-11-09
+date: 2026-11
 status: Draft — column-level definition; no schema applied
 ---
 
@@ -290,4 +290,4 @@ No index on `payload_ref` or on `exchange`. Neither is used as a filter, and an 
 
 ## 14. Document control
 
-Revision 0.1 records the column-level definition for twelve tables, written 09 November 2026 to close the gap named in the [data-and-contracts index](README.md). It is a definition, not a migration: no schema has been applied, and the types have not been exercised against PostgreSQL. The first migration is planned in [migration-plan.md](migration-plan.md).
+Revision 0.1 records the column-level definition for twelve tables, written November 2026 to close the gap named in the [data-and-contracts index](README.md). It is a definition, not a migration: no schema has been applied, and the types have not been exercised against PostgreSQL. The first migration is planned in [migration-plan.md](migration-plan.md).

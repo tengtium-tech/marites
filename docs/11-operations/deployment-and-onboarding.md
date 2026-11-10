@@ -3,7 +3,7 @@ document_id: DOC-OPS-001
 title: Deployment and Onboarding Specification
 product: Marites
 version: 0.1
-date: 2026-11-07
+date: 2026-11
 status: Draft — all decisions resolved; no implementation
 ---
 
@@ -76,11 +76,11 @@ If a queue has no DLX, the application **detects and warns** but will not fix it
 
 **The cost row is not a footnote.** On Service Bus and Pub/Sub, a monitoring subscription means every message is delivered twice and billed twice. On RabbitMQ a shadow queue costs storage, not billable operations. An adopter evaluating Marites on a high-volume Service Bus namespace should size that multiplier before enabling capture on a firehose topic — `payload_policy = none` reduces storage, not delivery operations.
 
-**Platforms excluded, and why.** Apache Kafka, Amazon SQS and Amazon SNS were removed from scope (DEC-001, 07 November 2026). Kafka has no native dead lettering — a DLQ is a naming convention, so the product's core metric would become an inference rather than an observation. SQS and SNS have no fan-out and no log, so there is no non-destructive way to observe them at all; making them observable would require the adopter to change their own topology. A provider list where half the entries cannot deliver the product's central promise is worse than a shorter list where all of them can.
+**Platforms excluded, and why.** Apache Kafka, Amazon SQS and Amazon SNS were removed from scope (DEC-001, November 2026). Kafka has no native dead lettering — a DLQ is a naming convention, so the product's core metric would become an inference rather than an observation. SQS and SNS have no fan-out and no log, so there is no non-destructive way to observe them at all; making them observable would require the adopter to change their own topology. A provider list where half the entries cannot deliver the product's central promise is worse than a shorter list where all of them can.
 
 ### 1.6 Prerequisites for the other providers
 
-Drafted here until 09 November 2026; now owned by [provider prerequisites](provider-prerequisites.md), which carries the identities, the exact rights, the commands that verify them and the preflight mapping for Azure Service Bus and Google Pub/Sub.
+Drafted here until November 2026; now owned by [provider prerequisites](provider-prerequisites.md), which carries the identities, the exact rights, the commands that verify them and the preflight mapping for Azure Service Bus and Google Pub/Sub.
 
 Two facts belong here rather than there, because they are about the shape of the obligation rather than about a platform:
 
@@ -271,4 +271,4 @@ Ships as a Docker image plus Helm chart. Capture workers scale by sharding `queu
 
 Revision 0.1 records adopter obligations and deployment shape. DEC-003 (topology permissions) and DEC-004 (existing DLX topology) change §1.2, §1.3, and §2. No deployment has been performed and no preflight has been executed.
 
-*Amended 09 November 2026:* §1.6 reduced to the shape of the obligation, with the identities, rights and verification commands moved to [provider prerequisites](provider-prerequisites.md). §1.2 corrected: binding a queue to an exchange is a write against the exchange, so `write` on watched exchanges is mandatory rather than `read`, and the publish grant is usually the same grant. Recorded as AUD-035.
+*Amended November 2026:* §1.6 reduced to the shape of the obligation, with the identities, rights and verification commands moved to [provider prerequisites](provider-prerequisites.md). §1.2 corrected: binding a queue to an exchange is a write against the exchange, so `write` on watched exchanges is mandatory rather than `read`, and the publish grant is usually the same grant..

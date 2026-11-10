@@ -1,6 +1,6 @@
 # Operations
 
-Version 0.5 | 10 November 2026 | Status: shared documentation section and coverage index.
+Version 0.5 | November 2026 | Status: shared documentation section and coverage index.
 
 What an adopter must supply, how Marites deploys, what ships when, and what to do when it goes wrong.
 

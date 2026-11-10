@@ -1,6 +1,6 @@
 # Documentation areas
 
-Version 0.1 | 07 November 2026 | Status: Drafted; the catalog maps areas to their owning documents. Per-area specification files are not written.
+Version 0.1 | November 2026 | Status: Drafted; the catalog maps areas to their owning documents. Per-area specification files are not written.
 
 Organize Marites knowledge into cohesive documentation areas with responsibilities, exclusions, records and handoffs.
 

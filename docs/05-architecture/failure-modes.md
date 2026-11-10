@@ -3,7 +3,7 @@ document_id: DOC-ARCH-002
 title: Component Failure Modes
 product: Marites
 version: 0.1
-date: 2026-11-09
+date: 2026-11
 status: Draft — designed behaviour; nothing implemented or observed
 ---
 
@@ -142,4 +142,4 @@ Every discard, purge, replay and publish passes through the same three steps (AD
 
 ## 11. Document control
 
-Revision 0.1 records designed failure behaviour for nine components. Written 09 November 2026 to close the gap named in the [architecture index](README.md). One item is flagged as unspecified rather than designed: compaction idempotency (§6). Nothing here has been observed against a running system.
+Revision 0.1 records designed failure behaviour for nine components. Written November 2026 to close the gap named in the [architecture index](README.md). One item is flagged as unspecified rather than designed: compaction idempotency (§6). Nothing here has been observed against a running system.

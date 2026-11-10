@@ -1,6 +1,6 @@
 # OpenAPI contracts
 
-Version 0.1 | 09 November 2026 | Status: current
+Version 0.1 | November 2026 | Status: current
 
 Two files, one contract. `openapi.yaml` is what the service serves; `openapi.deferred.yaml` holds operations that are designed and not yet served.
 

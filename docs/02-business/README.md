@@ -1,6 +1,6 @@
 # Business requirements
 
-Version 0.2 | 09 November 2026 | Status: Drafted; requirements carry acceptance criteria, and none has been verified.
+Version 0.2 | November 2026 | Status: Drafted; requirements carry acceptance criteria, and none has been verified.
 
 What Marites must do, for whom, and what it will not do, independent of runtime, database, deployment or transport details.
 

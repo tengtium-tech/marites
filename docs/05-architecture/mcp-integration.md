@@ -3,7 +3,7 @@ document_id: DOC-ARCH-004
 title: Agent Access (MCP)
 product: Marites
 version: 0.1
-date: 2026-11-10
+date: 2026-11
 status: Draft — designed; no server exists
 ---
 
@@ -148,4 +148,4 @@ The key is a credential, so it inherits NFR-003: encrypted per row, write-only, 
 
 ## 10. Document control
 
-Revision 0.1 records the agent surface and, from 10 November 2026, its second host (DEC-015) after the prototype demonstrated the propose-and-approve flow. No MCP server exists, no tool has been called, and the threat entries it depends on (THR-025, THR-026) are the mitigation of record.
+Revision 0.1 records the agent surface and, from November 2026, its second host (DEC-015) after the prototype demonstrated the propose-and-approve flow. No MCP server exists, no tool has been called, and the threat entries it depends on (THR-025, THR-026) are the mitigation of record.

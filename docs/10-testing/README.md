@@ -1,6 +1,6 @@
 # Testing and verification
 
-Version 0.3 | 10 November 2026 | Status: Partial; verification is designed as 28 named cases. Nothing is written in code and nothing has been executed.
+Version 0.3 | November 2026 | Status: Partial; verification is designed as 28 named cases. Nothing is written in code and nothing has been executed.
 
 Trace expected behaviour to implementation evidence without equating document validation with application tests.
 
@@ -19,6 +19,6 @@ Trace expected behaviour to implementation evidence without equating document va
 
 ## Why verification got its own document
 
-The section held an index and no other record until 09 November 2026. Adding 24 cases, seven levels and eight gates made the index longer than the material it was indexing, which is the condition the [standard](../01-project/documentation-standard.md) names for creating a separate document. The index now indexes.
+The section held an index and no other record until November 2026. Adding 24 cases, seven levels and eight gates made the index longer than the material it was indexing, which is the condition the [standard](../01-project/documentation-standard.md) names for creating a separate document. The index now indexes.
 
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

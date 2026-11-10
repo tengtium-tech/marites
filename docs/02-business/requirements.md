@@ -3,13 +3,13 @@ document_id: DOC-SRS-001
 title: Software Requirements Specification
 product: Marites
 version: 0.1
-date: 2026-11-07
+date: 2026-11
 status: Draft — all decisions resolved; no implementation
 ---
 
 # DOC-SRS-001 — Software Requirements Specification
 
-**Source:** discovery conversation, 07 November 2026. Owning document for scope and priorities. Enumerated values are cited from [VOCABULARY](../14-reference/vocabulary.md), never restated here.
+**Source:** discovery conversation, November 2026. Owning document for scope and priorities. Enumerated values are cited from [VOCABULARY](../14-reference/vocabulary.md), never restated here.
 
 ## 1. Purpose and scope
 
@@ -211,4 +211,4 @@ Designed verification exists as named cases; no test has been written, no code e
 
 Revision 0.1 records the initial requirement set. Priorities assume the MVP boundary in DOC-OPS-001 §6. All nineteen decisions in [DECISION-LOG](../01-project/decisions-and-open-questions.md) are answered; none blocks M0.
 
-*Amended 09 November 2026:* acceptance criteria added for every FR (§3.1) and NFR (§4.1), each with one outcome and a milestone; §7 now cites planned test cases rather than reading "not yet designed". **NFR-008 (accessibility) added**, because both surfaces are used under incident pressure and keyboard-only operation was recorded as a gap in the experience section with no requirement behind it. No existing requirement changed text or priority.
+*Amended November 2026:* acceptance criteria added for every FR (§3.1) and NFR (§4.1), each with one outcome and a milestone; §7 now cites planned test cases rather than reading "not yet designed". **NFR-008 (accessibility) added**, because both surfaces are used under incident pressure and keyboard-only operation was recorded as a gap in the experience section with no requirement behind it. No existing requirement changed text or priority.

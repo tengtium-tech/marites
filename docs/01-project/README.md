@@ -1,6 +1,6 @@
 # Project baseline
 
-Version 0.3 | 10 November 2026 | Status: shared documentation section and coverage index.
+Version 0.3 | November 2026 | Status: shared documentation section and coverage index.
 
 Purpose, decisions, assumptions and the rules that keep this documentation set consistent. Read this section before any other. Change history lives in version control, not in a document.
 

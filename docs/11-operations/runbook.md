@@ -3,7 +3,7 @@ document_id: DOC-OPS-005
 title: Runbook
 product: Marites
 version: 0.1
-date: 2026-11-09
+date: 2026-11
 status: Planned — no alerting exists, so nothing here has been triggered
 ---
 
@@ -123,4 +123,4 @@ If the broker's own numbers match the dashboard, Marites is reporting correctly 
 
 ## 8. Document control
 
-Revision 0.1 records eighteen symptoms with a first check and an action, plus the diagnostics that separate a product defect from an environment problem. Written 09 November 2026 to close the gap named in the [operations index](README.md). No symptom has been observed, because nothing runs.
+Revision 0.1 records eighteen symptoms with a first check and an action, plus the diagnostics that separate a product defect from an environment problem. Written November 2026 to close the gap named in the [operations index](README.md). No symptom has been observed, because nothing runs.

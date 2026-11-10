@@ -3,7 +3,7 @@ document_id: DOC-SEC-001
 title: Threat Model
 product: Marites
 version: 0.1
-date: 2026-11-09
+date: 2026-11
 status: Draft — controls are designed, none implemented or tested
 ---
 
@@ -142,4 +142,4 @@ Six of the twenty-four threats have a planned case. The rest are controls assert
 
 ## 7. Document control
 
-Revision 0.1 records the first threat model. It was written on 09 November 2026 because the [security index](README.md) had listed "no threat model" as a gap since the fourteen-section restructure. Threats are added, never renumbered. No control has been implemented, exercised or reviewed by anyone other than the author, and no penetration test has been performed.
+Revision 0.1 records the first threat model. It was written in November 2026 because the [security index](README.md) had listed "no threat model" as a gap since the fourteen-section restructure. Threats are added, never renumbered. No control has been implemented, exercised or reviewed by anyone other than the author, and no penetration test has been performed.

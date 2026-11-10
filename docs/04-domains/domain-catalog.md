@@ -1,6 +1,6 @@
 # Documentation area catalog
 
-Version 0.1 | 07 November 2026 | Status: Drafted; groups existing records by responsibility and adds no policy.
+Version 0.1 | November 2026 | Status: Drafted; groups existing records by responsibility and adds no policy.
 
 ## Purpose and boundary
 

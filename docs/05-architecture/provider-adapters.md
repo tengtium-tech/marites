@@ -3,7 +3,7 @@ document_id: DOC-ARCH-003
 title: Provider Adapter Design
 product: Marites
 version: 0.1
-date: 2026-11-09
+date: 2026-11
 status: Draft — design only; no adapter exists
 ---
 
@@ -114,4 +114,4 @@ Five differences, three adapters, one capability record. If a future provider ma
 
 ## 7. Document control
 
-Revision 0.1 records per-adapter design for the three v1 providers. Written 09 November 2026 to close the gap named in the [architecture index](README.md). Each adapter carries one item to confirm before its milestone; none has been prototyped, and no provider SDK has been exercised.
+Revision 0.1 records per-adapter design for the three v1 providers. Written November 2026 to close the gap named in the [architecture index](README.md). Each adapter carries one item to confirm before its milestone; none has been prototyped, and no provider SDK has been exercised.

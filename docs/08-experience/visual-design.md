@@ -3,7 +3,7 @@ document_id: DOC-UX-004
 title: Visual Design Tokens
 product: Marites
 version: 0.1
-date: 2026-11-10
+date: 2026-11
 status: Draft — tokens proposed and measured; no visual design review
 ---
 
@@ -118,4 +118,4 @@ Elevation is used sparingly: a border does the separating work, and the shadow o
 
 ## 9. Document control
 
-Revision 0.1 records the token set the prototype was built on, written 10 November 2026 after the UI work established values that had no owning document. Contrast ratios are computed from the HSL triplets, not measured in a browser. Every value is replaceable; the names are the contract.
+Revision 0.1 records the token set the prototype was built on, written November 2026 after the UI work established values that had no owning document. Contrast ratios are computed from the HSL triplets, not measured in a browser. Every value is replaceable; the names are the contract.

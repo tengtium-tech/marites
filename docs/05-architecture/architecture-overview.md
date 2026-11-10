@@ -3,7 +3,7 @@ document_id: DOC-ARCH-001
 title: Solution Architecture Specification
 product: Marites
 version: 0.1
-date: 2026-11-07
+date: 2026-11
 status: Draft — all decisions resolved; no implementation
 ---
 
@@ -362,4 +362,4 @@ One team, one database, and capture writes to the store the API reads. Splitting
 
 ## 12. Document control
 
-Revision 0.1 records the initial architecture. ADR-001 to ADR-019 are Accepted (ADR-019, redelivery-safe counting, was added and accepted on 07 Nov 2026). Reviewed 07 Nov 2026: prefetch sized above the batch, `read` added to the shadow-queue grant, SSE settled as the live transport, and "redact" removed from the capture path (DEC-006). No code exists and no behaviour has been observed.
+Revision 0.1 records the initial architecture. ADR-001 to ADR-019 are Accepted (ADR-019, redelivery-safe counting, was added and accepted in November 2026). Reviewed November 2026: prefetch sized above the batch, `read` added to the shadow-queue grant, SSE settled as the live transport, and "redact" removed from the capture path (DEC-006). No code exists and no behaviour has been observed.

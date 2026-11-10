@@ -1,6 +1,6 @@
 # Cross-cutting platform behavior
 
-Version 0.1 | 07 November 2026 | Status: Partial; index only, with the owning records linked.
+Version 0.1 | November 2026 | Status: Partial; index only, with the owning records linked.
 
 Make reliable capture, identity, audit, configuration and process topology explicit without assigning more than the accepted decisions already do.
 

@@ -3,7 +3,7 @@ document_id: DOC-TEST-001
 title: Verification Plan
 product: Marites
 version: 0.1
-date: 2026-11-09
+date: 2026-11
 status: Draft — verification designed as named cases; nothing executed
 ---
 

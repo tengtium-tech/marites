@@ -1,6 +1,6 @@
 # Data and contracts
 
-Version 0.4 | 09 November 2026 | Status: shared documentation section and coverage index.
+Version 0.4 | November 2026 | Status: shared documentation section and coverage index.
 
 What is stored, what the counting means, and the HTTP contract itself.
 

@@ -114,4 +114,4 @@ In CI it is the same commands as one-shot containers. Locally, `make seed SCENAR
 
 ## 8. Document control
 
-Revision 0.1, 10 November 2026. Written to close the gap the verification plan named in its own §5: no fixtures were committed, so no case could be run. Nothing here is implemented — the commands are the specification for a tool that does not exist yet, and the scenario names are the contract the first implementation must satisfy. The three-provider parity in §4 is derived from each provider's documented semantics, not from an observed run.
+Revision 0.1, November 2026. Written to close the gap the verification plan named in its own §5: no fixtures were committed, so no case could be run. Nothing here is implemented — the commands are the specification for a tool that does not exist yet, and the scenario names are the contract the first implementation must satisfy. The three-provider parity in §4 is derived from each provider's documented semantics, not from an observed run.

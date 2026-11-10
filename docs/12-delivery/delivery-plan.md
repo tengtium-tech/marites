@@ -113,4 +113,4 @@ Each package becomes one issue, with the milestone as its GitHub milestone and t
 
 ## 6. Document control
 
-Revision 0.1, 10 November 2026. The milestone table is taken from [deployment and onboarding §6](../11-operations/deployment-and-onboarding.md), which owned it; the work packages, the definition of done and the dependency table are new. M7 is added because two documents already assumed it. No date, estimate or staffing assumption appears anywhere in this document, deliberately.
+Revision 0.1, November 2026. The milestone table is taken from [deployment and onboarding §6](../11-operations/deployment-and-onboarding.md), which owned it; the work packages, the definition of done and the dependency table are new. M7 is added because two documents already assumed it. No date, estimate or staffing assumption appears anywhere in this document, deliberately.

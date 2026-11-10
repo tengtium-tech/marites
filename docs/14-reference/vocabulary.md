@@ -3,7 +3,7 @@ document_id: VOCABULARY
 title: Canonical Vocabulary and Enumerations
 product: Marites
 version: 0.1
-date: 2026-11-07
+date: 2026-11
 status: Controlled — single source for enumerated values
 ---
 
@@ -212,7 +212,7 @@ An adopter selects a platform when registering a broker profile. `provider_kind`
 | `azure_service_bus` | `full` | Azure Service Bus | `topic_subscription` | `dlq_subqueue` | `exact` | topics yes, bare queues no |
 | `google_pubsub` | `full` | Google Cloud Pub/Sub | `topic_subscription` | `dead_letter_topic` | `exact` | yes |
 
-**Three providers, all `full`.** Kafka, Amazon SQS and Amazon SNS were removed from scope on 07 November 2026 (DEC-001) because they cannot satisfy the product's core promise — see DOC-OPS-001 §1.5. Kafka has no native dead lettering, and SQS and SNS have no non-destructive way to observe traffic at all. Shipping them with caveats would have made half the provider list second-class.
+**Three providers, all `full`.** Kafka, Amazon SQS and Amazon SNS were removed from scope in November 2026 (DEC-001) because they cannot satisfy the product's core promise — see DOC-OPS-001 §1.5. Kafka has no native dead lettering, and SQS and SNS have no non-destructive way to observe traffic at all. Shipping them with caveats would have made half the provider list second-class.
 
 ### Support tiers
 
@@ -362,4 +362,4 @@ The key is a credential: encrypted per row, write-only, never returned, never lo
 
 Revision 0.1 establishes the initial enumeration set. Values here are binding on the implementation, the API contract and the UI. Adding a value requires amending this file first, then reconciling every consumer that cites it.
 
-*Amended 09 November 2026:* §15 added. `captureState` had been defined only inside the contract's `QueueSummary` and used in three documents — an enum with no owner in the controlled vocabulary, which is the exact condition this file exists to prevent.
+*Amended November 2026:* §15 added. `captureState` had been defined only inside the contract's `QueueSummary` and used in three documents — an enum with no owner in the controlled vocabulary, which is the exact condition this file exists to prevent.

@@ -1,6 +1,6 @@
 # Marites documentation
 
-Version 0.10 | 10 November 2026 | Status: specification complete for the planned system; no code exists
+Version 0.10 | November 2026 | Status: specification complete for the planned system; no code exists
 
 Marites observes message traffic crossing an adopter-supplied messaging platform — RabbitMQ, Azure Service Bus or Google Pub/Sub — and lets authorised operators count it, inspect it, and recover from failures. It is a **client** of a broker the adopter already runs: it never provisions, hosts, upgrades or repairs one.
 
@@ -187,6 +187,6 @@ Three things are nonetheless unresolved, and none of them is a decision:
 
 Cite the owning document; never restate an enumerated value, a decision, or a metric definition in a second place. A second copy drifts, and the copy that drifts is always the one someone reads.
 
-Record supersession explicitly — an identifier is never reused and never deleted. When a requirement, decision or table changes, update the owner and then reconcile every consumer that cites it. The 09 November 2026 pass added `revision` and `sample_rate` columns, split `payload_ref`, corrected a grant and registered a new enum; each change touched between three and eight documents.
+Record supersession explicitly — an identifier is never reused and never deleted. When a requirement, decision or table changes, update the owner and then reconcile every consumer that cites it. The November 2026 pass added `revision` and `sample_rate` columns, split `payload_ref`, corrected a grant and registered a new enum; each change touched between three and eight documents.
 
 Keep these categories separate and never let one imply another: **requirement**, **technical proposal**, **designed verification**, **executed evidence**, **sign-off**. At this baseline only the first three exist.

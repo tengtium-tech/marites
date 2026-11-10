@@ -1,6 +1,6 @@
 # Readiness dashboard
 
-Version 0.2 | 09 November 2026 | Status: single summary of documentation readiness by layer; summarises each source document's own status and adds no new policy.
+Version 0.2 | November 2026 | Status: single summary of documentation readiness by layer; summarises each source document's own status and adds no new policy.
 
 ## How to use this page
 
@@ -37,7 +37,7 @@ M0 exits when the contract is reviewed, `/capabilities` and preflight are served
 | Operations | Drafted | [Deployment](../11-operations/deployment-and-onboarding.md), [provider prerequisites](../11-operations/provider-prerequisites.md), [upgrade and rollback](../11-operations/upgrade-and-rollback.md), [backup and recovery](../11-operations/backup-and-recovery.md), [runbook](../11-operations/runbook.md). No alerting |
 | Testing | Planned | [Verification plan](../10-testing/verification-plan.md): 7 levels, 28 cases, 8 gates. Nothing written, nothing executed |
 | Traceability | Partial | [Operation matrix](../13-traceability/operation-coverage-matrix.md) carries levels and cases; requirement crosswalk in [requirements §7](../02-business/requirements.md) |
-| Vocabulary | Drafted | [Controlled values](../14-reference/vocabulary.md), including `captureState` (§15), added 09 November 2026 |
+| Vocabulary | Drafted | [Controlled values](../14-reference/vocabulary.md), including `captureState` (§15), added November 2026 |
 | Application code and tests | Not started | Nothing implemented or executed |
 
 ## The four things that would change this page most

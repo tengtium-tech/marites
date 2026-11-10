@@ -1,6 +1,6 @@
 # Documentation structure
 
-Version 0.1 | 07 November 2026 | Status: adopted navigation structure; content completeness is tracked separately in the [readiness dashboard](../12-delivery/readiness-dashboard.md).
+Version 0.1 | November 2026 | Status: adopted navigation structure; content completeness is tracked separately in the [readiness dashboard](../12-delivery/readiness-dashboard.md).
 
 ## Purpose
 
@@ -29,7 +29,7 @@ A folder or index is not a completed specification. Each document lives in exact
 
 ## Index-only sections
 
-`platform-foundation` contains an index and no further document. That is deliberate and is not a gap in the folder count: its content exists, but it is owned by documents in other sections, and a second copy would drift. The index lists the owning records and states what is still unwritten. A separate document is created only when its content outgrows the owner — which is what happened to `security` and `testing` on 09 November 2026, when the threat model and the verification plan were written. The same holds for `domains`: Marites has no commerce domain, so its catalog maps five documentation areas to the documents that specify them.
+`platform-foundation` contains an index and no further document. That is deliberate and is not a gap in the folder count: its content exists, but it is owned by documents in other sections, and a second copy would drift. The index lists the owning records and states what is still unwritten. A separate document is created only when its content outgrows the owner — which is what happened to `security` and `testing` in November 2026, when the threat model and the verification plan were written. The same holds for `domains`: Marites has no commerce domain, so its catalog maps five documentation areas to the documents that specify them.
 
 ## Where Marites differs from a commerce product
 

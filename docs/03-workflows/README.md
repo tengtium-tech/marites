@@ -1,6 +1,6 @@
 # Workflows
 
-Version 0.3 | 09 November 2026 | Status: shared documentation section and coverage index.
+Version 0.3 | November 2026 | Status: shared documentation section and coverage index.
 
 The paths this system actually has: a message's, an operator's, an adopter's, and two that describe what happens when they break.
 

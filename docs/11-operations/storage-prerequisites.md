@@ -3,7 +3,7 @@ document_id: DOC-OPS-006
 title: Storage Prerequisites
 product: Marites
 version: 0.1
-date: 2026-11-10
+date: 2026-11
 status: Draft — grants designed; no database has been connected
 ---
 
@@ -192,4 +192,4 @@ SQL Server equivalents are `sys.dm_db_partition_stats` and the same aggregate ov
 
 ## 8. Document control
 
-Revision 0.1 records the grants for the two engines in v1, written 10 November 2026 with the storage decision (DEC-012, ADR-022). No database has been connected, no grant has been tested, and every statement is derived from the engines' documented permission models rather than from an observed setup. Revision 0.2 adds §7: the table inventory, what is deliberately not in the product, and the queries that answer "how much, and until when" — after review found the adopter-owned database had no documented way to be inspected (AUD-061). Revision 0.3 corrects §7 to three tables: the first draft listed all twelve, which was the over-scope DEC-012 was revised to remove (AUD-062).
+Revision 0.1 records the grants for the two engines in v1, written November 2026 with the storage decision (DEC-012, ADR-022). No database has been connected, no grant has been tested, and every statement is derived from the engines' documented permission models rather than from an observed setup. Revision 0.2 adds §7: the table inventory, what is deliberately not in the product, and the queries that answer "how much, and until when" — because the adopter-owned database had no documented way to be inspected. Revision 0.3 corrects §7 to three tables: the first draft listed all twelve, which was the over-scope DEC-012 was revised to remove.

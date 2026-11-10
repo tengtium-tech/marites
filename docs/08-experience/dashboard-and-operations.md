@@ -3,7 +3,7 @@ document_id: DOC-UX-001
 title: Dashboard and Operations UX Specification
 product: Marites
 version: 0.1
-date: 2026-11-07
+date: 2026-11
 status: Draft — all decisions resolved; no implementation
 ---
 

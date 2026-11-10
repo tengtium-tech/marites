@@ -150,4 +150,4 @@ TC-… (or: none — and why that is acceptable)
 
 ## 8. Document control
 
-Revision 0.1, 10 November 2026. No repository exists yet: this is the setup the first commit follows, and the templates are written to be pasted into `.github/`. The label and field lists are intentionally short — the failure mode of a project board is taxonomy, not scarcity.
+Revision 0.1, November 2026. No repository exists yet: this is the setup the first commit follows, and the templates are written to be pasted into `.github/`. The label and field lists are intentionally short — the failure mode of a project board is taxonomy, not scarcity.

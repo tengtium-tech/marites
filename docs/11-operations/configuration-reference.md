@@ -74,4 +74,4 @@ Two are read per request — `MARITES_URL` and `MARITES_LOG_LEVEL` — because t
 
 ## 6. Document control
 
-Revision 0.1, 10 November 2026. The five previously-named variables are recorded as they were used; the rest are named here for the first time and are therefore **specification, not description** — no binary reads them yet. Where a default is a judgement rather than a constraint (the 50 GiB ceiling, the one-hour redelivery window) the value comes from the document that owns the behaviour, not from this one.
+Revision 0.1, November 2026. The five previously-named variables are recorded as they were used; the rest are named here for the first time and are therefore **specification, not description** — no binary reads them yet. Where a default is a judgement rather than a constraint (the 50 GiB ceiling, the one-hour redelivery window) the value comes from the document that owns the behaviour, not from this one.

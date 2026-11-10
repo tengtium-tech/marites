@@ -3,7 +3,7 @@ document_id: DOC-API-003
 title: Error Catalog
 product: Marites
 version: 0.1
-date: 2026-11-07
+date: 2026-11
 status: Draft — codes binding on data-and-contracts/openapi/openapi.yaml
 ---
 

@@ -3,7 +3,7 @@ document_id: DOC-DATA-003
 title: First Migration Plan
 product: Marites
 version: 0.1
-date: 2026-11-09
+date: 2026-11
 status: Planned — no schema exists and nothing has been applied
 ---
 
@@ -114,4 +114,4 @@ The fourth check is the one that catches a natural key implemented as a surrogat
 
 ## 9. Document control
 
-Revision 0.1 records the first migration plan, written 09 November 2026 to close the gap named in the [data-and-contracts index](README.md). Nothing has been applied. The four gaps in §8 are recorded rather than resolved; the object-store schema is the one most likely to be needed before M2.
+Revision 0.1 records the first migration plan, written November 2026 to close the gap named in the [data-and-contracts index](README.md). Nothing has been applied. The four gaps in §8 are recorded rather than resolved; the object-store schema is the one most likely to be needed before M2.

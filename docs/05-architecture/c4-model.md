@@ -1,6 +1,6 @@
 # C4 model
 
-Version 0.1 | 07 November 2026 | Status: Draft
+Version 0.1 | November 2026 | Status: Draft
 
 The system at three zoom levels, in the C4 notation. Each level answers a different question for a different reader; none of them restates the others.
 

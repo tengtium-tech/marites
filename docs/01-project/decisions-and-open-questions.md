@@ -3,7 +3,7 @@ document_id: DECISION-LOG
 title: Open Decision Log
 product: Marites
 version: 0.1
-date: 2026-11-07
+date: 2026-11
 status: 0 open — all answered
 ---
 
@@ -52,11 +52,11 @@ status: 0 open — all answered
 
 ## DEC-001 — Supported messaging platforms (scope)
 
-**Status:** **Answered** 07 Nov 2026 · **Was blocking:** M0
+**Status:** **Answered** November 2026 · **Was blocking:** M0
 
 Originally recorded as "what does Service Bus mean". Reframed as a scope question, then answered.
 
-**Answer (revised 07 Nov 2026):** three providers, all at `full` tier — `rabbitmq`, `azure_service_bus`, `google_pubsub`.
+**Answer (revised November 2026):** three providers, all at `full` tier — `rabbitmq`, `azure_service_bus`, `google_pubsub`.
 
 **Revision note.** The first answer included Kafka, Amazon SQS and Amazon SNS at lower support tiers. Reviewing what "save every message" actually requires (DOC-OPS-001 §1.5) showed that none of the three could deliver the product's central promise:
 
@@ -82,7 +82,7 @@ A six-entry provider list where half the entries are caveated is worse than a th
 
 ## DEC-002 — Viewer payload visibility
 
-**Status:** **Answered** 07 Nov 2026 — reporting dashboard only · **Was blocking:** M0
+**Status:** **Answered** November 2026 — reporting dashboard only · **Was blocking:** M0
 
 **Answer: Viewer sees the reporting dashboard and nothing else.** No message list, no message detail, no payloads, no operation controls.
 
@@ -107,7 +107,7 @@ Three reasons this is the right answer:
 
 ## DEC-003 — Broker topology permissions
 
-**Status:** **Answered** 07 Nov 2026 — the app is granted topology rights · **Was blocking:** M0
+**Status:** **Answered** November 2026 — the app is granted topology rights · **Was blocking:** M0
 
 **The question, in plain terms.** To observe traffic without competing with production consumers, Marites attaches its own queue to the adopter's exchange. Creating that queue is a **configuration write**, not a read. May the account Marites connects with do that?
 
@@ -130,7 +130,7 @@ RabbitMQ grants three regexes per vhost — `configure` (create/delete queues an
 
 ## DEC-004 — Existing dead-letter topology
 
-**Status:** **Answered** 07 Nov 2026 — resolved by runtime detection · **Was constraining:** M2
+**Status:** **Answered** November 2026 — resolved by runtime detection · **Was constraining:** M2
 
 **The question, in plain terms.** RabbitMQ only preserves failed messages if the queue was declared with `x-dead-letter-exchange` pointing at a dead-letter exchange, with a DLQ bound to it. Without that setting, a rejected or expired message is **discarded silently** and there is nothing left to observe.
 
@@ -196,7 +196,7 @@ The question is an environmental fact, not a design choice, and it differs per a
 
 ## DEC-005 — Expected volume and payload size
 
-**Status:** **Answered** 07 Nov 2026 — resolved as admin configuration · **Was constraining:** M2
+**Status:** **Answered** November 2026 — resolved as admin configuration · **Was constraining:** M2
 
 **Answer: the sizing question becomes a setting, not a decision.** Rather than wait for traffic figures, the storage-affecting choices are exposed to the Admin role per queue, with a conservative default and an enforced ceiling.
 
@@ -242,7 +242,7 @@ Partitioning is deliberately **not** an admin control: it is a physical table st
 
 ## DEC-006 — Payload sensitivity
 
-**Status:** **Answered** 07 Nov 2026 — stored verbatim; redaction is the producer's responsibility · **Was constraining:** M2
+**Status:** **Answered** November 2026 — stored verbatim; redaction is the producer's responsibility · **Was constraining:** M2
 
 **Answer: Marites stores the payload exactly as published.** There is no masking, redaction, or field filtering. If a message body contains a credential, token or personal data, that value is stored.
 
@@ -264,11 +264,11 @@ Redaction belongs upstream: if a value should not be retained, the producer remo
 
 ## DEC-007 — MediatR
 
-**Status:** **Answered** 07 Nov 2026 — in-house dispatcher · **Was blocking:** M0 skeleton dependencies
+**Status:** **Answered** November 2026 — in-house dispatcher · **Was blocking:** M0 skeleton dependencies
 
 Should slices dispatch through MediatR, or call handlers directly?
 
-**Answer (revised 07 Nov 2026): no third-party mediator — a ~50-line in-house dispatcher instead.**
+**Answer (revised November 2026): no third-party mediator — a ~50-line in-house dispatcher instead.**
 
 How the answer moved:
 
@@ -287,7 +287,7 @@ How the answer moved:
 
 ## DEC-008 — Federated or independent clusters
 
-**Status:** **Answered** 07 Nov 2026 — per-cluster scoping; dedupe out of scope for v1 · **Was constraining:** M2
+**Status:** **Answered** November 2026 — per-cluster scoping; dedupe out of scope for v1 · **Was constraining:** M2
 
 **The question, in plain terms.** Do the adopter's RabbitMQ clusters copy messages to each other? RabbitMQ's **Federation** and **Shovel** plugins do exactly that, so a message published in one cluster physically exists in the other. Marites connects to each cluster independently, sees the message twice, and counts it twice.
 
@@ -320,7 +320,7 @@ A "unique messages" figure would therefore **change meaning by time range**. Pre
 
 ## DEC-009 — Project licence
 
-**Status:** **Answered** 09 Nov 2026 — MIT · **Was blocking:** publication
+**Status:** **Answered** November 2026 — MIT · **Was blocking:** publication
 
 **The question, in plain terms.** A public repository with no licence is **all rights reserved** by default: readable, and not usable. Before the set is published, it needs a licence or an explicit statement that none is granted.
 
@@ -344,7 +344,7 @@ A "unique messages" figure would therefore **change meaning by time range**. Pre
 
 ## DEC-010 — Agent access
 
-**Status:** **Answered** 10 Nov 2026 · **Revised 10 Nov 2026** — the agent acts as the person whose credential it holds · **Was constraining:** M3
+**Status:** **Answered** November 2026 · **Revised November 2026** — the agent acts as the person whose credential it holds · **Was constraining:** M3
 
 **The question, in plain terms.** A support team already has an AI assistant open. Should it be able to ask Marites what is failing, and should it be able to act on the answer?
 
@@ -375,7 +375,7 @@ The original answer stopped at *propose*, and the reason it was wrong is the rea
 
 ## DEC-011 — Replay payload override
 
-**Status:** **Answered** 10 Nov 2026 — one message at a time, audited as a new body · **Was constraining:** M3
+**Status:** **Answered** November 2026 — one message at a time, audited as a new body · **Was constraining:** M3
 
 **The question, in plain terms.** When you replay a failed message, may you change its body first?
 
@@ -393,7 +393,7 @@ The original answer stopped at *propose*, and the reason it was wrong is the rea
 
 ## DEC-012 — Storage: which database, and who creates it
 
-**Status:** **Answered** 10 Nov 2026 · **Revised 10 Nov 2026** — two stores, not one · **Was constraining:** M0
+**Status:** **Answered** November 2026 · **Revised November 2026** — two stores, not one · **Was constraining:** M0
 
 **The question, in plain terms.** Does Marites bring its own database, or use the one the customer already runs? And who creates it?
 
@@ -427,7 +427,7 @@ Mode B is the same shape as the broker answer in DEC-003: the platform team keep
 
 ## DEC-013 — Capture depth
 
-**Status:** **Answered** 10 Nov 2026 — a queue may be counted without storing its messages · **Was constraining:** M2
+**Status:** **Answered** November 2026 — a queue may be counted without storing its messages · **Was constraining:** M2
 
 **The question, in plain terms.** Can a customer say *"count our traffic, but do not store our messages"* and still get the product?
 
@@ -450,7 +450,7 @@ Mode B is the same shape as the broker answer in DEC-003: the platform team keep
 
 ## DEC-014 — How migrations are applied
 
-**Status:** **Answered** 10 Nov 2026 — a separate step, with the migration credential · **Was constraining:** M0
+**Status:** **Answered** November 2026 — a separate step, with the migration credential · **Was constraining:** M0
 
 **The question, in plain terms.** Marites creates the tables. Does it do that when the application starts, or as a step the deploy runs before starting it?
 
@@ -474,7 +474,7 @@ Mode B is the same shape as the broker answer in DEC-003: the platform team keep
 
 ## DEC-015 — The AI assistant and its model
 
-**Status:** **Answered** 10 Nov 2026 — Marites hosts the assistant; the adopter supplies the model; local is first-class · **Was constraining:** M3
+**Status:** **Answered** November 2026 — Marites hosts the assistant; the adopter supplies the model; local is first-class · **Was constraining:** M3
 
 **The question, in plain terms.** DEC-010 let an external assistant ask Marites questions through MCP. Should Marites also host a conversation of its own, and if so, whose model answers it?
 
@@ -505,7 +505,7 @@ Mode B is the same shape as the broker answer in DEC-003: the platform team keep
 
 ## DEC-016 — Running without storage
 
-**Status:** **Answered** 10 Nov 2026 · **Revised 10 Nov 2026** — skipping storage costs history, not recovery · **Was constraining:** M0
+**Status:** **Answered** November 2026 · **Revised November 2026** — skipping storage costs history, not recovery · **Was constraining:** M0
 
 **The question, in plain terms.** Does the adopter have to connect a database before they can use the product? What if they want the broker now and message history next month?
 
@@ -540,7 +540,7 @@ The revision matters more than the original answer did. When there was one datab
 
 ## DEC-017 — Payload evidence in the audit
 
-**Status:** **Answered** 10 Nov 2026 — kept beside the audit, on the capture retention clock · **Was constraining:** M1
+**Status:** **Answered** November 2026 — kept beside the audit, on the capture retention clock · **Was constraining:** M1
 
 **The question, in plain terms.** The audit records *that* a replay happened. Should it also keep the message body, so history can show *what* was sent or destroyed?
 
@@ -569,7 +569,7 @@ The revision matters more than the original answer did. When there was one datab
 
 ## DEC-018 — Complete payload evidence
 
-**Status:** **Answered** 10 Nov 2026 — every message, before and after · **Supersedes:** DEC-017's sampling and linking rules · **Was constraining:** M1
+**Status:** **Answered** November 2026 — every message, before and after · **Supersedes:** DEC-017's sampling and linking rules · **Was constraining:** M1
 
 **The question, in plain terms.** DEC-017 stored a sample for purge and linked rather than copied for peek. Is that enough for an audit a person has to defend?
 
@@ -604,7 +604,7 @@ The revision matters more than the original answer did. When there was one datab
 
 ## DEC-019 — Is an operation atomic?
 
-**Status:** **Answered** 10 Nov 2026 — no, and two invariants replace the question · **Recorded as:** [ADR-023](../05-architecture/decisions.md) · **Was constraining:** M1
+**Status:** **Answered** November 2026 — no, and two invariants replace the question · **Recorded as:** [ADR-023](../05-architecture/decisions.md) · **Was constraining:** M1
 
 **The question, in plain terms.** When an operator discards a message, the sequence is: hold the complete message including its payload, issue the command to RabbitMQ, Service Bus or Pub/Sub, and — if it succeeded — save the action together with what was held. Is that one atomic step?
 
@@ -631,28 +631,28 @@ The revision matters more than the original answer did. When there was one datab
 
 ## Document control
 
-Revision 0.1 records nineteen questions; **all nineteen are answered.** No decision is open, and none blocks M0. The register is closed: the specification is complete, so a question that is not recorded here is a question the product does not ask. Anything the set does not mention is out of scope by [requirements §1](../02-business/requirements.md), and adding a behaviour to the product means opening a decision here first. DEC-009 was added on 09 November 2026 when the repository was prepared for publication.
+Revision 0.1 records nineteen questions; **all nineteen are answered.** No decision is open, and none blocks M0. The register is closed: the specification is complete, so a question that is not recorded here is a question the product does not ask. Anything the set does not mention is out of scope by [requirements §1](../02-business/requirements.md), and adding a behaviour to the product means opening a decision here first. DEC-009 was added in November 2026 when the repository was prepared for publication.
 
 | ID | Answer | Closed |
 |---|---|---|
-| DEC-001 | Three platforms: RabbitMQ, Azure Service Bus, Google Pub/Sub | 07 Nov 2026 |
-| DEC-002 | Viewer sees the reporting dashboard only — no messages, no payloads, no operations | 07 Nov 2026 |
-| DEC-003 | The app is granted `configure` + `write` + `read` on `^marites\.`; shadow bindings are the capture mechanism | 07 Nov 2026 |
-| DEC-004 | DLX presence detected per queue at runtime, reported honestly, never assumed | 07 Nov 2026 |
-| DEC-005 | Per-queue Admin configuration with conservative defaults and an enforced storage ceiling | 07 Nov 2026 |
-| DEC-006 | Payloads stored verbatim; redaction is the producer's responsibility | 07 Nov 2026 |
-| DEC-007 | In-house dispatcher, no third-party mediator | 07 Nov 2026 |
-| DEC-008 | Per-cluster scoping; cross-cluster dedupe out of scope for v1 | 07 Nov 2026 |
-| DEC-009 | MIT licence; documents and future code under the same terms | 09 Nov 2026 |
-| DEC-010 | Agents read and propose; a human approves with a token bound to their identity | 10 Nov 2026 |
-| DEC-011 | Replay may override the body for one message; the audit records the hash sent | 10 Nov 2026 |
-| DEC-012 | Adopter supplies the database; PostgreSQL and SQL Server; Marites creates the tables | 10 Nov 2026 |
-| DEC-013 | A queue may be counted without storing its messages (`capture_mode = counts`) | 10 Nov 2026 |
-| DEC-014 | Migrations run as a separate step with the migration credential, never at startup | 10 Nov 2026 |
-| DEC-015 | Marites hosts an AI assistant on an adopter-supplied model; local runtime first-class; payloads off by default | 10 Nov 2026 |
-| DEC-016 | Storage may be skipped; the install then runs live-only with recovery disabled; history begins at enablement | 10 Nov 2026 |
-| DEC-017 | The audit keeps payload evidence in a separate store on the capture retention clock, never inside the audit row | 10 Nov 2026 |
-| DEC-018 | Evidence is complete, not sampled: one row per message, `before` and `after` for replay, truncated at a stated bound | 10 Nov 2026 |
-| DEC-019 | An operation is not atomic across the broker and the store: the bodies are held durably first, the audit row is written only after the broker confirms, and reconciliation closes the one window | 10 Nov 2026 |
+| DEC-001 | Three platforms: RabbitMQ, Azure Service Bus, Google Pub/Sub | November 2026 |
+| DEC-002 | Viewer sees the reporting dashboard only — no messages, no payloads, no operations | November 2026 |
+| DEC-003 | The app is granted `configure` + `write` + `read` on `^marites\.`; shadow bindings are the capture mechanism | November 2026 |
+| DEC-004 | DLX presence detected per queue at runtime, reported honestly, never assumed | November 2026 |
+| DEC-005 | Per-queue Admin configuration with conservative defaults and an enforced storage ceiling | November 2026 |
+| DEC-006 | Payloads stored verbatim; redaction is the producer's responsibility | November 2026 |
+| DEC-007 | In-house dispatcher, no third-party mediator | November 2026 |
+| DEC-008 | Per-cluster scoping; cross-cluster dedupe out of scope for v1 | November 2026 |
+| DEC-009 | MIT licence; documents and future code under the same terms | November 2026 |
+| DEC-010 | Agents read and propose; a human approves with a token bound to their identity | November 2026 |
+| DEC-011 | Replay may override the body for one message; the audit records the hash sent | November 2026 |
+| DEC-012 | Adopter supplies the database; PostgreSQL and SQL Server; Marites creates the tables | November 2026 |
+| DEC-013 | A queue may be counted without storing its messages (`capture_mode = counts`) | November 2026 |
+| DEC-014 | Migrations run as a separate step with the migration credential, never at startup | November 2026 |
+| DEC-015 | Marites hosts an AI assistant on an adopter-supplied model; local runtime first-class; payloads off by default | November 2026 |
+| DEC-016 | Storage may be skipped; the install then runs live-only with recovery disabled; history begins at enablement | November 2026 |
+| DEC-017 | The audit keeps payload evidence in a separate store on the capture retention clock, never inside the audit row | November 2026 |
+| DEC-018 | Evidence is complete, not sampled: one row per message, `before` and `after` for replay, truncated at a stated bound | November 2026 |
+| DEC-019 | An operation is not atomic across the broker and the store: the bodies are held durably first, the audit row is written only after the broker confirms, and reconciliation closes the one window | November 2026 |
 
 New questions get a new identifier. An answered decision is not reopened — it is superseded by a later one, with both retained.

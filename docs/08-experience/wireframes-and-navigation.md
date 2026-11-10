@@ -3,7 +3,7 @@ document_id: DOC-UX-003
 title: Wireframes and Navigation
 product: Marites
 version: 0.5
-date: 2026-11-10
+date: 2026-11
 status: Draft — layout described in text; tokens in DOC-UX-004
 ---
 
@@ -610,6 +610,6 @@ Colour, type and spacing are no longer in this list — they are owned by [visua
 
 ## 8. Document control
 
-Revision 0.1 recorded the navigation model, nine routes and the operation dialog. Written 09 November 2026.
+Revision 0.1 recorded the navigation model, nine routes and the operation dialog. Written November 2026.
 
-*Amended 10 November 2026:* the route map gained `/login`, `/publish` and `/audit` — three screens the contract served and this document had omitted, found while building the prototype. Added §3.6 (publish composer), §3.7 (dead-letter selection and header actions), §3.8 (agent proposals) and §5 (authentication states, including the expired-token rule). Visual design moved out to [DOC-UX-004](visual-design.md). Recorded as AUD-045 to AUD-048. A further amendment the same day added §3.9 (the assistant drawer), the `/ai` and drawer routes, and the unconfigured state — AUD-053.
+*Amended November 2026:* the route map gained `/login`, `/publish` and `/audit` — three screens the contract served and this document had omitted, found while building the prototype. Added §3.6 (publish composer), §3.7 (dead-letter selection and header actions), §3.8 (agent proposals) and §5 (authentication states, including the expired-token rule). Visual design moved out to [DOC-UX-004](visual-design.md). A further amendment added §3.9 (the assistant drawer), the `/ai` and drawer routes, and the unconfigured state.

@@ -3,7 +3,7 @@ document_id: DOC-OPS-004
 title: Backup and Recovery
 product: Marites
 version: 0.1
-date: 2026-11-09
+date: 2026-11
 status: Planned — no backup has been taken, no restore has been tested
 ---
 
@@ -108,4 +108,4 @@ An untested restore is not a backup. That sentence is the whole reason this docu
 
 ## 7. Document control
 
-Revision 0.1 records what must be backed up, what cannot be recovered, proposed objectives and a restore procedure with its verification checks. Written 09 November 2026 to close the gap named in the [operations index](README.md). No backup has been taken, no restore has been performed, and the proposed targets in §3 are the author's defaults rather than an agreed requirement.
+Revision 0.1 records what must be backed up, what cannot be recovered, proposed objectives and a restore procedure with its verification checks. Written November 2026 to close the gap named in the [operations index](README.md). No backup has been taken, no restore has been performed, and the proposed targets in §3 are the author's defaults rather than an agreed requirement.

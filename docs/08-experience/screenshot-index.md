@@ -118,4 +118,4 @@ bash screens/shoot.sh http://127.0.0.1:4331/index.html
 
 ## 4. Document control
 
-Revision 0.1, 10 November 2026. Thirty-five images, captured from build `dist` on 10 November 2026 after the agent-access and two-store revisions, replacing a set of thirty-three that had drifted. The capture script is part of the record: a screenshot with no reproducible route to it is an illustration, not evidence.
+Revision 0.1, November 2026. Thirty-five images, captured from build `dist` in November 2026 after the agent-access and two-store revisions, replacing a set of thirty-three that had drifted. The capture script is part of the record: a screenshot with no reproducible route to it is an illustration, not evidence.

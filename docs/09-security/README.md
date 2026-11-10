@@ -1,6 +1,6 @@
 # Security and access
 
-Version 0.2 | 09 November 2026 | Status: Partial; threat model drafted, no control implemented or tested.
+Version 0.2 | November 2026 | Status: Partial; threat model drafted, no control implemented or tested.
 
 Apply credential protection, payload responsibility, role boundaries and operation safeguards to every operation Marites performs.
 

@@ -3,7 +3,7 @@ document_id: DOC-DATA-001
 title: Data Model Specification
 product: Marites
 version: 0.1
-date: 2026-11-07
+date: 2026-11
 status: Draft — all decisions resolved; no implementation
 ---
 
@@ -236,6 +236,6 @@ The rollup upsert is the one place where two writers on the same key would seria
 
 ## 6. Document control
 
-Revision 0.1 records the initial model. DEC-005 set the `sampled` default and DEC-006 settled verbatim storage; both are answered. `peak_rate` was added to `message_rollup` on 07 Nov 2026 because the dashboard tile and the contract's `peakRate` cannot be derived from summed rows. ADR-019 added a tenth table, `capture_dedupe`. No migration exists and no schema has been applied.
+Revision 0.1 records the initial model. DEC-005 set the `sampled` default and DEC-006 settled verbatim storage; both are answered. `peak_rate` was added to `message_rollup` in November 2026 because the dashboard tile and the contract's `peakRate` cannot be derived from summed rows. ADR-019 added a tenth table, `capture_dedupe`. No migration exists and no schema has been applied.
 
-*Amended 09 November 2026:* four columns added that the contract already required and the model did not carry — `broker_profile.revision` and `credentials_updated_at`, `capture_rule.revision` and `sample_rate`. Without them `If-Match` had nothing to match and the `sampled` policy had no rate to sample at. `payload_ref` split into `payload_inline` and `payload_ref`, because one column cannot hold both an inline body and an object key without a discriminator that already means something else. Recorded as AUD-032 to AUD-034; the [data dictionary](data-dictionary.md) now owns the column-level definition.
+*Amended November 2026:* four columns added that the contract already required and the model did not carry — `broker_profile.revision` and `credentials_updated_at`, `capture_rule.revision` and `sample_rate`. Without them `If-Match` had nothing to match and the `sampled` policy had no rate to sample at. `payload_ref` split into `payload_inline` and `payload_ref`, because one column cannot hold both an inline body and an object key without a discriminator that already means something else. The [data dictionary](data-dictionary.md) now owns the column-level definition.

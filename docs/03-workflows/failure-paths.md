@@ -1,6 +1,6 @@
 # Failure paths
 
-Version 0.1 | 09 November 2026 | Status: Draft
+Version 0.1 | November 2026 | Status: Draft
 
 The three lifecycles describe what happens when things work. This document draws what happens when they do not, because a failure path that exists only as a table row is a failure path nobody has looked at end to end.
 

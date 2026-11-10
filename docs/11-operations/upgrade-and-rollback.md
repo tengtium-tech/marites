@@ -3,7 +3,7 @@ document_id: DOC-OPS-003
 title: Upgrade and Rollback
 product: Marites
 version: 0.1
-date: 2026-11-09
+date: 2026-11
 status: Planned — no released version exists
 ---
 
@@ -88,4 +88,4 @@ This table is the reason the guard chain exists ([DOC-UX-001 §3](../08-experien
 
 ## 8. Document control
 
-Revision 0.1 records the upgrade and rollback procedure, written 09 November 2026 to close the gap named in the [operations index](README.md). It describes an intent for software that does not exist; no upgrade has been performed and no rollback has been tested.
+Revision 0.1 records the upgrade and rollback procedure, written November 2026 to close the gap named in the [operations index](README.md). It describes an intent for software that does not exist; no upgrade has been performed and no rollback has been tested.

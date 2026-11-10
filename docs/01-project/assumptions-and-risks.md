@@ -1,6 +1,6 @@
 # Assumptions and risks
 
-Version 0.2 | 09 November 2026 | Status: Drafted; every item restates a fact recorded in its owning document and adds no new policy.
+Version 0.2 | November 2026 | Status: Drafted; every item restates a fact recorded in its owning document and adds no new policy.
 
 An assumption (ASM) is something the design relies on and has not proven. A risk (RSK) is something that could invalidate the plan, with its mitigation. Identifiers are stable and are never reused. The status words are those of the [documentation standard](documentation-standard.md).
 

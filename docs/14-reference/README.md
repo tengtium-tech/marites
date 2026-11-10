@@ -1,6 +1,6 @@
 # Reference
 
-Version 0.4 | 09 November 2026 | Status: shared documentation section and coverage index.
+Version 0.4 | November 2026 | Status: shared documentation section and coverage index.
 
 Canonical vocabulary: every enumerated value, defined once.
 
@@ -14,7 +14,7 @@ Canonical vocabulary: every enumerated value, defined once.
 
 Four artefacts consume these values: the C# implementation, the OpenAPI contract, the database schema and the React UI. Each is written at a different time and none reads the others' source. That is the condition under which one value gets spelled two ways. If something needs an enumerated value it links here; restating it is a defect.
 
-The 09 November 2026 pass found one that had escaped: `captureState` was defined only inside the contract's `QueueSummary` and used in three documents. It now has a section (§15), which is what the rule above is for — an enum with no owner is an enum that gets re-derived.
+The November 2026 pass found one that had escaped: `captureState` was defined only inside the contract's `QueueSummary` and used in three documents. It now has a section (§15), which is what the rule above is for — an enum with no owner is an enum that gets re-derived.
 
 ## Reserved values
 

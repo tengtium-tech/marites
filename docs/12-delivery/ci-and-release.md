@@ -80,4 +80,4 @@ Not a CI concern, and not duplicated here: [upgrade and rollback](../11-operatio
 
 ## 8. Document control
 
-Revision 0.1, 10 November 2026. Written as specification: no pipeline exists, no image is published, and the timings in §1 are targets rather than measurements. The gate list is derived from the verification plan and the review's mechanical checks; the versioning rules follow from the contract being the product boundary (ADR-006).
+Revision 0.1, November 2026. Written as specification: no pipeline exists, no image is published, and the timings in §1 are targets rather than measurements. The gate list is derived from the verification plan and the review's mechanical checks; the versioning rules follow from the contract being the product boundary (ADR-006).
