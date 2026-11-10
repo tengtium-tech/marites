@@ -84,6 +84,9 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 | Element | Behaviour |
 |---|---|
 | Broker switcher | Changes the profile for every figure on the screen. Never mixed: one screen, one profile |
+| Banners | Two, and they are different problems. *"2 queues cannot report failures"* is a configuration gap — those queues will never show a dead-letter count. *"1 queue's capture is stale and 1 is capped"* is a freshness problem — the figures exist but are older than they look. Both name the count, and neither appears when the count is zero |
+| **Status appears when it changes, not permanently** | A green "capture health: passing" badge that sits in the sidebar all day is a badge people stop reading — and this one contradicted itself, showing *passing* while listing one stale and one capped queue. The state belongs in a banner that appears when it is true, and in the queue's own row |
+| Watched count | *"5 queues watched"* is in the page header, in words. It was previously a permanent counter in the sidebar, which is where a number goes when nobody has decided what it is for |
 | Banner | Appears when any queue in the profile cannot report failures, and links to the filtered list |
 | Dead-letter column | Shows `unavailable` where there is no routing, never `0` (`ERR-QUE-002`) |
 | Capture column | The five states of VOCABULARY §15, each with a distinct icon **and** a word |
@@ -91,7 +94,7 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 
 ![01-queues](../../prototype/screens/01-queues.png)
 
-*The queue list. Depth, rate and dead letters per queue, `captureState` as a word beside the number rather than a colour, and the banner for queues that cannot report failures.*
+*The queue list. Depth, rate and dead letters per queue, `captureState` as a word beside the number rather than a colour, and the two banners that appear when something needs attention — never a permanent status badge.*
 
 ![14c-live-only-queues](../../prototype/screens/14c-live-only-queues.png)
 

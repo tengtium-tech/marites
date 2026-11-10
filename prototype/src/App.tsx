@@ -596,33 +596,6 @@ function Sidebar({
         {item("report", <Activity className="h-4 w-4" />, "Volume & failures", screen === "report")}
       </nav>
 
-      <div className="mt-auto rounded-lg border bg-secondary/40 p-3">
-        <div className="flex items-center justify-between">
-          <span className="text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
-            Capture health
-          </span>
-          <Badge variant="success" className="px-1.5 py-0 text-[10px]">
-            passing
-          </Badge>
-        </div>
-        <div className="mt-2.5 space-y-1.5 text-[12px]">
-          {[
-            ["watched", "5", ""],
-            ["live", "3", "text-success"],
-            ["stale", "1", "text-warning"],
-            ["capped", "1", "text-warning"],
-          ].map(([k, v, cls]) => (
-            <div key={k} className="flex items-baseline justify-between">
-              <span className="text-muted-foreground">{k}</span>
-              <span className={cn("num font-medium", cls)}>{v}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-2.5 border-t pt-2 text-[10.5px] text-muted-foreground">
-          last poll 6s ago
-        </div>
-      </div>
-
       <div className="mt-3 border-t px-2.5 pt-3 text-[11px] leading-relaxed text-muted-foreground">
         Prototype · not authoritative
         <div className="opacity-75">
@@ -717,7 +690,7 @@ function QueuesScreen({ onOpen, liveOnly }: { onOpen: () => void; liveOnly?: boo
         <div>
           <h1 className="text-[22px] font-semibold tracking-[-0.025em]">Queues</h1>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
-            prod-cluster · /prod · polled 6 seconds ago
+            prod-cluster · /prod · 5 queues watched · polled 6 seconds ago
           </p>
         </div>
         <div className="flex-1" />
@@ -741,6 +714,14 @@ function QueuesScreen({ onOpen, liveOnly }: { onOpen: () => void; liveOnly?: boo
         <AlertTriangle className="h-4 w-4 shrink-0" />
         <span>
           2 queues cannot report failures — no dead-letter routing configured.{" "}
+          <button className="font-semibold underline underline-offset-2">View</button>
+        </span>
+      </div>
+
+      <div className="mb-4 flex items-center gap-2.5 rounded-lg border border-warning/25 bg-warning/[0.07] px-3.5 py-2.5 text-[13px] text-warning">
+        <AlertTriangle className="h-4 w-4 shrink-0" />
+        <span>
+          1 queue's capture is stale and 1 is capped — their figures are older than they look.{" "}
           <button className="font-semibold underline underline-offset-2">View</button>
         </span>
       </div>
@@ -805,8 +786,6 @@ function QueuesScreen({ onOpen, liveOnly }: { onOpen: () => void; liveOnly?: boo
       </p>
 
       <div className="mt-6 flex items-center gap-3 border-t pt-3 text-[11.5px] text-muted-foreground">
-        <span>5 queues watched</span>
-        <span aria-hidden="true">·</span>
         <span className="num">4,200 msg/s</span>
         <span aria-hidden="true">·</span>
         <span>poll interval 10 s</span>

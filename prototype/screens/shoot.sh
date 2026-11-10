@@ -3,6 +3,11 @@
 # Usage: bash screens/shoot.sh [base-url]
 set -u
 BASE="${1:-http://127.0.0.1:4331/index.html}"
+if ! curl -sf -o /dev/null "$BASE"; then
+  echo "No server at $BASE — start one first:" >&2
+  echo "  npx vite build && python -m http.server 4331 -d dist" >&2
+  exit 1
+fi
 CH="/c/Program Files/Google/Chrome/Application/chrome.exe"
 OUT="$(cd "$(dirname "$0")" && pwd)"
 
