@@ -8,7 +8,7 @@ Apply credential protection, payload responsibility, role boundaries and operati
 
 | Record | Shared coverage |
 | --- | --- |
-| [Threat model](threat-model.md) | Assets, six trust boundaries, 26 threats (THR-001 to THR-026) with controls and residual risk, and the six gaps that remain |
+| [Threat model](threat-model.md) | Assets, six trust boundaries, 26 threats (THR-001 to THR-026) with controls, and the six residual risks that no control removes |
 | [Credential kinds](../14-reference/vocabulary.md) (§13) and [ADR-018](../05-architecture/decisions.md) | Eight credential shapes in use, ambient credentials first-class, write-only credentials, encrypted per row |
 | [NFR-003 and NFR-004](../02-business/requirements.md) | Credentials never logged or returned; no destructive operation without explicit human confirmation |
 | [Payload responsibility](../11-operations/deployment-and-onboarding.md) (§1.7) and DEC-006 | Bodies stored exactly as published; no masking; `payload_policy = none` is the only way to avoid storing them |

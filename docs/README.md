@@ -38,7 +38,7 @@ For a first read: [requirements](02-business/requirements.md) §2, then the [thr
 | Architecture and data model | Drafted. Twelve tables in two stores, twelve source projects, four ports, nine components with failure modes |
 | API contract | 10 operations served and 15 deferred; both validate as OpenAPI 3.1 |
 | Verification | Planned only: 29 cases, 8 gates, 0 executed — [verification plan](10-testing/verification-plan.md) |
-| Security | Partial. 26 threats, 7 with a planned case; no key-rotation procedure, no penetration test |
+| Security | Drafted. 26 threats, 7 with a planned case, six stated residuals; no penetration test |
 | Application code and tests | Not started |
 
 ## Authority and interpretation

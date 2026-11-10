@@ -104,7 +104,6 @@ Named so they are not mistaken for omissions:
 | Chaos and soak | Needs a stable M2 and a decision about what "soak" means for a self-hosted tool |
 | Object store for bodies over 64 KB | **Specified, not scheduled as its own package.** The layout, lifecycle and backup scope are in the [data dictionary](../07-data-and-contracts/data-dictionary.md) §6; it ships with the capture packages in M2 rather than before them |
 | Storage-usage gauge | Deliberate omission, with a trigger to revisit ([storage prerequisites §7](../11-operations/storage-prerequisites.md)) |
-| Evidence retention floor for destructive operations | **Not built, because it does not exist.** Evidence dies with the capture window by decision (DEC-017): a payload must never outlive the promise about it. A floor would be a second retention rule to reason about |
 | Role-assignment UI | Roles come from the identity provider, and Marites only reads them ([ADR-008](../05-architecture/decisions.md)). `CanAssignRoles` is a claim in the token, not a screen |
 
 ## 5. How this plan is tracked

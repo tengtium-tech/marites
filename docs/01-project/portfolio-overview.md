@@ -71,7 +71,7 @@ If you only read one page, read the [failure modes](../05-architecture/failure-m
 - **Nothing is proven.** The counting claim rests on ADR-019 and ADR-011, both of which need integration tests that do not exist (TC-013, TC-014).
 - **The counting claim is designed, not proven.** Compaction is idempotent by recomputation and by transaction scope ([ADR-024](../05-architecture/decisions.md)), and redelivery is absorbed by a ledger ([ADR-019](../05-architecture/decisions.md)) — but neither has run, and a design that is right on paper is still a design.
 - **The isolation story has a hole.** Row-level security covers configuration tables but not the capture tables, because the write path batches across tenants ([migration plan](../07-data-and-contracts/migration-plan.md) §4).
-- **Operationally it is blind.** No alerting, no health endpoint, no way to watch Marites with Marites. Every runbook symptom is discovered by a person.
+- **Operationally it is deaf.** Health and readiness endpoints and a Prometheus endpoint exist ([deployment §3.2](../11-operations/deployment-and-onboarding.md)), but nothing watches them and nothing pages anyone. A stopped capture is discovered by a person noticing, which is the failure the product exists to prevent.
 - **The documentation is large relative to what exists.** Forty-five documents and sixteen indexes for zero lines of production code is a real risk: the set can look finished when nothing is built. The readiness dashboard exists to counter that, and it is the page to distrust least.
 
 ## 6. What a reviewer should check first

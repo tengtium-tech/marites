@@ -583,7 +583,7 @@ The `max` matters in both directions. Evidence never expires before the messages
 
 **What it does not change.** The audit row is still permanent and the evidence is still swept; only the clock is different. The row keeps `payloadHash` after the bodies go, so a specific message can still be checked against a claim.
 
-**What history looks like after expiry.** The audit row keeps `payloadHash` and the count; the bodies are gone. The screen says *"payload no longer retained · hash abc3f1…"* rather than showing an empty panel. The audit still proves **that** it happened; it proves **what** only for as long as the message would have existed anyway.
+**What history looks like after expiry.** The audit row keeps `payloadHash` and the count; the bodies are gone. The screen says *"payload no longer retained · hash abc3f1…"* rather than showing an empty panel. The audit still proves **that** it happened; it proves **what** for the evidence term, which is longer than the message's own life — and after that, only the hash remains.
 
 **Consequence.** A twelfth table, `operation_payload`, written in the same transaction as the audit row. `GET /audit/{id}/payloads` reads it; `ERR-AUD-001` when the evidence has expired. THR-008 extended: this is a second place payloads can outlive their window, and the sweeper must cover both — with the second window now longer than the first, which is why THR-008 names it rather than assuming it away.
 
