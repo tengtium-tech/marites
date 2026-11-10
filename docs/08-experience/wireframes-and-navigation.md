@@ -2,37 +2,35 @@
 document_id: DOC-UX-003
 title: Wireframes and Navigation
 product: Marites
-version: 0.5
+version: 0.6
 date: 2026-11
-status: Draft — layout described in text; tokens in DOC-UX-004
+status: Draft — every screen captured from the prototype; tokens in DOC-UX-004
 ---
 
 # DOC-UX-003 — Wireframes and Navigation
 
 **Source:** [dashboard and operations](dashboard-and-operations.md) §1.1, §3, §4; [API catalog](../07-data-and-contracts/api-catalog.md). Owning document for layout and navigation. Metric meaning is owned by DOC-UX-001 §1; this document does not restate it.
 
-Wireframes here are **text descriptions with a block layout**, not pictures. That is deliberate: a text wireframe can be reviewed in a pull request and cannot silently disagree with the document beside it. Colour, type and spacing are owned by [visual design](visual-design.md), which was written after the prototype established values this document had left open.
+**The figures here are the prototype, not drawings of it.** Every screen below was captured from the running build, and [`prototype/screens/shoot.sh`](../../prototype/screens/shoot.sh) names the route that reaches each one — so a screen that cannot be reached cannot be illustrated, and an image cannot quietly disagree with the text beside it. Colour, type and spacing are owned by [visual design](visual-design.md).
+
+What an image cannot carry is the **rules**: why a control sits where it does, what it refuses, and what it says when it cannot do the thing. Those are the tables under each figure, and they are the part worth reviewing in a pull request. A mockup beside a photograph is the same information twice, and the mockup is the one that goes stale — so there are none left in this document.
 
 ## 1. Navigation model
 
 Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.md)). One product, two front doors, chosen by role.
 
-```
-                    ┌──────────────────────────┐
-   sign in ────────▶│ role from the token      │
-                    └───────────┬──────────────┘
-                                │
-              ┌─────────────────┴──────────────────┐
-              │                                    │
-      Viewer  ▼                            Support / Admin ▼
-   ┌────────────────────┐            ┌────────────────────────────┐
-   │ Reporting          │            │ Operations console         │
-   │ /report            │            │ /queues /publish /audit    │
-   │                    │            │ /brokers /setup            │
-   └────────────────────┘            └────────────────────────────┘
-```
+| Role | Lands on | Reaches |
+|---|---|---|
+| Viewer | `/report` | The reporting surface, and nothing else |
+| Support | `/queues` | The operations console: queues, publish, audit, and the assistant |
+| Admin | `/queues` | The console, plus brokers, setup, storage, purge and the AI provider settings |
 
 `/login` sits in front of both, and is described in §5 — it is the one screen Marites owns rather than delegates.
+
+| Viewer | Support · Admin |
+|---|---|
+| ![05-reporting](../../prototype/screens/05-reporting.png) | ![01-queues](../../prototype/screens/01-queues.png) |
+| *Four tiles, a trend, a per-queue table. No message bodies, no operation controls, no queue a Viewer can act on.* | *Depth, rates, dead letters and capture state, with the two banners that appear when something needs attention.* |
 
 | Rule | Why |
 |---|---|
@@ -49,8 +47,8 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 | `/setup` | Console | First-run wizard | `POST /brokers`, `POST /brokers/{id}/preflight` |
 | `/queues` | Console | Queue tree and list | `GET /queues` |
 | `/queues/:id` | Console | Queue detail, capture policy | `GET /queues/{id}`, `PUT /queues/{id}/capture-policy` |
-| `/queues/:id/messages` | Console | Message list | `GET /messages` |
-| `/messages/:id` | Console | Message detail | `GET /messages/{id}` |
+| `/queues/:id/messages` | Console | Message list — the table inside the queue detail (§3.3) | `GET /messages` |
+| `/messages/:id` | Console | Message detail — the read-only payload dialog (§3.11.1) | `GET /messages/{id}` |
 | `/operations/:id` | Console | Operation progress | `GET /operations/{id}` |
 | `/brokers` | Console | Broker profiles | `GET /brokers`, `GET /brokers/{id}/capabilities` |
 | `/publish` | Console | Message composer | `POST /operations/publish` |
@@ -66,22 +64,7 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 
 ### 3.1 Queue list (`/queues`)
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│ Marites   [prod ▾]                          Support · A. Reyes      │
-├──────────────────────────────────────────────────────────────────────┤
-│ ⚠ 2 queues cannot report failures — no dead-letter routing  [view]   │
-│ ⚠ 1 capture has stopped — figures frozen · 1 capped — counts         │
-│   continue, no new rows stored                              [view]   │
-├───────────────────────────┬──────────┬────────┬────────┬────────────┤
-│ Queue                     │ Depth    │ Rate   │ DLQ    │ Capture    │
-├───────────────────────────┼──────────┼────────┼────────┼────────────┤
-│ orders                    │  12,481  │ 4,200  │ 1,204  │ ● live     │
-│ orders.dlq                │   1,204  │    12  │   —    │ ● live     │
-│ payments                  │       0  │      0  │ unavail│ ● live     │
-│ reports                   │   3,110  │      0  │     88 │ ◐ stale    │
-└───────────────────────────┴──────────┴────────┴────────┴────────────┘
-```
+One row per queue, five numbers, and a banner whenever one of them needs attention. The screen answers *which queue is the problem* before it answers anything else.
 
 | Element | Behaviour |
 |---|---|
@@ -113,19 +96,7 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 
 ### 3.2 Queue detail (`/queues/:id`)
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│ ← queues    orders            prod · /prod            ● live        │
-├──────────────────────────────────────────────────────────────────────┤
-│ Depth 12,481   Publish 4,200/s   Deliver 4,180/s   Consumers 6      │
-│ Last seen 14:22:08  ·  Dead letters 1,204 (28.6% in the last hour)  │
-├──────────────────────────────────────────────────────────────────────┤
-│ [ Peek ]  [ Replay dead letters ]  [ Purge ]        (capability-     │
-│                                                      gated)          │
-├──────────────────────────────────────────────────────────────────────┤
-│ Capture policy   sampled 1:100 · 72 h rows · default   [ edit ]     │
-└──────────────────────────────────────────────────────────────────────┘
-```
+The metric strip answers *how bad*, the reason breakdown answers *why*, and the action bar sits on the same line as the selection that enables it — so an operator never has to look in two places to find out what a button will act on.
 
 | Element | Behaviour |
 |---|---|
@@ -140,14 +111,7 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 
 ### 3.3 Message list and detail
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│ ← orders    [reason ▾] [routing key] [correlation id] [time ▾]      │
-├──────────────────────────────────────────────────────────────────────┤
-│ 14:21:57  rejected    order.created   a3f1…  1.2 KB   ×400 same hash│
-│ 14:21:44  expired     order.created   b7c2…  0.9 KB                 │
-└──────────────────────────────────────────────────────────────────────┘
-```
+**This is the table inside the queue detail, not a second screen.** One table over one set of rows, filtered — a separate message-list page would be the same data with a different header, and two places to fix a column. Opening a row is the read-only payload dialog (§3.11.1), which is where a captured body is actually read.
 
 | Element | Behaviour |
 |---|---|
@@ -157,23 +121,7 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 
 ### 3.4 The operation dialog — the one screen that must be slow
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│ Replay dead letters — orders                    prod · /prod        │
-├─────────────────────────────────────────────────────────────────────┤
-│ Dry run: 1,204 messages would be replayed.                          │
-│ 1,150 rejected · 54 expired                                         │
-│ ⚠ 1,150 of these were rejected by the same consumer. Replaying them │
-│   will dead-letter again unless the consumer is fixed first.        │
-├─────────────────────────────────────────────────────────────────────┤
-│ Rate: [ 60 ] per minute     Estimated time: 20 min                  │
-│ Type prod to confirm: [            ]                                │
-├─────────────────────────────────────────────────────────────────────┤
-│                                   [ Cancel ]  [ Replay 1,204 ]      │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-Three properties, each preventing a specific incident:
+The dialog carries the dry run, the warning, the rate, the typed environment tag and the button — in that order, on one surface. Three properties, each preventing a specific incident:
 
 - **The dry run is the dialog, not a step before it.** The count and the death reasons are what the operator needs in order to decide, so they are in the same place as the button.
 - **The warning names the mechanism**, not the risk. "They will dead-letter again" is actionable; "this operation may be risky" is not.
@@ -233,22 +181,6 @@ Capture is forward-only (C-002), so the backfill offer is the only way to see wh
 
 The highest-risk screen in the product: it injects a message into a live business flow.
 
-```
-┌ Message ──────────────────────────────┬ Target ────────────────────┐
-│ Exchange [orders ▾]  Key [order.…]    │ Exchange   orders          │
-│ Payload  json      [Format][Template] │ Key        order.created   │
-│ ┌───────────────────────────────────┐ │ Environment  [prod]        │
-│ │ { "orderId": "ORD-88301", … }     │ │ Payload hash  a91f3c02     │
-│ └───────────────────────────────────┘ │ Idempotency  9f2c1a44…     │
-│ Valid JSON · 14 lines · 312 bytes     │                            │
-├───────────────────────────────────────┼────────────────────────────┤
-│                                       │ ⚠ Valid JSON is not a      │
-│                                       │   valid message            │
-│                                       │ Type [prod] to confirm     │
-│                                       │ [ Publish message ]        │
-└───────────────────────────────────────┴────────────────────────────┘
-```
-
 | Guard | Why it is visible rather than implied |
 |---|---|
 | Body must parse | The button stays disabled and the line under the editor names the error |
@@ -277,21 +209,6 @@ The queue detail carries a paginated dead-letter list — time, reason, routing 
 
 **The confirmation shows what it is about to destroy.** Discard and purge open a confirmation that lists the affected messages with their bodies, one click each, before the command is issued — not only in the audit afterwards. This is the same read-only payload dialog the audit uses (§3.11.1), opened in preview: the hash is not shown because it does not exist yet, and the footer says so.
 
-```
-┌ Discard 3 messages?                                                    ✕ ┐
-│ Each body is written to the audit before the message is acknowledged.    │
-│ If the record cannot be written, nothing is discarded.                   │
-├──────────────────────────────────────────────────────────────────────────┤
-│ What will be discarded                       3 bodies · open any one     │
-│  ORD-88213  1.2 KB  { "orderId": "ORD-88213", "total": 2499.0, … }   ⤢   │
-│  ORD-88197  1.4 KB  { "orderId": "ORD-88197", "status": "shipped", …}⤢   │
-│  ORD-88190  1.1 KB  { "orderId": "ORD-88190", "total": 1299.0, … }   ⤢   │
-├──────────────────────────────────────────────────────────────────────────┤
-│ Type the queue name to confirm  [ orders            ]                    │
-│                                              [Cancel]  [Discard 3]       │
-└──────────────────────────────────────────────────────────────────────────┘
-```
-
 The list is not a preview of a *sample*: every message the confirmation will act on is in it, for the same reason the evidence keeps one row per message (DEC-018). What changes between the confirmation and the audit is only the tense — *will be discarded* becomes *was discarded*.
 
 ![08-discard](../../prototype/screens/08-discard.png)
@@ -308,26 +225,15 @@ What appears here depends on one thing: whether the credential the assistant hol
 
 **With the grant — the action is already done.** The banner reports it, and offers to show what was touched. It is a notice, not a request.
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│ 🤖 Claude replayed 3 messages                   [VIA ASSISTANT]      │
-│    "All three were rejected by the same consumer, which was          │
-│     redeployed at 14:31. They should succeed now."                   │
-│    14:29 as a.reyes@company.com · recorded in the audit              │
-│                                                        [ Show 3 ]    │
-└──────────────────────────────────────────────────────────────────────┘
-```
+> 🤖 **Claude replayed 3 messages** · `VIA ASSISTANT`
+> *"All three were rejected by the same consumer, which was redeployed at 14:31. They should succeed now."*
+> 14:29 as a.reyes@company.com · recorded in the audit — **Show 3**
 
 **Without it — the action is a proposal.** Same reasoning, different ending: a person decides.
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│ 🤖 Claude suggested replaying 3 messages        [PROPOSAL]           │
-│    "…they should succeed now."                                       │
-│    proposed 2 min ago on behalf of a.reyes@company.com               │
-│                                            [ Review 3 ]  [ Dismiss ] │
-└──────────────────────────────────────────────────────────────────────┘
-```
+> 🤖 **Claude suggested replaying 3 messages** · `PROPOSAL`
+> *"…they should succeed now."*
+> proposed 2 min ago on behalf of a.reyes@company.com — **Review 3** · **Dismiss**
 
 | Property | Why |
 |---|---|
@@ -348,31 +254,6 @@ What appears here depends on one thing: whether the credential the assistant hol
 ### 3.9 The assistant drawer
 
 A panel over whatever screen is open, because an operator should not leave the queue to ask about it. It is the same agent as the MCP server, over the same tool registry, filtered by the signed-in user's credential ([agent access](../05-architecture/mcp-integration.md) §9).
-
-```
-┌───────────────────────────── drawer, 440px ──────────────────────────┐
-│ 🤖 Ask Marites                                   llama3.1:8b    [×]  │
-│    headers and reasons only                                          │
-├──────────────────────────────────────────────────────────────────────┤
-│                        ┌──────────────────────────────┐              │
-│                        │ Why is orders failing?       │  ← user      │
-│                        └──────────────────────────────┘              │
-│ 🤖 1,150 rejected by the same consumer, 54 expired.                  │
-│    Rejections start at 14:31 — a consumer was redeployed then.       │
-│    ┌────────────────────────────────────────────┐                    │
-│    │ Queue      orders · prod                   │  ← evidence        │
-│    │ Rejected   1,150 since 14:31               │                    │
-│    │ Capture    live · last message 14:22:08    │                    │
-│    └────────────────────────────────────────────┘                    │
-│    ┌ Propose replaying 3 messages ── [PROPOSAL] ┐                    │
-│    │ You review the dry run and type the tag.   │                    │
-│    │ I never send it.            [ Review 3 ]   │                    │
-│    └────────────────────────────────────────────┘                    │
-├──────────────────────────────────────────────────────────────────────┤
-│ [ Ask about a queue, a failure, a trend…            ]  [ ↵ ]         │
-│ Headers, reasons and counts are sent to the configured provider.      │
-└──────────────────────────────────────────────────────────────────────┘
-```
 
 | Rule | Why |
 |---|---|
@@ -438,48 +319,9 @@ Each audit row expands to show what the operation actually carried. The evidence
 
 **One message: what was sent, and did it change.** The panel shows the body **in full**, not a preview, and when the operator edited it before replaying, both versions sit side by side with the changed lines marked. The row itself carries an `edited` flag, so an administrator scanning the log sees that a replay was not a plain resend without opening anything.
 
-```
-┌ 14:31:02  a.reyes@company.com  SUPPORT  replay · orders  applied · 1 EDITED [▾] ┐
-├─────────────────────────────────────────────────────────────────────────────────┤
-│ Payload evidence · 1 body · retained until 13 Nov 14:31             abc3f1…     │
-│ ┌ ORD-88213 · 1.2 KB · [payload edited] the replayed body is not the one       │
-│ │   that was dead-lettered                                                     │
-│ ├──────────────────────────────┬───────────────────────────────────────────────┤
-│ │ BEFORE                       │ REPLAYED                                      │
-│ │ {                            │ {                                             │
-│ │   "orderId": "ORD-88213",    │   "orderId": "ORD-88213",                     │
-│ │   "customer": "acme-pty",    │   "customer": "acme-pty",                     │
-│ │ ▸ "total": 2499.0,           │ ▸ "total": 1999.0,                            │
-│ │   "currency": "AUD",         │   "currency": "AUD",                          │
-│ │   "status": "payment_pending"│   "status": "payment_pending"                 │
-│ │ }                            │ }                                             │
-│ └──────────────────────────────┴───────────────────────────────────────────────┘
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
-
 **A batch: every message, one row each.** The count in the header and the number of rows are the same number — a purge of ten shows ten, and the operator can scroll to any one of them.
 
-```
-┌ 14:18:55  m.cruz@company.com  ADMIN  purge · payments  applied · 10  [▾] ┐
-├──────────────────────────────────────────────────────────────────────────┤
-│ Payload evidence · 10 bodies · one record per message · until 13 Nov 14:18│
-│   PAY-5591  2.3 KB  { "paymentId": "PAY-5591", "amount": 2499.0, … }     │
-│   PAY-5588  1.9 KB  { "paymentId": "PAY-5588", "amount": 899.0, … }      │
-│   … eight more rows, to PAY-5540                                         │
-└──────────────────────────────────────────────────────────────────────────┘
-```
-
-after retention lapses, either shape:
-
-```
-┌ 13:52:44  a.reyes@company.com  SUPPORT  discard · orders  applied · 3  [▾] ┐
-├───────────────────────────────────────────────────────────────────────────┤
-│ Payload no longer retained · swept 06 Nov                    hash 4b7d02…  │
-│ 3 bodies were kept on the same clock as the messages they came from — this │
-│ queue's 3-day row retention — and were deleted with them. The operation and │
-│ its hash survive; the content does not.                                    │
-└───────────────────────────────────────────────────────────────────────────┘
-```
+**After retention lapses, either shape says so.** The row does not go blank: it names the date the bodies were swept, the retention that applied, and the hash that survives. *Payload no longer retained* on its own reads as a broken panel; the date and the rule turn it into an answer.
 
 | Rule | Why |
 |---|---|
@@ -510,24 +352,6 @@ after retention lapses, either shape:
 ### 3.11.1 The body itself
 
 The expanded row is a summary, not the record. Any evidence row opens a dialog holding the complete body, and that dialog is the **same surface for all four operations** — replay, discard, purge and publish — because the question is the same one each time: *what exactly was in that message?*
-
-```
-┌ ORD-88213  replay  orders  [payload edited]                              ✕ ┐
-│ The body replayed, beside the body it replaced. The marked line is the     │
-│ only difference.                                                          │
-├───────────────────────────────────┬───────────────────────────────────────┤
-│ BEFORE — AS DEAD-LETTERED  7 lines│ REPLAYED — AS SENT          7 lines   │
-│  1  {                             │  1  {                                 │
-│  2    "orderId": "ORD-88213",     │  2    "orderId": "ORD-88213",         │
-│  3    "customer": "acme-pty",     │  3    "customer": "acme-pty",         │
-│  4 -  "total": 2499.0,            │  4 +  "total": 1999.0,                │
-│  5    "currency": "AUD",          │  5    "currency": "AUD",              │
-│  6    "status": "payment_pending" │  6    "status": "payment_pending"     │
-│  7  }                             │  7  }                                 │
-├───────────────────────────────────┴───────────────────────────────────────┤
-│ 1.2 KB · retained until 13 Nov 14:31 · sha256 abc3f1…   [Copy body] [Close]│
-└───────────────────────────────────────────────────────────────────────────┘
-```
 
 | Rule | Why |
 |---|---|
@@ -562,21 +386,7 @@ The dialog is read-only. Nothing in it can be edited and re-sent — replay edit
 
 ## 4. Reporting dashboard (`/report`)
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│ Marites — reporting            [prod ▾]      [ 30 days ▾ ]  Viewer  │
-├──────────────┬──────────────┬──────────────┬────────────────────────┤
-│ Published    │ Dead letters │ Dead-letter  │ Peak rate              │
-│ 41.2 M       │ 118,402      │ rate 0.29%   │ 4,800 /s               │
-├──────────────┴──────────────┴──────────────┴────────────────────────┤
-│  Daily totals                                          ▁▂▃▅▆▅▃▂    │
-│  ─────────────────────────────────────────────────────────────      │
-├──────────────────────────────────────────────────────────────────────┤
-│ Per queue            Published    Dead letters   Rate    Last seen   │
-│ orders               38.1 M       110,204        0.29%   2 min ago   │
-│ payments              3.1 M         8,198        0.26%   2 min ago   │
-└──────────────────────────────────────────────────────────────────────┘
-```
+Four tiles, one trend and a per-queue table. The executive surface, and the only screen a Viewer can reach — so it carries no operation control, no message body and no setting.
 
 | Rule | Where it is owned |
 |---|---|
@@ -635,20 +445,26 @@ The last row is the one that matters. A session that expires while an operator i
 | Storage capped | "Capped" banner with an explanation that counts continue | DOC-UX-001 §5 |
 | Agent proposal pending | A banner above the metrics, with the reasoning and two actions | §3.8 |
 | Assistant not configured | The drawer explains, names the owner, and disables its input | §3.9 |
-| **Live-only (no storage)** | A banner on the queue list, queue detail and audit log; recovery controls disabled with the reason stated | §3.10 |
-| Proposal awaiting approval | `awaiting human` in the audit log, never "failed" | [agent access](../05-architecture/mcp-integration.md) §4 |
+| **Live-only (no message store)** | A banner where the gap is felt — the queue list, the report screen, any search — saying what still works. Recovery and the audit are **not** degraded and carry no warning (DEC-016) | §3.10 |
+| Proposal raised, not executed | A `proposal` row in the audit with result `pending`, and a banner on the queue screen when a credential may only propose | [agent access](../05-architecture/mcp-integration.md) §4 |
 
-## 7. What is not designed
+## 7. Deliberate scope
 
-- **Responsive behaviour.** The console is assumed desktop-width; below 900px the rail collapses and the step strip wraps, but no phone layout is specified. The reporting view would be the sensible one to adapt first.
-- **Onboarding copy.** The wizard's wording is the difference between an adopter fixing a grant and giving up, and it is unwritten.
-- **Error surfaces.** Where a `429`, `503` or `Unresolved` appears on screen is implied by the operations but not laid out.
-- **Empty and loading states for the agent banner.** A proposal that arrives while the queue is open has no arrival behaviour; it appears on next load.
+Four boundaries, each a decision rather than an omission.
 
-Colour, type and spacing are no longer in this list — they are owned by [visual design](visual-design.md).
+| Boundary | The rule | Why |
+|---|---|---|
+| **Desktop only** | The console is designed for a workstation. Below 900px the rail collapses and the step strip wraps, and nothing further is specified | An incident is diagnosed at a desk with the broker's logs open beside it. A phone layout would be a second design to keep in step for a case nobody has |
+| **Errors appear in place** | A failure that blocks the screen is a banner at the top of it; a failure that blocks one control is a line under that control. The message is the error catalog's remedy, not a status code | The operator needs the next action, and the catalog already carries it (`ERR-*` in [the error catalog](../07-data-and-contracts/error-catalog.md)) |
+| **The assistant never interrupts** | A proposal that arrives while the queue is open appears as a banner on the next poll. It is never a modal, and it never takes focus | The operator is mid-incident. A dialog that steals the cursor is a dialog that gets dismissed without being read |
+| **No loading skeleton** | A screen that has not loaded shows its previous state, dimmed, rather than an empty frame | An empty frame reads as "no messages", which is the one thing this product must never say by accident |
+
+Colour, type and spacing are owned by [visual design](visual-design.md).
 
 ## 8. Document control
 
 Revision 0.1 recorded the navigation model, nine routes and the operation dialog. Written November 2026.
 
 *Amended November 2026:* the route map gained `/login`, `/publish` and `/audit` — three screens the contract served and this document had omitted, found while building the prototype. Added §3.6 (publish composer), §3.7 (dead-letter selection and header actions), §3.8 (agent proposals) and §5 (authentication states, including the expired-token rule). Visual design moved out to [DOC-UX-004](visual-design.md). A further amendment added §3.9 (the assistant drawer), the `/ai` and drawer routes, and the unconfigured state.
+
+*Amended November 2026:* the block mockups were removed and replaced by the prototype's own screenshots, one set per section — a mockup beside a photograph is the same information twice, and the mockup is the copy that drifts. §3.8 was rewritten for both credential states after DEC-010 was revised; §3.3 stopped claiming a separate message-list screen; §6 lost two rows that contradicted DEC-016 and DEC-010; §7 became scope decisions rather than a list of what was unwritten.

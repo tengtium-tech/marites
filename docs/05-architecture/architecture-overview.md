@@ -44,7 +44,12 @@ One self-hosted service, one PostgreSQL database, one React frontend, and a cont
 └──────────────────────────────────────────────────────────────┘
            │
 ┌──────────▼───────────────────────────────────────────────────┐
-│  PostgreSQL  — partitioned by day · payload spillover >64 KB │
+│  Message store — the adopter's, optional (DEC-012)           │
+│    PostgreSQL first · SQL Server second                      │
+│    message_capture · message_rollup · capture_dedupe         │
+├──────────────────────────────────────────────────────────────┤
+│  Bookkeeping store — Marites' own, always present            │
+│    SQLite, one file: config · roles · audit · evidence       │
 └──────────────────────────────────────────────────────────────┘
 ```
 
