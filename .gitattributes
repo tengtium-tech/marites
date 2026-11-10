@@ -1,0 +1,4 @@
+# Markdown is authored and reviewed as CRLF; everything else stays LF.
+* text=auto eol=lf
+*.md text eol=crlf
+*.png binary

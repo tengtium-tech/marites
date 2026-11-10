@@ -121,4 +121,4 @@ These come from the documents and are the reason the UI looks the way it does:
 
 ## What it is not
 
-Not a design system. The tokens in `src/index.css` follow [the visual design document](../docs/experience/visual-design.md), which owns the palette, the type scale and the computed contrast ratios; the prototype implements them rather than defining them. No accessibility audit has been run beyond the contrast pairs, which were computed rather than measured in a browser.
+Not a design system. The tokens in `src/index.css` follow [the visual design document](../docs/08-experience/visual-design.md), which owns the palette, the type scale and the computed contrast ratios; the prototype implements them rather than defining them. No accessibility audit has been run beyond the contrast pairs, which were computed rather than measured in a browser.
