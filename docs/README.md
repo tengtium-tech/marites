@@ -12,7 +12,7 @@ The documentation uses numbered sections — `01-project` to `14-reference` — 
 
 | Section | Contents |
 | --- | --- |
-| [Project](01-project/README.md) | The [portfolio overview](01-project/portfolio-overview.md), decisions, assumptions and risks, the documentation standard and structure. Read first |
+| [Project](01-project/README.md) | The [portfolio overview](01-project/portfolio-overview.md), shared specification and implementation-profile strategy, decisions, assumptions and risks. Read first |
 | [Business](02-business/README.md) | Requirements with acceptance criteria, actors, constraints and scope |
 | [Workflows](03-workflows/README.md) | The capture, recovery and onboarding lifecycles, failure paths, and the retention and compaction lifecycle |
 | [Domains](04-domains/README.md) | Five documentation areas with responsibilities, records and handoffs |
@@ -77,6 +77,10 @@ When two documents disagree, this table decides which one wins.
 
 **A document is not evidence of implementation.** The prototype illustrates the UI; no production service has been built, run, or verified against a broker. Statements about product behaviour describe intent.
 
+## Shared specification and implementation profiles
+
+The product contract is shared: requirements, user-visible workflows, domain behavior, the OpenAPI surface, security rules, and acceptance criteria apply to every stack. The first implementation profile is React/TypeScript with C#/.NET. Some current architecture, persistence, operations, and delivery documents contain choices for that profile; those choices do not bind later profiles. See the [portfolio overview](01-project/portfolio-overview.md) for the planned frontend/backend matrix and repository strategy.
+
 **Paths in prose are relative to this `docs/` directory.** The contract lives inside the documentation because it is the product boundary, not a build artefact.
 
 ## Document register
@@ -85,7 +89,7 @@ Forty-eight substantive documents, fourteen section indexes, two nested indexes,
 
 | Document | Version | Status | Scope / evidence |
 | --- | --- | --- |
-| [project/portfolio-overview.md](01-project/portfolio-overview.md) | 0.1 | Approved | what this set demonstrates, and what it does not |
+| [project/portfolio-overview.md](01-project/portfolio-overview.md) | 0.2 | Approved | what this set demonstrates and how shared requirements govern multiple stack profiles |
 | [project/documentation-structure.md](01-project/documentation-structure.md) | 0.1 | Approved | the fourteen sections |
 | [project/documentation-standard.md](01-project/documentation-standard.md) | 0.2 | Approved | document review and approval statuses are defined |
 | [project/decisions-and-open-questions.md](01-project/decisions-and-open-questions.md) | 0.1 | Approved | 19 questions, all answered |
@@ -126,7 +130,7 @@ Forty-eight substantive documents, fourteen section indexes, two nested indexes,
 | [operations/configuration-reference.md](11-operations/configuration-reference.md) | 0.1 | Approved | 24 variables, none read by a binary yet |
 | [delivery/delivery-plan.md](12-delivery/delivery-plan.md) | 0.1 | Approved | 8 milestones, 30 packages, nothing scheduled |
 | [delivery/ci-and-release.md](12-delivery/ci-and-release.md) | 0.1 | Approved | ten gates, no pipeline exists |
-| [delivery/github-project.md](12-delivery/github-project.md) | 0.1 | Approved | no repository exists yet |
+| [delivery/github-project.md](12-delivery/github-project.md) | 0.2 | Approved | one-repository multi-profile layout and per-backend GitHub Projects |
 | [experience/screenshot-index.md](08-experience/screenshot-index.md) | 0.1 | Approved | 39 images from one build; capture script committed |
 | [operations/deployment-and-onboarding.md](11-operations/deployment-and-onboarding.md) | 0.1 | Approved | Specification baseline; implementation and verification state are tracked separately |
 | [operations/provider-prerequisites.md](11-operations/provider-prerequisites.md) | 0.1 | Approved | Service Bus and Pub/Sub |

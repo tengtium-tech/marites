@@ -3,7 +3,7 @@ document_id: DOC-DEL-004
 title: GitHub Project
 product: Marites
 status: Approved — Product owner, 2026-11-11
-version: 0.1
+version: 0.2
 date: 2026-11
 ---
 
@@ -15,22 +15,27 @@ How this document set becomes a repository: the layout, the labels, the issue te
 
 ```
 marites/
-├── docs/                 the specification set (this tree)
-├── src/                  the service — Marites.Api, .Worker, .Contracts, .Core
-├── web/                  the React client, generated from the contract
-├── contract-tests/       the black-box conformance suite
-├── testing/
-│   ├── compose.yaml      broker stacks, one service per provider
-│   ├── scenarios/        traffic-harness scenario files
-│   └── fixtures/         the harness itself
-├── migrations/           one folder per store
-├── deploy/               compose, Helm chart, manifests
-├── tools/                repository scripts — docs_check.py guards the specification set
-├── .github/              workflows, issue and PR templates
+├── docs/                         shared product specification and profile guidance
+├── implementations/
+│   ├── frontends/
+│   │   ├── react/
+│   │   ├── angular/
+│   │   └── svelte/
+│   └── backends/
+│       ├── dotnet/
+│       ├── python/
+│       └── go/
+├── contract-tests/               shared black-box API conformance suite
+├── testing/                      shared broker stacks and traffic harness
+├── deploy/                       profile-specific deployment assets
+├── tools/                        repository and documentation checks
+├── .github/                      workflows, issue and PR templates
 └── README.md
 ```
 
-**`docs/` stays at the root and stays authoritative.** The specification is not wiki material that drifts from the code; it is reviewed, versioned and gated by CI like the code is.
+The implementation directories are created as each profile starts; they are target paths, not claims that those applications already exist. **`docs/` stays at the root and remains authoritative for shared product behavior and the API contract.** Stack-specific architecture, build, storage-adapter and deployment guidance belongs with its profile and must not silently alter the shared contract.
+
+Use one GitHub Project per backend profile: start with React + .NET, then create the Python and Go projects when those profiles begin. Each project tracks its backend work and the frontend pairings tested against it. All profiles use the same shared requirements, contract, and verification gates.
 
 ## 2. Labels
 
@@ -133,6 +138,8 @@ Deliberately small. Every automation is one that cannot be wrong in a way nobody
 
 **Squash merge, one package per pull request.** A pull request that closes two packages cannot be reviewed against either definition of done.
 
+Technology variants are directories on `main`, not permanent branches. Branches are short-lived work in progress and merge into `main`; this keeps shared documentation and completed profiles visible together.
+
 The PR template asks for four things and refuses to be longer:
 
 ```markdown
@@ -154,4 +161,4 @@ TC-… (or: none — and why that is acceptable)
 
 ## 8. Document control
 
-Revision 0.1, November 2026. No repository exists yet: this is the setup the first commit follows, and the templates are written to be pasted into `.github/`. The label and field lists are intentionally short — the failure mode of a project board is taxonomy, not scarcity.
+Revision 0.2, November 2026. The repository is initialized locally; its GitHub remote and profile project boards are pending publication. The layout supports one shared product specification with independently implemented frontend and backend profiles. The label and field lists are intentionally short — the failure mode of a project board is taxonomy, not scarcity.

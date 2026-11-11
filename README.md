@@ -2,7 +2,7 @@
 
 Marites observes message traffic on a broker an adopter already runs — RabbitMQ, Azure Service Bus or Google Pub/Sub — counts it exactly, shows why messages failed, and lets a support engineer retry, discard or publish from one screen. It is a **client** of that broker: it never provisions, hosts, upgrades or repairs one.
 
-**Status: specification only. No application code exists, no test has run, and no broker has been contacted.**
+**Status: approved specification baseline. No production service, database, test run, or broker connection exists.**
 
 ## Where to start
 
@@ -31,13 +31,20 @@ docs/                    the specification set: 14 sections, 48 substantive docu
   12-delivery/           plan, CI, project board, readiness, review
   13-traceability/       operation-to-requirement matrix
   14-reference/          controlled vocabulary
-
-prototype/       a UI exploration — React + shadcn/ui, no backend, not authoritative
 ```
 
-**There is no application code**: no service, no database, no test. The contract at [docs/07-data-and-contracts/openapi/openapi.yaml](docs/07-data-and-contracts/openapi/openapi.yaml) is the artefact every later implementation will be measured against.
+The contract at [docs/07-data-and-contracts/openapi/openapi.yaml](docs/07-data-and-contracts/openapi/openapi.yaml) is the shared API boundary every implementation will be measured against.
 
-`prototype/` is a clickable mockup of the screens described in [the wireframes](docs/08-experience/wireframes-and-navigation.md), built with the stack the specification names so the design can be judged before it is built. It has no backend and every number on screen is hard-coded — where it disagrees with `docs/`, the documents win.
+## One product, multiple stack profiles
+
+The requirements, workflows, domain rules, experience, API contract, and acceptance criteria are shared across implementations. The current architecture and operations documents describe the first profile: a React/TypeScript frontend and a C#/.NET backend. They include stack-specific choices and should be read as that profile's guidance, not as requirements for every future implementation.
+
+| | First profile | Planned alternatives |
+|---|---|---|
+| Frontend | React | Angular, Svelte |
+| Backend | C#/.NET | Python, Go |
+
+The goal is to exercise all nine frontend/backend pairings against the same product behavior and HTTP contract. Shared requirements or API changes belong in `docs/`; implementation-specific code and guidance belong with their stack profile. The repository plan is documented in [the portfolio overview](docs/01-project/portfolio-overview.md).
 
 ## How this becomes a sprint plan
 
@@ -51,6 +58,8 @@ The documents already contain the structure a project board needs, so the board 
 | Test task | A case, TC-001 to TC-029, with its level and milestone |
 
 Two rules keep the board from drifting away from the specification: **a story that needs data the contract does not serve is a contract change first**, and **a milestone does not close until its gate passes** — not until its tickets are closed.
+
+There will be a GitHub Project for each backend profile. The first is React + .NET; Python and Go follow. Each project uses the shared requirements, API contract, and verification gates while tracking its own implementation work.
 
 ## A note on what these documents are not
 

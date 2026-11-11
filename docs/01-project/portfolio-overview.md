@@ -1,6 +1,6 @@
 # Portfolio overview
 
-Version 0.1 | November 2026 | Status: Approved — Product owner, 2026-11-11
+Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 What this repository is, what it is meant to demonstrate, and what it deliberately does not prove. Written for a reader who has twenty minutes and wants to know whether the thinking is sound.
 
@@ -81,6 +81,24 @@ If you only read one page, read the [failure modes](../05-architecture/failure-m
 3. **Is anything claimed as verified?** It should not be. Search for "Verified" and expect to find only a vocabulary definition.
 4. **Do the two places that describe the same thing agree?** The review found several that did not. Finding one more is a fair outcome.
 
-## 7. Document control
+## 7. The implementation portfolio
 
-Revision 0.1 records the portfolio framing, written November 2026. It makes no claim about quality beyond what the linked documents support, and it is the only document in the set written primarily for a reader outside the project.
+Marites is one product with a shared specification and multiple implementation profiles. Requirements, workflows, domain rules, user-visible behavior, the HTTP contract, and acceptance criteria are the common source of truth. Each implementation must conform to them; a stack choice does not silently change product behavior.
+
+The first profile is React/TypeScript with a C#/.NET backend. The planned portfolio covers the full three-by-three pairing matrix:
+
+| Frontend \ Backend | C#/.NET | Python | Go |
+|---|---|---|---|
+| React | First profile | Planned | Planned |
+| Angular | Planned | Planned | Planned |
+| Svelte | Planned | Planned | Planned |
+
+The current approved architecture set contains stack-specific guidance alongside shared rules. React frontend architecture, ASP.NET Core API guidance, C#/.NET backend architecture, provider/storage adapters, deployment, and CI choices describe the initial profile. Before another profile starts, its implementation guidance must be separated from shared behavior so a different stack can follow the same contract without inheriting framework-specific instructions.
+
+The repository will keep shared specifications under `docs/` and implementation code under `implementations/`, grouped by frontend and backend technology. Short-lived feature branches are for changes in progress; long-lived technology variants live in their directories so the shared contract and completed implementations remain visible together on `main`.
+
+Each backend profile gets a GitHub Project. The first project covers React + .NET; later Python and Go projects reuse the same requirements, contract, and verification gates. Frontend pairings are tracked as implementation work against each backend's conformance suite.
+
+## 8. Document control
+
+Revision 0.2 records the multi-stack portfolio direction. It makes no claim about quality beyond what the linked documents support, and it is the only document in the set written primarily for a reader outside the project.

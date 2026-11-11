@@ -8,7 +8,7 @@ Purpose, decisions, assumptions and the rules that keep this documentation set c
 
 | Record | Shared coverage |
 | --- | --- |
-| [Portfolio overview](portfolio-overview.md) | What the repository demonstrates, how to read it in twenty minutes, and an honest assessment of what is weak |
+| [Portfolio overview](portfolio-overview.md) | What the repository demonstrates, the shared product contract, the React/.NET starting profile, and the planned technology variants |
 | [Documentation structure](documentation-structure.md) | The fourteen sections, what each owns, index-only sections and the coverage standard |
 | [Documentation standard](documentation-standard.md) | Naming, headers, readiness vocabulary, identifier register, citation, supersession and evidence discipline |
 | [Decision register](decisions-and-open-questions.md) | DEC-001 to DEC-019: every question, its answer, and what each answer rules out. 19 answered, 0 open |
