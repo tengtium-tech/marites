@@ -23,8 +23,6 @@ Twelve tables in **two stores** ([DEC-012](../01-project/decisions-and-open-ques
 
 ![Marites data stores and ownership](../05-architecture/diagrams/data-stores.png)
 
-**Diagram source:** [data-store ownership](../05-architecture/diagrams/data-stores.architecture.json).
-
 ### 2.1 Marites' own store — always present
 
 Embedded SQLite, one file, created at install. Nothing here is asked of the adopter, and nothing here grows with traffic.
@@ -78,8 +76,6 @@ The Outbox does not replace `operation_intent`: the latter holds bodies before a
 #### Marites-owned logical relationships
 
 ![Marites bookkeeping logical model](diagrams/bookkeeping-logical-model.png)
-
-**Diagram source:** [bookkeeping logical model](diagrams/bookkeeping-logical-model.class.json).
 
 This view shows the nine current SQLite records, selected key references, and the operation-intent promotion path. It does not include the planned Outbox record. It is a logical relationship map: SQLite physical type mappings are not specified, and fields such as `tenant_id` remain logical scope references unless the dictionary explicitly declares a foreign key.
 

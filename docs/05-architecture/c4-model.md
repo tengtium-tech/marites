@@ -19,8 +19,6 @@ Marites serves three user roles and connects to adopter-run provider platforms, 
 
 ![C4 system context](diagrams/c4-context.png)
 
-**Diagram source:** [c4-context.architecture.json](diagrams/c4-context.architecture.json).
-
 **What this level establishes, and what it deliberately hides.**
 
 Marites is a **client** of the broker, not a peer of it. It never provisions, hosts or repairs one — that boundary is [ADR-001](decisions.md) and it is the single most consequential line in the whole design. Everything downstream follows from it: the prerequisite document, the preflight checks, and the fact that a misconfigured broker looks like a broken product.
@@ -32,8 +30,6 @@ The broker-to-Marites relationship represents message copies delivered through a
 The view separates the web UI, API, capture worker, and their external dependencies. The API and worker share an image with separate entrypoints; the combined entrypoint runs both in the single-server profile.
 
 ![C4 container view](diagrams/c4-containers.png)
-
-**Diagram source:** [c4-containers.architecture.json](diagrams/c4-containers.architecture.json).
 
 **Three properties worth reading off this diagram.**
 
@@ -48,8 +44,6 @@ The view separates the web UI, API, capture worker, and their external dependenc
 The API is mostly request/response slices and reads well as a file tree ([architecture-overview.md](architecture-overview.md) §6). The worker is where the real machinery is, so it gets a component view.
 
 ![C4 capture worker components](diagrams/c4-capture-components.png)
-
-**Diagram source:** [c4-capture-components.architecture.json](diagrams/c4-capture-components.architecture.json).
 
 **Why the batcher exists.** A provider's delivery callback must not block on a database write; otherwise storage delays can trigger broker-side flow control. `Channel<T>` decouples message delivery from batch persistence.
 

@@ -1,0 +1,184 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "MCP Execute and Propose Paths",
+    "locale": "en",
+    "output": ".archify/workflow-mcp-two-paths-20261111-204216/mcp-two-paths.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "human",
+      "label": "Human operator"
+    },
+    {
+      "id": "assistant",
+      "label": "Claude Desktop / agent"
+    },
+    {
+      "id": "mcp",
+      "label": "MCP server",
+      "variant": "normal"
+    },
+    {
+      "id": "api",
+      "label": "Marites API"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "request",
+      "lane": "human",
+      "col": 0,
+      "type": "external",
+      "label": "Ask Claude Desktop",
+      "sublabel": "person-bound credential"
+    },
+    {
+      "id": "tool-list",
+      "lane": "mcp",
+      "col": 1,
+      "type": "security",
+      "label": "Filter tools by credential",
+      "sublabel": "CanExecute decides act vs propose"
+    },
+    {
+      "id": "act-tool",
+      "lane": "assistant",
+      "col": 2,
+      "type": "backend",
+      "label": "Call replay_messages",
+      "sublabel": "CanExecute granted",
+      "yOffset": -80
+    },
+    {
+      "id": "propose-tool",
+      "lane": "assistant",
+      "col": 2,
+      "type": "backend",
+      "label": "Call propose_replay",
+      "sublabel": "CanExecute absent",
+      "yOffset": 80
+    },
+    {
+      "id": "act-api",
+      "lane": "api",
+      "col": 3,
+      "type": "security",
+      "label": "Authorize role · hold · act",
+      "sublabel": "API rechecks user capability",
+      "yOffset": -80
+    },
+    {
+      "id": "pending-api",
+      "lane": "api",
+      "col": 3,
+      "type": "backend",
+      "label": "Record pending proposal",
+      "sublabel": "Return proposalId + expiresAt",
+      "yOffset": 80
+    },
+    {
+      "id": "review",
+      "lane": "human",
+      "col": 4,
+      "type": "external",
+      "label": "Review in Marites",
+      "sublabel": "dry run · reasons · target",
+      "tag": "type prod · confirm"
+    },
+    {
+      "id": "applied-audit",
+      "lane": "api",
+      "col": 5,
+      "type": "database",
+      "label": "Applied audit row",
+      "sublabel": "Attribution follows the path"
+    }
+  ],
+  "edges": [
+    {
+      "id": "request-tools",
+      "from": "request",
+      "to": "tool-list",
+      "label": "assistant connects as this person",
+      "variant": "default",
+      "role": "main"
+    },
+    {
+      "id": "tool-act",
+      "from": "tool-list",
+      "to": "act-tool",
+      "label": "CanExecute granted · action tools offered",
+      "variant": "security",
+      "role": "branch"
+    },
+    {
+      "id": "tool-propose",
+      "from": "tool-list",
+      "to": "propose-tool",
+      "label": "CanExecute absent · propose tools offered",
+      "variant": "security",
+      "role": "branch"
+    },
+    {
+      "id": "execute",
+      "from": "act-tool",
+      "to": "act-api",
+      "label": "MCP tool call",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "propose",
+      "from": "propose-tool",
+      "to": "pending-api",
+      "label": "MCP tool call",
+      "variant": "default",
+      "role": "branch"
+    },
+    {
+      "id": "direct-audit",
+      "from": "act-api",
+      "to": "applied-audit",
+      "label": "actor=user · via=Claude",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "pending-review",
+      "from": "pending-api",
+      "to": "review",
+      "label": "proposalId + expiresAt",
+      "variant": "default",
+      "role": "branch"
+    },
+    {
+      "id": "approved-audit",
+      "from": "review",
+      "to": "applied-audit",
+      "label": "human confirms · approvedBy + proposalId",
+      "variant": "security",
+      "role": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Attribution",
+      "items": [
+        "Direct execution records the human behind the credential as actor and Claude as the channel; the assistant is never the actor.",
+        "The proposal path records the human confirmer in approvedBy and retains proposalId."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Proposal guard",
+      "items": [
+        "A pending proposal expires after a bounded window (one hour by default); stale work must be proposed again.",
+        "The API still enforces the person's role. CanExecute does not grant capabilities beyond that role."
+      ]
+    }
+  ]
+}

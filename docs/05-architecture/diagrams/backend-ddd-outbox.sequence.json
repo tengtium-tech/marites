@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Backend DDD — Transactional Outbox",
+    "locale": "en",
+    "output": ".archify/sequence-backend-ddd-20261111-203231/backend-ddd-outbox.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "admin",
+      "type": "external",
+      "label": "Admin"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Marites API",
+      "sublabel": "Presentation"
+    },
+    {
+      "id": "app",
+      "type": "backend",
+      "label": "Application",
+      "sublabel": "command handler"
+    },
+    {
+      "id": "domain",
+      "type": "backend",
+      "label": "Domain",
+      "sublabel": "aggregate + event"
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "Bookkeeping SQLite"
+    },
+    {
+      "id": "dispatcher",
+      "type": "backend",
+      "label": "Outbox dispatcher"
+    },
+    {
+      "id": "sink",
+      "type": "external",
+      "label": "Integration sink",
+      "sublabel": "configured subscriber"
+    }
+  ],
+  "segments": [
+    {
+      "from": 160,
+      "to": 637,
+      "label": "Command and atomic commit"
+    },
+    {
+      "from": 655,
+      "to": 985,
+      "label": "Async delivery · when configured"
+    }
+  ],
+  "messages": [
+    {
+      "id": "request",
+      "from": "admin",
+      "to": "api",
+      "y": 180,
+      "label": "PATCH broker profile + If-Match",
+      "variant": "emphasis"
+    },
+    {
+      "id": "map",
+      "from": "api",
+      "to": "app",
+      "y": 245,
+      "label": "Map request to command"
+    },
+    {
+      "id": "apply",
+      "from": "app",
+      "to": "domain",
+      "y": 305,
+      "label": "Apply change and raise domain event"
+    },
+    {
+      "id": "event",
+      "from": "domain",
+      "to": "app",
+      "y": 365,
+      "label": "Successful transition + event facts",
+      "variant": "return"
+    },
+    {
+      "id": "save",
+      "from": "app",
+      "to": "store",
+      "y": 430,
+      "label": "Save aggregate + OutboxMessage",
+      "variant": "emphasis",
+      "note": "Commit both in the same bookkeeping-store transaction."
+    },
+    {
+      "id": "commit",
+      "from": "store",
+      "to": "app",
+      "y": 505,
+      "label": "Atomic commit",
+      "variant": "return"
+    },
+    {
+      "id": "result",
+      "from": "app",
+      "to": "api",
+      "y": 565,
+      "label": "Application result",
+      "variant": "return"
+    },
+    {
+      "id": "response",
+      "from": "api",
+      "to": "admin",
+      "y": 620,
+      "label": "HTTP result · RFC 9457 errors",
+      "variant": "return"
+    },
+    {
+      "id": "lease",
+      "from": "dispatcher",
+      "to": "store",
+      "y": 690,
+      "label": "Lease pending event"
+    },
+    {
+      "id": "pending",
+      "from": "store",
+      "to": "dispatcher",
+      "y": 745,
+      "label": "Event + stable ID",
+      "variant": "return"
+    },
+    {
+      "id": "publish",
+      "from": "dispatcher",
+      "to": "sink",
+      "y": 815,
+      "label": "Publish · at least once",
+      "variant": "emphasis",
+      "note": "Bounded backoff retries transient failures; poison events stay visible for operator action."
+    },
+    {
+      "id": "ack",
+      "from": "sink",
+      "to": "dispatcher",
+      "y": 900,
+      "label": "Acknowledge",
+      "variant": "return"
+    },
+    {
+      "id": "delivered",
+      "from": "dispatcher",
+      "to": "store",
+      "y": 950,
+      "label": "Mark delivered"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "api",
+      "from": 180,
+      "to": 630,
+      "type": "backend"
+    },
+    {
+      "participant": "app",
+      "from": 245,
+      "to": 575,
+      "type": "backend"
+    },
+    {
+      "participant": "domain",
+      "from": 305,
+      "to": 380,
+      "type": "backend"
+    },
+    {
+      "participant": "store",
+      "from": 430,
+      "to": 515,
+      "type": "database"
+    },
+    {
+      "participant": "dispatcher",
+      "from": 690,
+      "to": 970,
+      "type": "backend"
+    },
+    {
+      "participant": "sink",
+      "from": 815,
+      "to": 910,
+      "type": "external"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Delivery condition",
+      "items": [
+        "No external event sink is currently in the product boundary; publishing starts only after a named subscriber and sink are configured.",
+        "Consumers deduplicate by stable event ID because delivery is at least once."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Scope",
+      "items": [
+        "This sequence records the specification, not an implemented service.",
+        "Capture-batch events stay outside SQLite; capture-originated delivery requires a message-store transaction and storage-port change first."
+      ]
+    }
+  ]
+}

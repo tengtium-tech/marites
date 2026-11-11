@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "API — Recovery Command, Confirmed Outcome",
+    "locale": "en",
+    "output": "docs/05-architecture/diagrams/api-recovery-confirmed.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "operator",
+      "type": "external",
+      "label": "Operator"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Marites API",
+      "sublabel": "ASP.NET Core boundary"
+    },
+    {
+      "id": "guard",
+      "type": "security",
+      "label": "Operation policy",
+      "sublabel": "capability · limits"
+    },
+    {
+      "id": "book",
+      "type": "database",
+      "label": "Bookkeeping store",
+      "sublabel": "SQLite · always present"
+    },
+    {
+      "id": "provider",
+      "type": "backend",
+      "label": "Provider adapter"
+    },
+    {
+      "id": "broker",
+      "type": "external",
+      "label": "Adopter broker"
+    }
+  ],
+  "segments": [
+    {
+      "from": 160,
+      "to": 350,
+      "label": "Validate and authorize"
+    },
+    {
+      "from": 365,
+      "to": 475,
+      "label": "Durable hold"
+    },
+    {
+      "from": 490,
+      "to": 660,
+      "label": "Execute at broker"
+    },
+    {
+      "from": 679,
+      "to": 855,
+      "label": "Record confirmed result"
+    }
+  ],
+  "messages": [
+    {
+      "id": "command",
+      "from": "operator",
+      "to": "api",
+      "y": 180,
+      "label": "POST /operations/* + Idempotency-Key",
+      "variant": "emphasis",
+      "note": "The command includes typed confirmation where required."
+    },
+    {
+      "id": "authorize",
+      "from": "api",
+      "to": "guard",
+      "y": 260,
+      "label": "Authenticate · authorize · validate"
+    },
+    {
+      "id": "allowed",
+      "from": "guard",
+      "to": "api",
+      "y": 325,
+      "label": "Allowed · limits pass",
+      "variant": "return"
+    },
+    {
+      "id": "hold",
+      "from": "api",
+      "to": "book",
+      "y": 390,
+      "label": "Commit operation_intent + held bodies",
+      "variant": "emphasis"
+    },
+    {
+      "id": "held",
+      "from": "book",
+      "to": "api",
+      "y": 450,
+      "label": "Durable hold",
+      "variant": "return"
+    },
+    {
+      "id": "execute",
+      "from": "api",
+      "to": "provider",
+      "y": 510,
+      "label": "Issue broker command"
+    },
+    {
+      "id": "broker-command",
+      "from": "provider",
+      "to": "broker",
+      "y": 565,
+      "label": "Execute operation",
+      "variant": "emphasis"
+    },
+    {
+      "id": "broker-confirm",
+      "from": "broker",
+      "to": "provider",
+      "y": 620,
+      "label": "Confirmed",
+      "variant": "return"
+    },
+    {
+      "id": "confirmed",
+      "from": "provider",
+      "to": "api",
+      "y": 675,
+      "label": "Confirmed outcome",
+      "variant": "return"
+    },
+    {
+      "id": "record",
+      "from": "api",
+      "to": "book",
+      "y": 730,
+      "label": "Commit audit + evidence; remove intent",
+      "note": "Write an outbox event in this transaction only when an integration sink is configured."
+    },
+    {
+      "id": "result",
+      "from": "api",
+      "to": "operator",
+      "y": 815,
+      "label": "200/201 · Applied result",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "api",
+      "from": 180,
+      "to": 830,
+      "type": "backend"
+    },
+    {
+      "participant": "guard",
+      "from": 255,
+      "to": 335,
+      "type": "security"
+    },
+    {
+      "participant": "book",
+      "from": 385,
+      "to": 755,
+      "type": "database"
+    },
+    {
+      "participant": "provider",
+      "from": 505,
+      "to": 685,
+      "type": "backend"
+    },
+    {
+      "participant": "broker",
+      "from": 560,
+      "to": 630,
+      "type": "messagebus"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Ordering rule",
+      "items": [
+        "The durable hold commits before the broker command.",
+        "Audit and evidence are recorded only after broker confirmation."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Status",
+      "items": [
+        "This is the confirmed branch; the ambiguous branch returns 202 and is reconciled separately.",
+        "The sequence describes the specification, not an implemented service."
+      ]
+    }
+  ]
+}

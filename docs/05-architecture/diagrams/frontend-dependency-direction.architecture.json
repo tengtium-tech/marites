@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Frontend Dependency Direction",
+    "locale": "en",
+    "output": ".archify/architecture-frontend-dependency-direction-20261111-203516/frontend-dependency-direction.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {"id": "presentation", "type": "frontend", "label": "Presentation", "sublabel": "React pages · components · hooks", "pos": [80, 100], "size": [170, 80]},
+    {"id": "application", "type": "backend", "label": "Application", "sublabel": "use cases · repository ports", "pos": [360, 100], "size": [170, 80]},
+    {"id": "domain", "type": "backend", "label": "Domain", "sublabel": "models · business rules", "pos": [640, 100], "size": [170, 80]},
+    {"id": "infrastructure", "type": "backend", "label": "Infrastructure", "sublabel": "HTTP · DTOs · mappers · storage", "pos": [360, 340], "size": [190, 80]},
+    {"id": "composition", "type": "backend", "label": "Composition root", "sublabel": "src/di · startup wiring", "pos": [80, 340], "size": [170, 80]}
+  ],
+  "connections": [
+    {"id": "presentation-to-application", "from": "presentation", "to": "application", "label": "calls use cases"},
+    {"id": "application-to-domain", "from": "application", "to": "domain", "label": "depends on"},
+    {"id": "infrastructure-to-application", "from": "infrastructure", "to": "application", "label": "implements ports", "fromSide": "top", "toSide": "bottom"},
+    {"id": "infrastructure-to-domain", "from": "infrastructure", "to": "domain", "label": "uses domain models", "fromSide": "right", "toSide": "bottom"},
+    {"id": "composition-to-presentation", "from": "composition", "to": "presentation", "label": "injects hooks / adapters", "fromSide": "top", "toSide": "bottom"},
+    {"id": "composition-to-application", "from": "composition", "to": "application", "label": "constructs use cases", "fromSide": "top", "toSide": "bottom"},
+    {"id": "composition-to-infrastructure", "from": "composition", "to": "infrastructure", "label": "binds implementations"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Dependency rule", "items": ["Presentation and Infrastructure depend inward on Application and Domain.", "Domain has no React, browser, HTTP, or infrastructure dependency."]},
+    {"dot": "slate", "title": "Composition root", "items": ["src/di is wiring, not a fifth business layer.", "Only the composition root names concrete adapters and the ports they implement."]}
+  ]
+}

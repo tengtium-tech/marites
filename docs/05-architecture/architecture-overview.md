@@ -66,8 +66,6 @@ The design is therefore *possible* via Federation, at the cost of a second clust
 
 ![The one-hop capture path](diagrams/one-hop-tap.png)
 
-**Diagram source:** [one-hop capture path](diagrams/one-hop-tap.architecture.json).
-
 Marites requires **AMQP and management access to whichever broker holds the queues**. What publishes into that broker, or what feeds it upstream, is invisible to Marites and irrelevant to this architecture.
 
 ### When a separate hop is justified
@@ -206,15 +204,11 @@ The dependency rule is enforced at project boundaries: Domain references no oute
 
 ![Stored message read path](diagrams/read-path.png)
 
-**Diagram source:** [stored-message read sequence](diagrams/read-path.sequence.json).
-
 Reads are thin: Application query handlers project read models to contract response DTOs without loading aggregate graphs for rules that do not apply. API/Infrastructure mapping keeps external DTOs out of Domain. See [backend DDD architecture §4–6](backend-ddd.md).
 
 **Capture:**
 
 ![Capture batch and durable acknowledgement](diagrams/capture-batch.png)
-
-**Diagram source:** [capture batch sequence](diagrams/capture-batch.sequence.json).
 
 Two non-obvious choices:
 
@@ -255,8 +249,6 @@ Splitting is a deployment concern, not a code concern — the same assemblies ei
 Adopters run more than one cluster — prod and staging, per-region, per-team. This does not add hops. Marites is a client of **N clusters in a star**:
 
 ![Independent capture across clusters](diagrams/multiple-clusters.png)
-
-**Diagram source:** [multiple-cluster topology](diagrams/multiple-clusters.architecture.json).
 
 Each cluster gets its own `broker_profile`, preflight result, health state, and capture worker with its own connection — **bulkhead isolation**. One unreachable or slow cluster must not stall the others.
 

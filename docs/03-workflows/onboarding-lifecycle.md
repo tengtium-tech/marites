@@ -8,8 +8,6 @@ From "we have a broker" to "the dashboard is useful", including the three places
 
 ![Onboarding sequence](diagrams/onboarding-setup.png)
 
-**Diagram source:** [onboarding-setup.sequence.json](diagrams/onboarding-setup.sequence.json).
-
 The C4 model assigns tap declaration to the capture worker. The current design does not specify how API-saved queue rules trigger worker reconciliation; this sequence does not imply a direct API-to-worker call.
 
 ## 2. Why preflight is not a formality

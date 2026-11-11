@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Frontend Request Flow",
+    "locale": "en",
+    "output": ".archify/sequence-frontend-request-flow-20261111-203516/frontend-request-flow.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "operator",
+      "type": "external",
+      "label": "Operator"
+    },
+    {
+      "id": "component",
+      "type": "frontend",
+      "label": "React component"
+    },
+    {
+      "id": "hook",
+      "type": "frontend",
+      "label": "Bridge hook"
+    },
+    {
+      "id": "usecase",
+      "type": "backend",
+      "label": "Application",
+      "sublabel": "use case"
+    },
+    {
+      "id": "port",
+      "type": "backend",
+      "label": "Repository",
+      "sublabel": "application port"
+    },
+    {
+      "id": "adapter",
+      "type": "backend",
+      "label": "Infrastructure",
+      "sublabel": "repository adapter"
+    },
+    {
+      "id": "client",
+      "type": "backend",
+      "label": "API client",
+      "sublabel": "generated contract"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Marites API"
+    }
+  ],
+  "messages": [
+    {
+      "id": "action",
+      "from": "operator",
+      "to": "component",
+      "y": 180,
+      "label": "Select a documented action",
+      "variant": "emphasis"
+    },
+    {
+      "id": "intent",
+      "from": "component",
+      "to": "hook",
+      "y": 235,
+      "label": "Invoke intent"
+    },
+    {
+      "id": "execute",
+      "from": "hook",
+      "to": "usecase",
+      "y": 290,
+      "label": "execute(input)"
+    },
+    {
+      "id": "port-call",
+      "from": "usecase",
+      "to": "port",
+      "y": 345,
+      "label": "Load or change domain data"
+    },
+    {
+      "id": "implement",
+      "from": "port",
+      "to": "adapter",
+      "y": 400,
+      "label": "Call port implementation"
+    },
+    {
+      "id": "operation",
+      "from": "adapter",
+      "to": "client",
+      "y": 455,
+      "label": "Contract operation"
+    },
+    {
+      "id": "request",
+      "from": "client",
+      "to": "api",
+      "y": 510,
+      "label": "HTTP request",
+      "variant": "emphasis"
+    },
+    {
+      "id": "response",
+      "from": "api",
+      "to": "client",
+      "y": 565,
+      "label": "Response or Problem",
+      "variant": "return"
+    },
+    {
+      "id": "wire",
+      "from": "client",
+      "to": "adapter",
+      "y": 620,
+      "label": "Wire DTO or transport failure",
+      "variant": "return"
+    },
+    {
+      "id": "mapped",
+      "from": "adapter",
+      "to": "usecase",
+      "y": 700,
+      "label": "Domain data or application error",
+      "variant": "return",
+      "note": "The adapter maps the DTO and normalizes transport errors before returning."
+    },
+    {
+      "id": "result",
+      "from": "usecase",
+      "to": "hook",
+      "y": 780,
+      "label": "Use-case result",
+      "variant": "return"
+    },
+    {
+      "id": "view",
+      "from": "hook",
+      "to": "component",
+      "y": 835,
+      "label": "View state",
+      "variant": "return"
+    },
+    {
+      "id": "render",
+      "from": "component",
+      "to": "operator",
+      "y": 890,
+      "label": "Declarative UI",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "component",
+      "from": 180,
+      "to": 910,
+      "type": "frontend"
+    },
+    {
+      "participant": "hook",
+      "from": 235,
+      "to": 855,
+      "type": "frontend"
+    },
+    {
+      "participant": "usecase",
+      "from": 290,
+      "to": 790,
+      "type": "backend"
+    },
+    {
+      "participant": "port",
+      "from": 345,
+      "to": 415,
+      "type": "backend"
+    },
+    {
+      "participant": "adapter",
+      "from": 400,
+      "to": 725,
+      "type": "backend"
+    },
+    {
+      "participant": "client",
+      "from": 455,
+      "to": 635,
+      "type": "backend"
+    },
+    {
+      "participant": "api",
+      "from": 510,
+      "to": 575,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "slate",
+      "title": "Example scope",
+      "items": [
+        "The User folder examples illustrate the pattern only; Marites has no user-profile endpoint.",
+        "The sequence shows a documented contract operation, not a new route or screen."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Boundary rule",
+      "items": [
+        "Generated DTOs and raw transport errors stop in Infrastructure.",
+        "Presentation receives view state; business rules stay outside JSX."
+      ]
+    }
+  ]
+}

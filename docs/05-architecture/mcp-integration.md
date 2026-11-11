@@ -2,7 +2,7 @@
 document_id: DOC-ARCH-004
 title: Agent Access (MCP)
 product: Marites
-version: 0.1
+version: 0.2
 date: 2026-11
 status: Approved — Product owner, 2026-11-11
 ---
@@ -52,25 +52,7 @@ A tool list is a suggestion. The boundary is the **credential**, and an MCP cred
 
 ## 4. The two paths
 
-**Executing** — the credential carries `CanExecute`:
-
-```
-human ──asks Claude Desktop──▶ agent ──replay_messages──▶ API
-                                                          ├─ authorises against the *user's* role
-                                                          ├─ holds the bodies, then acts (ADR-023)
-                                                          └─ audit row: actor a.reyes, via Claude, applied
-```
-
-**Proposing** — the credential does not:
-
-```
-agent ──propose_replay──▶ API ──▶ audit row (result: pending)
-                          └──▶ { proposalId, expiresAt }
-
-human ──opens Marites──▶ sees the dry run, the reasons, the target
-       ──types prod───▶ replay { proposalId, environmentConfirmation }
-                          └─ audit row (result: applied, approvedBy: human, proposalId)
-```
+![MCP execute and propose paths](diagrams/mcp-two-paths.png)
 
 **Attribution replaces the second signature.** An executed operation names the person whose credential carried it and records `via = <assistant>`; the assistant is the channel, never the actor. That is what makes a 3am replay answerable, and it is why the `Approval-Id` token is now needed only on the propose path, where a second person genuinely is the decider.
 
@@ -148,4 +130,4 @@ The key is a credential, so it inherits NFR-003: encrypted per row, write-only, 
 
 ## 10. Document control
 
-Revision 0.1 records the agent surface and, from November 2026, its second host (DEC-015) after the prototype demonstrated the flow in both directions: a credential that proposes, and one granted `CanExecute` that acts. No MCP server exists, no tool has been called, and the threat entries it depends on (THR-025, THR-026) are the mitigation of record.
+Revision 0.2 records that the agent surface and second host (DEC-015) remain a specification: no MCP server exists, no tool has been called, and the threat entries it depends on (THR-025, THR-026) are the mitigation of record.

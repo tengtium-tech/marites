@@ -10,8 +10,6 @@ The five responsibilities below are the first bounded-context map under ADR-025.
 
 ![Documented domain responsibilities and handoffs](diagrams/domain-responsibility-map.png)
 
-**Diagram source:** [domain responsibility map](diagrams/domain-responsibility-map.class.json).
-
 This map shows responsibilities and handoffs, not aggregate structure. Capture is optional for live recovery, though a replay dry-run can read captured rows. Dead-letter Recovery owns the append-only `operation_audit` record; Access, Roles, and Audit Access authorizes and reads its projection. The table has one writer.
 
 Rebuild the preview from the repository root with:

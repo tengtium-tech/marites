@@ -2,7 +2,7 @@
 document_id: DOC-ARCH-007
 title: API Architecture and Non-Functional Requirements
 product: Marites
-version: 0.2
+version: 0.3
 date: 2026-11
 status: Approved — Product owner, 2026-11-11
 ---
@@ -94,63 +94,20 @@ Simple resource reads and bounded scalar filters remain `GET`. Captured-message 
 
 ### Structured message query
 
-```mermaid
-sequenceDiagram
-    actor Support
-    participant Client as Generated React client
-    participant API as ASP.NET Core API
-    participant Auth as Auth and capability policy
-    participant App as Application query handler
-    participant Repo as No-tracking query adapter
-    participant Store as Message store
-
-    Support->>Client: Set message filters and sort
-    Client->>API: QUERY /api/v1/messages (JSON filter/sort/page)
-    API->>Auth: Validate token and tenant scope
-    Auth-->>API: CanViewPayloads
-    API->>App: Validate and dispatch query
-    App->>Repo: Search tenant-scoped read model
-    Repo->>Store: Parameterized, bounded query
-    Store-->>Repo: Ordered page and next cursor
-    Repo-->>App: Application page DTO
-    App-->>API: Query result
-    API-->>Client: 200 MessagePage
-```
+![Structured message query sequence](diagrams/api-structured-query.png)
 
 ### Recovery command and reconciliation
 
-```mermaid
-sequenceDiagram
-    actor Operator
-    participant API as ASP.NET Core API
-    participant App as Application command
-    participant Guard as Domain operation guard
-    participant Book as Bookkeeping store
-    participant Broker as Provider adapter
-    participant Reconciler as Worker
+#### Confirmed outcome
 
-    Operator->>API: POST operation + Idempotency-Key
-    API->>App: Authenticate, authorize, validate
-    App->>Guard: Check capability, confirmation, limits
-    App->>Book: Commit operation_intent and held bodies
-    Book-->>App: Durable hold
-    App->>Broker: Issue broker command
-    alt Broker confirms
-        Broker-->>App: Confirmed outcome
-        App->>Book: Commit audit, evidence, and outbox event
-        App-->>API: Applied result
-        API-->>Operator: 200/201 result
-    else Outcome is ambiguous
-        Broker-->>App: Connection lost / partial effect
-        App-->>API: 202 Unresolved + operationId
-        API-->>Operator: Poll /operations/{operationId}
-        Reconciler->>Broker: Resolve effect against broker
-        Reconciler->>Book: Promote or abandon intent; record audit
-    end
-```
+![Recovery command with a confirmed outcome](diagrams/api-recovery-confirmed.png)
 
-The outbox event is recorded only with the durable post-operation record; it does not replace the hold or reconciliation step.
+#### Ambiguous outcome
+
+![Recovery command with reconciliation](diagrams/api-recovery-ambiguous.png)
+
+An outbox event is written with the post-operation record only when an integration sink is configured. It does not replace the durable hold or reconciliation step.
 
 ## 8. Document control
 
-Revision 0.2 records the Codex documentation review on 2026-11-11. It specifies the API architecture and NFRs, adds no application source files, and changes no existing functional requirement or screen behavior.
+Revision 0.3 records that event delivery is conditional on a configured sink. This remains a specification; no application source files, functional requirements, or screen behavior changed.

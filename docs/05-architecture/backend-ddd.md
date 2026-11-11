@@ -2,7 +2,7 @@
 document_id: DOC-ARCH-006
 title: Backend DDD and Clean Architecture
 product: Marites
-version: 0.2
+version: 0.3
 date: 2026-11
 status: Approved — Product owner, 2026-11-11
 ---
@@ -88,31 +88,10 @@ Provider, identity, AI, database, object-store, and cache clients live in Infras
 
 ## 6. Request and event sequences
 
-```mermaid
-sequenceDiagram
-    actor Admin
-    participant API as Marites.Api
-    participant App as Application command
-    participant Domain as Aggregate
-    participant UoW as SQLite Unit of Work
-    participant Outbox as Outbox dispatcher
-    participant Sink as Configured integration sink
-
-    Admin->>API: PATCH broker profile + If-Match
-    API->>App: validate HTTP and send command
-    App->>Domain: apply change, raise domain event
-    App->>UoW: save aggregate and OutboxMessage
-    UoW-->>App: commit both atomically
-    App-->>API: application result
-    API-->>Admin: RFC 9457-compatible HTTP result
-    Outbox->>UoW: lease pending event
-    Outbox->>Sink: publish stable event ID
-    Sink-->>Outbox: acknowledge
-    Outbox->>UoW: mark delivered
-```
+![Transactional outbox sequence](diagrams/backend-ddd-outbox.png)
 
 For broker-side operations, the separate sequence in [API architecture and NFRs](api-architecture-and-nfrs.md) shows durable intent and reconciliation. It does not use the Outbox as a substitute for the operation hold.
 
 ## 7. Document control
 
-Revision 0.2 records the Codex documentation review on 2026-11-11. The DDD model and backend dependency rules follow ADR-025. Proposed event consumers and the eventual Outbox destination remain conditional implementation choices; no application source or database migration has been generated.
+Revision 0.3 records that asynchronous delivery is conditional on a configured subscriber and sink. The DDD model and backend dependency rules follow ADR-025; no application source or database migration has been generated.

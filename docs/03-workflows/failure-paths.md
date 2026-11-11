@@ -12,8 +12,6 @@ Three failures look similar on a dashboard and have nothing in common in their c
 
 ![Capture failure states](diagrams/capture-failure-states.png)
 
-**Diagram source:** [capture-failure-states.workflow.json](diagrams/capture-failure-states.workflow.json).
-
 | State | Who fixes it | What must never be shown |
 |---|---|---|
 | `unavailable` | The adopter's platform team — a permission | A queue that looks healthy with no capture |
@@ -29,8 +27,6 @@ The one failure with no clean fix. A queue with no dead-letter routing loses fai
 
 ![Dead-letter observability](diagrams/dead-letter-observability.png)
 
-**Diagram source:** [dead-letter-observability.workflow.json](diagrams/dead-letter-observability.workflow.json).
-
 `deadLetterConfigured: false` is the honest label; the published-versus-delivered gap is the only remaining signal, and it is tracked under FR-018. Neither is a substitute for the adopter configuring a dead-letter exchange ([DEC-004](../01-project/decisions-and-open-questions.md)).
 
 ## 3. Recovery: where the loop breaks
@@ -38,8 +34,6 @@ The one failure with no clean fix. A queue with no dead-letter routing loses fai
 The loop is Detect → Understand → Act → Prove. Each arrow below is a place it can stop.
 
 ![Recovery breaks](diagrams/recovery-breaks.png)
-
-**Diagram source:** [recovery-breaks.workflow.json](diagrams/recovery-breaks.workflow.json).
 
 | Break | The wrong response | The right response |
 |---|---|---|
@@ -54,8 +48,6 @@ Owned by [recovery lifecycle](recovery-lifecycle.md) §2–§4 and [DOC-UX-001 �
 ## 4. Onboarding: the three exits
 
 ![Onboarding exits](diagrams/onboarding-exits.png)
-
-**Diagram source:** [onboarding-exits.workflow.json](diagrams/onboarding-exits.workflow.json).
 
 Two of the three exits are hard stops and one is a degraded success. The distinction matters commercially: an adopter whose queues have no dead-letter exchange still gets volume, inspection and replay — only the failure reason is missing ([onboarding lifecycle](onboarding-lifecycle.md) §3).
 

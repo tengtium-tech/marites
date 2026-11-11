@@ -21,8 +21,6 @@ This is the only step that changes anything, so it carries every guard. The diag
 
 ![Recovery actions sequence](diagrams/recovery-actions.png)
 
-**Diagram source:** [recovery-actions.sequence.json](diagrams/recovery-actions.sequence.json).
-
 The dry run reads captured rows from the optional message store. Operation intents, audit records, and payload evidence belong to the always-present SQLite bookkeeping store. The view shows one poll/response pair; Support repeats it until the job reaches a terminal state.
 
 **Why the dry run is not optional.** A dead letter replayed to its origin dead-letters again if the consumer still rejects it. Without the preview, an operator retries 200 messages into the same broken consumer and concludes the tool failed. With it, they see the reason first and fix the cause.

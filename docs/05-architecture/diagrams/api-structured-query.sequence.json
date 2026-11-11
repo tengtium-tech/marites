@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "API — Structured Message Query",
+    "locale": "en",
+    "output": "docs/05-architecture/diagrams/api-structured-query.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "support",
+      "type": "external",
+      "label": "Support"
+    },
+    {
+      "id": "client",
+      "type": "frontend",
+      "label": "React client",
+      "sublabel": "generated OpenAPI client"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Marites API",
+      "sublabel": "ASP.NET Core boundary"
+    },
+    {
+      "id": "policy",
+      "type": "security",
+      "label": "Authorization",
+      "sublabel": "JWT · capability · tenant"
+    },
+    {
+      "id": "app",
+      "type": "backend",
+      "label": "Application",
+      "sublabel": "query handler"
+    },
+    {
+      "id": "adapter",
+      "type": "backend",
+      "label": "Query adapter",
+      "sublabel": "bounded projection"
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "Message store",
+      "sublabel": "adopter-supplied"
+    }
+  ],
+  "segments": [
+    {
+      "from": 160,
+      "to": 395,
+      "label": "Request and authorization"
+    },
+    {
+      "from": 410,
+      "to": 640,
+      "label": "Bounded data query"
+    },
+    {
+      "from": 655,
+      "to": 870,
+      "label": "Page response"
+    }
+  ],
+  "messages": [
+    {
+      "id": "filters",
+      "from": "support",
+      "to": "client",
+      "y": 180,
+      "label": "Choose filters and sort"
+    },
+    {
+      "id": "query",
+      "from": "client",
+      "to": "api",
+      "y": 235,
+      "label": "QUERY /api/v1/messages",
+      "variant": "emphasis",
+      "note": "The JSON body carries filter, sort and page cursor/limit."
+    },
+    {
+      "id": "authorize",
+      "from": "api",
+      "to": "policy",
+      "y": 320,
+      "label": "Validate bearer token + tenant"
+    },
+    {
+      "id": "policy-result",
+      "from": "policy",
+      "to": "api",
+      "y": 380,
+      "label": "CanViewPayloads · tenant scoped",
+      "variant": "return"
+    },
+    {
+      "id": "dispatch",
+      "from": "api",
+      "to": "app",
+      "y": 435,
+      "label": "Dispatch validated query"
+    },
+    {
+      "id": "project",
+      "from": "app",
+      "to": "adapter",
+      "y": 495,
+      "label": "Build bounded projection",
+      "note": "Filters combine conjunctively; sort is allowlisted and stable."
+    },
+    {
+      "id": "read",
+      "from": "adapter",
+      "to": "store",
+      "y": 585,
+      "label": "Parameterized page query",
+      "variant": "emphasis"
+    },
+    {
+      "id": "rows",
+      "from": "store",
+      "to": "adapter",
+      "y": 635,
+      "label": "Rows + next cursor",
+      "variant": "return"
+    },
+    {
+      "id": "page",
+      "from": "adapter",
+      "to": "app",
+      "y": 685,
+      "label": "Paged projection",
+      "variant": "return"
+    },
+    {
+      "id": "dto",
+      "from": "app",
+      "to": "api",
+      "y": 735,
+      "label": "MessagePage DTO",
+      "variant": "return"
+    },
+    {
+      "id": "response",
+      "from": "api",
+      "to": "client",
+      "y": 785,
+      "label": "200 · MessagePage",
+      "variant": "return"
+    },
+    {
+      "id": "render",
+      "from": "client",
+      "to": "support",
+      "y": 835,
+      "label": "Render results",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "client",
+      "from": 180,
+      "to": 850,
+      "type": "frontend"
+    },
+    {
+      "participant": "api",
+      "from": 235,
+      "to": 800,
+      "type": "backend"
+    },
+    {
+      "participant": "policy",
+      "from": 315,
+      "to": 390,
+      "type": "security"
+    },
+    {
+      "participant": "app",
+      "from": 430,
+      "to": 745,
+      "type": "backend"
+    },
+    {
+      "participant": "adapter",
+      "from": 490,
+      "to": 695,
+      "type": "backend"
+    },
+    {
+      "participant": "store",
+      "from": 580,
+      "to": 645,
+      "type": "database"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Scope",
+      "items": [
+        "This is the captured-message search path, not a live broker peek.",
+        "Without the optional message store, historical search is unavailable."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Constraints",
+      "items": [
+        "The API authorizes the caller and applies tenant scope before query execution.",
+        "The adapter uses parameterized filters and an allowlisted sort."
+      ]
+    }
+  ]
+}

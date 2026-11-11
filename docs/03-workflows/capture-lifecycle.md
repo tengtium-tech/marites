@@ -8,8 +8,6 @@ How a published message becomes a counted row, and the four points where this st
 
 ![Live capture sequence](diagrams/capture-live.png)
 
-**Diagram source:** [capture-live.sequence.json](diagrams/capture-live.sequence.json).
-
 The sequence describes the design contract. The message store is optional and adopter-owned; capture writes only when it is configured.
 
 Three properties of this path matter more than the sequence itself.
@@ -25,8 +23,6 @@ Three properties of this path matter more than the sequence itself.
 This branch joins the same capture, batch, transaction, and acknowledgement path after the provider routes a failed message to its dead-letter exchange.
 
 ![Dead-letter capture sequence](diagrams/dead-letter-capture.png)
-
-**Diagram source:** [dead-letter-capture.sequence.json](diagrams/dead-letter-capture.sequence.json).
 
 Provider dead-letter metadata arrives with the copy (RabbitMQ exposes it as `x-death`), so the reason is recorded at capture time rather than reconstructed later. That is what turns "a pile of messages" into "1,204 rejected, 3 expired, 88 dropped for maxlen".
 

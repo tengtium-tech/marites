@@ -2,7 +2,7 @@
 
 Version 0.1 | November 2026 | Status: Approved — Product owner, 2026-11-11.
 
-The rendered figures for the [architecture overview](../architecture-overview.md) and [C4 model](../c4-model.md). Each `.png` is built from the `.json` beside it: the JSON is the editable source, and the PNG is its inline preview.
+The rendered figures for the [architecture overview](../architecture-overview.md), [C4 model](../c4-model.md), [frontend architecture](../frontend-architecture.md), [backend DDD](../backend-ddd.md), [API architecture and NFRs](../api-architecture-and-nfrs.md), and [MCP integration](../mcp-integration.md). Each `.png` is built from the `.json` beside it: the JSON is the editable source, and the PNG is its inline preview.
 
 | Source JSON | Figure |
 |---|---|
@@ -15,18 +15,13 @@ The rendered figures for the [architecture overview](../architecture-overview.md
 | `c4-context.architecture.json` | C4 §1, system context |
 | `c4-containers.architecture.json` | C4 §2, containers and the two stores |
 | `c4-capture-components.architecture.json` | C4 §3, capture worker components |
-
-## Rebuilding previews
-
-From the repository root:
-
-```bash
-python docs/05-architecture/diagrams/build.py docs/05-architecture/diagrams/*.architecture.json docs/05-architecture/diagrams/*.sequence.json
-```
-
-The same builder renders workflow figures from `docs/03-workflows/diagrams/`; it accepts source paths from any documentation folder. It requires the configured local diagram renderer and Chrome. The builder captures the drawing and its explanatory cards, then writes a PNG preview.
-
-Interactive HTML views are local build products and are not committed. The source JSON files remain the editable records for each figure.
+| `api-structured-query.sequence.json` | API Architecture §7, structured message query |
+| `api-recovery-confirmed.sequence.json` | API Architecture §7, confirmed recovery command |
+| `api-recovery-ambiguous.sequence.json` | API Architecture §7, ambiguous result and reconciliation |
+| `backend-ddd-outbox.sequence.json` | Backend DDD §6, command and conditional outbox delivery |
+| `frontend-dependency-direction.architecture.json` | Frontend Architecture §2, inward dependencies and composition root |
+| `frontend-request-flow.sequence.json` | Frontend Architecture §2, request and response across client layers |
+| `mcp-two-paths.workflow.json` | MCP Integration §4, credential-selected execution or proposal |
 
 ## What is deliberately not a diagram
 

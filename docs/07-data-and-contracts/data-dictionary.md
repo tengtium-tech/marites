@@ -21,8 +21,6 @@ Conventions used throughout: `uuid` values are server-assigned v4, never reused.
 
 ![Message store schema](diagrams/message-store-schema.png)
 
-**Diagram source:** [message-store schema](diagrams/message-store-schema.erd.json).
-
 Rebuild the inline preview from the repository root with:
 
 ```bash

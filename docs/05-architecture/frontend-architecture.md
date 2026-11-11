@@ -2,7 +2,7 @@
 document_id: DOC-ARCH-005
 title: Frontend Architecture Specification
 product: Marites
-version: 0.2
+version: 0.3
 date: 2026-11
 status: Approved — Product owner, 2026-11-11
 ---
@@ -53,51 +53,11 @@ src/
 
 Dependencies point inward: **Presentation → Application → Domain** and **Infrastructure → Application → Domain**. The composition root is the only place that names both concrete infrastructure adapters and the application ports they implement.
 
-```mermaid
-flowchart LR
-    P[Presentation<br/>React pages, components, hooks]
-    A[Application<br/>Use cases and ports]
-    D[Domain<br/>Models and business rules]
-    I[Infrastructure<br/>HTTP, DTOs, mappers, storage]
-    C[DI composition root]
-
-    P --> A
-    A --> D
-    I --> A
-    I --> D
-    C -. wires .-> P
-    C -. constructs .-> A
-    C -. binds ports to .-> I
-```
+![Frontend dependency direction](diagrams/frontend-dependency-direction.png)
 
 The UI calls a use case through a bridge hook. The repository implementation calls the contract-generated client and maps the response before returning it to Application. The component receives a view model and renders it; it does not parse HTTP responses or decide domain rules.
 
-```mermaid
-sequenceDiagram
-    actor Operator
-    participant Component as React component
-    participant Hook as Bridge hook
-    participant UseCase as Application use case
-    participant Port as Repository port
-    participant Adapter as Infrastructure repository
-    participant Client as Generated API client
-    participant API as Marites API
-
-    Operator->>Component: Select a documented action
-    Component->>Hook: invoke intent
-    Hook->>UseCase: execute(input)
-    UseCase->>Port: load or change domain data
-    Port->>Adapter: port implementation
-    Adapter->>Client: contract operation
-    Client->>API: HTTP request
-    API-->>Client: response or Problem
-    Client-->>Adapter: wire DTO or transport failure
-    Adapter->>Adapter: map DTO / normalize error
-    Adapter-->>UseCase: domain data or application error
-    UseCase-->>Hook: result
-    Hook-->>Component: view state
-    Component-->>Operator: declarative UI
-```
+![Frontend request sequence](diagrams/frontend-request-flow.png)
 
 ## 3. API boundary and DTO isolation
 
@@ -142,4 +102,4 @@ The feature matrix is a coverage aid. A missing contract operation is recorded a
 
 ## 6. Document control
 
-Revision 0.2 records the Codex documentation review on 2026-11-11, including alignment of message search to `QUERY /messages`. It preserves the existing experience requirements and adds no application source files.
+Revision 0.3 records that the request sequence remains generic to documented contract operations and does not add the illustrative user-profile endpoint. Existing experience requirements and application behavior are unchanged.

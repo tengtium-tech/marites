@@ -18,8 +18,6 @@ Three tiers, each aggregated from the one above it and then deleted. Nothing is 
 
 ![Rollup tier lifecycle](diagrams/rollup-tiers.png)
 
-**Diagram source:** [rollup-tiers.lifecycle.json](diagrams/rollup-tiers.lifecycle.json).
-
 Three properties, each a correctness requirement:
 
 - **A coarser row must exist before a finer row is deleted.** Otherwise a day's total is derived from hours that were already dropped.
@@ -31,8 +29,6 @@ Three properties, each a correctness requirement:
 The order is the contract. Each step is idempotent, so a crash mid-pass resumes rather than corrupts.
 
 ![Retention sweeper sequence](diagrams/retention-sweeper.png)
-
-**Diagram source:** [retention-sweeper.sequence.json](diagrams/retention-sweeper.sequence.json).
 
 The message store is optional and adopter-owned; operation evidence is swept from Marites’ always-present SQLite store. Spilled payload objects are deleted from the optional object store.
 
@@ -54,8 +50,6 @@ The message store is optional and adopter-owned; operation evidence is swept fro
 The ceiling is the only part of this lifecycle that changes behaviour rather than data.
 
 ![Storage ceiling lifecycle](diagrams/storage-ceiling.png)
-
-**Diagram source:** [storage-ceiling.lifecycle.json](diagrams/storage-ceiling.lifecycle.json).
 
 | State | Rows | Rollups | Reads | What the operator sees |
 |---|---|---|---|---|

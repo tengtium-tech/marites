@@ -1,0 +1,269 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "API — Recovery Command, Ambiguous Outcome",
+    "locale": "en",
+    "output": "docs/05-architecture/diagrams/api-recovery-ambiguous.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "operator",
+      "type": "external",
+      "label": "Operator"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Marites API",
+      "sublabel": "ASP.NET Core boundary"
+    },
+    {
+      "id": "guard",
+      "type": "security",
+      "label": "Operation policy",
+      "sublabel": "capability · limits"
+    },
+    {
+      "id": "book",
+      "type": "database",
+      "label": "Bookkeeping store",
+      "sublabel": "SQLite · always present"
+    },
+    {
+      "id": "provider",
+      "type": "backend",
+      "label": "Provider adapter"
+    },
+    {
+      "id": "broker",
+      "type": "external",
+      "label": "Adopter broker"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Reconcile worker"
+    }
+  ],
+  "segments": [
+    {
+      "from": 160,
+      "to": 350,
+      "label": "Validate and authorize"
+    },
+    {
+      "from": 365,
+      "to": 475,
+      "label": "Durable hold"
+    },
+    {
+      "from": 490,
+      "to": 665,
+      "label": "Outcome is ambiguous"
+    },
+    {
+      "from": 680,
+      "to": 970,
+      "label": "Reconcile and poll"
+    }
+  ],
+  "messages": [
+    {
+      "id": "command",
+      "from": "operator",
+      "to": "api",
+      "y": 180,
+      "label": "POST /operations/* + Idempotency-Key",
+      "variant": "emphasis",
+      "note": "The command includes typed confirmation where required."
+    },
+    {
+      "id": "authorize",
+      "from": "api",
+      "to": "guard",
+      "y": 260,
+      "label": "Authenticate · authorize · validate"
+    },
+    {
+      "id": "allowed",
+      "from": "guard",
+      "to": "api",
+      "y": 325,
+      "label": "Allowed · limits pass",
+      "variant": "return"
+    },
+    {
+      "id": "hold",
+      "from": "api",
+      "to": "book",
+      "y": 390,
+      "label": "Commit operation_intent + held bodies",
+      "variant": "emphasis"
+    },
+    {
+      "id": "held",
+      "from": "book",
+      "to": "api",
+      "y": 450,
+      "label": "Durable hold",
+      "variant": "return"
+    },
+    {
+      "id": "execute",
+      "from": "api",
+      "to": "provider",
+      "y": 510,
+      "label": "Issue broker command"
+    },
+    {
+      "id": "broker-command",
+      "from": "provider",
+      "to": "broker",
+      "y": 565,
+      "label": "Execute operation",
+      "variant": "emphasis"
+    },
+    {
+      "id": "unknown",
+      "from": "broker",
+      "to": "provider",
+      "y": 620,
+      "label": "No conclusive response",
+      "variant": "return"
+    },
+    {
+      "id": "timeout",
+      "from": "provider",
+      "to": "api",
+      "y": 675,
+      "label": "Timeout · effect unknown",
+      "variant": "return"
+    },
+    {
+      "id": "unresolved",
+      "from": "api",
+      "to": "operator",
+      "y": 730,
+      "label": "202 · Unresolved + operationId",
+      "variant": "emphasis"
+    },
+    {
+      "id": "schedule",
+      "from": "api",
+      "to": "worker",
+      "y": 785,
+      "label": "Continue reconciliation",
+      "variant": "dashed"
+    },
+    {
+      "id": "inspect",
+      "from": "worker",
+      "to": "provider",
+      "y": 840,
+      "label": "Resolve the existing effect"
+    },
+    {
+      "id": "probe",
+      "from": "provider",
+      "to": "broker",
+      "y": 895,
+      "label": "Inspect broker state"
+    },
+    {
+      "id": "state",
+      "from": "broker",
+      "to": "provider",
+      "y": 950,
+      "label": "Observed effect",
+      "variant": "return"
+    },
+    {
+      "id": "evidence",
+      "from": "provider",
+      "to": "worker",
+      "y": 1005,
+      "label": "Reconciliation evidence",
+      "variant": "return"
+    },
+    {
+      "id": "record",
+      "from": "worker",
+      "to": "book",
+      "y": 1060,
+      "label": "Promote or abandon intent; record audit"
+    },
+    {
+      "id": "poll",
+      "from": "operator",
+      "to": "api",
+      "y": 1120,
+      "label": "GET /operations/{operationId}"
+    },
+    {
+      "id": "resolved",
+      "from": "api",
+      "to": "operator",
+      "y": 1175,
+      "label": "Resolved operation state",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "api",
+      "from": 180,
+      "to": 800,
+      "type": "backend"
+    },
+    {
+      "participant": "guard",
+      "from": 255,
+      "to": 335,
+      "type": "security"
+    },
+    {
+      "participant": "book",
+      "from": 385,
+      "to": 1080,
+      "type": "database"
+    },
+    {
+      "participant": "provider",
+      "from": 505,
+      "to": 1015,
+      "type": "backend"
+    },
+    {
+      "participant": "broker",
+      "from": 560,
+      "to": 960,
+      "type": "messagebus"
+    },
+    {
+      "participant": "worker",
+      "from": 780,
+      "to": 1090,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Unresolved outcome",
+      "items": [
+        "A timeout does not prove that the broker command failed.",
+        "Return 202 and reconcile the existing effect; do not blindly repeat the command."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Durable audit",
+      "items": [
+        "The SQLite intent remains available while the outcome is resolved.",
+        "Reconciliation records one terminal outcome for the operation."
+      ]
+    }
+  ]
+}
