@@ -1,0 +1,21 @@
+{
+  "name": "@marites/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "generate:types": "openapi-typescript ../../docs/07-data-and-contracts/openapi/openapi.yaml -o src/api/generated/openapi.d.ts",
+    "generate:client": "orval --config ./orval.config.mjs",
+    "generate:api": "npm run generate:types && npm run generate:client",
+    "typecheck": "tsc --noEmit",
+    "verify:query-compat": "node ../../tests/contract-compat/verify-query-output.mjs && tsc --noEmit"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "orval": "8.47.0",
+    "typescript": "5.9.3"
+  }
+}

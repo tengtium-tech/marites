@@ -1,0 +1,47 @@
+name: React client validation
+
+on:
+  pull_request:
+    branches:
+      - react
+    paths:
+      - 'apps/web/**'
+      - 'tests/contract-compat/**'
+      - 'docs/07-data-and-contracts/openapi/**'
+      - '.github/workflows/react-client-validation.yml'
+  push:
+    branches:
+      - react
+    paths:
+      - 'apps/web/**'
+      - 'tests/contract-compat/**'
+      - 'docs/07-data-and-contracts/openapi/**'
+      - '.github/workflows/react-client-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  generated-client:
+    name: Generate and compile API clients
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci --prefix apps/web
+
+      - name: Generate API clients and types
+        run: npm run generate:api --prefix apps/web
+
+      - name: Compile generated clients
+        run: npm run typecheck --prefix apps/web
+
+      - name: Verify deferred QUERY compatibility
+        run: npm run verify:query-compat --prefix apps/web
