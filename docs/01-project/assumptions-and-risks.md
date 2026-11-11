@@ -1,6 +1,6 @@
 # Assumptions and risks
 
-Version 0.2 | November 2026 | Status: Drafted; every item restates a fact recorded in its owning document and adds no new policy.
+Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 An assumption (ASM) is something the design relies on and has not proven. A risk (RSK) is something that could invalidate the plan, with its mitigation. Identifiers are stable and are never reused. The status words are those of the [documentation standard](documentation-standard.md).
 
@@ -33,7 +33,7 @@ An assumption (ASM) is something the design relies on and has not proven. A risk
 | RSK-008 | The in-house dispatcher grows into the framework that was rejected | Keep it near fifty lines; cross-cutting concerns stay explicit decorators | ADR-013 |
 | RSK-009 | A document is mistaken for evidence of implementation | The README and standard state that nothing is built or executed | [documentation standard](documentation-standard.md) |
 | RSK-010 | A retried compaction over additive upserts doubles a window's counts permanently, and totals are never rebuilt from rows | **Closed.** Compaction recomputes the window's absolute totals from the finer tier and assigns them, so a retry writes the same numbers; the three orderings that make the recomputation correct are part of the decision (ADR-024) | [ADR-024](../05-architecture/decisions.md) |
-| RSK-011 | Row-level security covers configuration tables but not the capture tables, so isolation depends on query shape | Tenant-scoped keys and API query shape; TC-022 asserts it. Moving capture to RLS changes the write path | [migration plan §4](../07-data-and-contracts/migration-plan.md) |
+| RSK-011 | Neither bookkeeping SQLite nor the batched message store uses database row-level security; tenant isolation depends on explicit repository/API query scope | Tenant scope is supplied by authenticated Application calls and included in every query; TC-022 asserts isolation. Moving message capture to RLS changes the write path | [migration plan §4](../07-data-and-contracts/migration-plan.md) |
 | RSK-012 | Nothing alerts. A stopped capture is discovered by a person, and the dashboard may look quiet for hours | Runbook symptoms and `captureState`; the product gap is recorded rather than solved | [runbook §7](../11-operations/runbook.md) |
 | RSK-013 | Spilled payload objects have no lifecycle, so deletion and backup scope are undefined | **Closed.** The bucket layout is content-addressed, the sweeper deletes an object when no capture row references its hash, the bucket is named in the backup scope, and a failed spill degrades to a recorded truncation rather than blocking capture | [data dictionary §6](../07-data-and-contracts/data-dictionary.md) |
 | RSK-014 | Two accepted ADRs (011, 019) carry the "exact counts" promise and neither has an executed test | TC-013 and TC-014 are milestone gates, not optional tests | [verification plan §3](../10-testing/verification-plan.md) |

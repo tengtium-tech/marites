@@ -1,6 +1,6 @@
 # Onboarding lifecycle
 
-Version 0.1 | November 2026 | Status: Draft
+Version 0.1 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 From "we have a broker" to "the dashboard is useful", including the three places it stops.
 

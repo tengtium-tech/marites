@@ -2,9 +2,9 @@
 document_id: DOC-API-002
 title: API Catalog
 product: Marites
-version: 0.1
+version: 0.2
 date: 2026-11
-status: Draft — mirrors data-and-contracts/openapi/openapi.yaml
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-API-002 — API Catalog
@@ -22,7 +22,7 @@ Only the v0.1 operations are served. The rest are designed and preserved in `07-
 | Revision | Operations |
 |---|---|
 | **v0.1 — served** | `getBackendCapabilities`, `listBrokers`, `createBroker`, `getBroker`, `updateBroker`, `deleteBroker`, `runPreflight`, `getProviderCapabilities`, `listQueues`, `getQueue` |
-| M1 | `peekQueue`, `discardMessages`, `purgeQueue`, `replayMessages` (live redrive), `getOperation`, `listAudit` |
+| M1 | `peekQueue`, `discardMessages`, `purgeQueue`, `replayMessages` (live redrive), `getOperation`, `listAudit`, `listAuditPayloads` |
 | M3 | `createProposal` — the agent surface (DEC-010) |
 | M2 | `setCapturePolicy`, `getMetricSummary`, `getMetricSeries`, `getMetricAvailability` |
 | M3 | `searchMessages`, `getMessage`, `publishMessage`; `replayMessages` gains captured-message replay |
@@ -67,7 +67,7 @@ Viewer may list brokers because the reporting dashboard groups volume by cluster
 
 | ID | Operation | Method and path | Kind | Roles | Capability | Guards |
 |---|---|---|---|---|---|---|
-| OP-MSG-001 | SearchMessages | `GET /messages` | query | Support, Admin | `CanViewPayloads` | none |
+| OP-MSG-001 | SearchMessages | `QUERY /messages` | query | Support, Admin | `CanViewPayloads` | structured JSON filter/sort/page |
 | OP-MSG-002 | GetMessage | `GET /messages/{messageId}` | query | Support, Admin | `CanViewPayloads` | none |
 
 **Viewer receives 403 on both** (DEC-002). There is no redacted-payload variant, so no Viewer-accessible branch exists to maintain.
@@ -92,7 +92,7 @@ Viewer may list brokers because the reporting dashboard groups volume by cluster
 | OP-OPR-004 | ReplayMessages | `POST /operations/replay` | command | Support, Admin | `CanReplay` | Idempotency-Key, dry run, environment confirmation (prod) |
 | OP-OPR-005 | PublishMessage | `POST /operations/publish` | command | Support, Admin | `CanPublish` | Idempotency-Key, environment confirmation (prod) |
 | OP-OPR-006 | GetOperation | `GET /operations/{operationId}` | query | Support, Admin | — | none |
-| OP-OPR-007 | CreateProposal | `POST /operations/proposals` | command | Credentials without `CanExecute` | `CanPropose` | Idempotency-Key |
+| OP-OPR-007 | CreateProposal | `POST /operations/proposals` | command | Service principals (no `CanExecute`) | `CanPropose` | Idempotency-Key |
 
 `OP-OPR-007` is the path for a credential that may not act: it changes a record of intent and
 executes nothing, returning a proposal id and an expiry. A credential carrying `CanExecute` calls the
@@ -127,4 +127,4 @@ Append-only. No operation in this API modifies or deletes an audit entry.
 
 ## 9. Document control
 
-Revision 0.1 mirrors the first contract. **Revision 0.2 records the split:** ten operations are served in `openapi.yaml`, thirteen are preserved in `openapi.deferred.yaml`. Regenerating this table is a manual step; when a contract changes, this document is corrected in the same commit.
+Revision 0.2 records the split: ten operations are served in `openapi.yaml`, fifteen are preserved in `openapi.deferred.yaml`. OP-MSG-001 is a deferred safe/idempotent `QUERY`; no `POST /search` operation exists. The Codex documentation review on 2026-11-11 reconciled the catalog milestones with both contract files and the operation matrix. Regenerating this table is a manual step; when a contract changes, this document is corrected in the same commit.

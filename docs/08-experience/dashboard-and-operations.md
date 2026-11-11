@@ -2,9 +2,9 @@
 document_id: DOC-UX-001
 title: Dashboard and Operations UX Specification
 product: Marites
-version: 0.1
+version: 0.2
 date: 2026-11
-status: Draft — all decisions resolved; no implementation
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-UX-001 — Dashboard and Operations UX Specification
@@ -68,7 +68,7 @@ The reporting dashboard is the one place a provider-agnostic UI works, because c
 
 ## 2. Roles and capabilities
 
-Roles arrive as Entra App Roles in the `roles` claim and map to **capability policies**, never to endpoints. The mapping lives in exactly one place (`Marites.Identity`).
+Roles arrive as Entra App Roles in the `roles` claim and map to **capability policies**, never to endpoints. The mapping lives in exactly one place (`Marites.Application` authorization orchestration; backend DDD §3).
 
 | Capability policy | Viewer | Support | Admin |
 |---|---|---|---|
@@ -96,7 +96,7 @@ Roles arrive as Entra App Roles in the `roles` claim and map to **capability pol
 
 Where an adopter's policy forbids Support publishing, `CanPublish` is revoked per tenant. That is configuration, not a code change — which is the reason capabilities are modelled as policies rather than as role checks.
 
-**Viewer payload visibility is settled by DEC-002: none.** Payloads routinely contain PII and tokens, so Viewer has no message list, detail or payload, and `GET /messages*` returns 403. There is no redacted variant.
+**Viewer payload visibility is settled by DEC-002: none.** Payloads routinely contain PII and tokens, so Viewer has no message list, detail or payload, and `QUERY /messages` plus `GET /messages/*` return 403. There is no redacted variant.
 
 ## 3. Operations and their safety model
 
@@ -181,4 +181,4 @@ Defaults are chosen to work without configuration: `sampled` means an operator i
 
 ## 6. Document control
 
-Revision 0.1 records metric presentation, capability mapping, and operation safety. DEC-002 governs §2 and the payload endpoint. Wireframes are a separate record ([wireframes and navigation](wireframes-and-navigation.md)) and follow DEC-002 and the M0 contract.
+Revision 0.2 records the API method alignment for message search and detail while preserving the established Viewer access rule. DEC-002 governs §2 and the payload endpoint. Wireframes are a separate record ([wireframes and navigation](wireframes-and-navigation.md)) and follow DEC-002 and the contract.

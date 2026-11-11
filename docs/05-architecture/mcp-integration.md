@@ -4,7 +4,7 @@ title: Agent Access (MCP)
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — designed; no server exists
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-ARCH-004 — Agent Access (MCP)

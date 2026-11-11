@@ -2,6 +2,9 @@
 document_id: DOC-OPS-007
 title: Configuration Reference
 product: Marites
+status: Approved — Product owner, 2026-11-11
+version: 0.1
+date: 2026-11
 ---
 
 # Configuration reference
@@ -44,6 +47,7 @@ Every setting an operator can set, in one table. Five of these names appeared ac
 | `MARITES_EVIDENCE_RETENTION_DAYS` | integer | `90` | No | How long payload evidence is kept, ceiling 365. `retained_until` is `max(this, the queue's row retention)`, so evidence never dies before the messages it describes (DEC-017) |
 | `MARITES_REDELIVERY_WINDOW_SECONDS` | integer | `3600` | No | How long `capture_dedupe` holds an identity. Shorter than the broker's redelivery window under-counts (ADR-019) |
 | `MARITES_CAPTURE_BATCH_ROWS` | integer | `500` | No | Rows per `COPY`. Lowering it costs throughput; raising it costs memory |
+| `MARITES_PREFETCH_COUNT` | integer | `1000` | No | Maximum in-flight messages per capture consumer; adapters map this to the provider's flow-control setting. Must exceed `MARITES_CAPTURE_BATCH_ROWS` for batch-triggered flushes; tune with the M2 throughput test |
 | `MARITES_LOG_LEVEL` | `debug` \| `info` \| `warn` \| `error` | `info` | No | `debug` logs message **headers**, never bodies |
 | `MARITES_POLL_INTERVAL_SECONDS` | integer | `10` | No | How often the broker is polled for depth, rates and consumers. It also sets the definition of *stale*: three intervals with no rollup write |
 | `MARITES_OPERATIONS_PER_MINUTE` | integer | `30` | No | The per-tenant token bucket for mutating operations (THR-015). Exceeding it returns `429` with `Retry-After` |
@@ -73,7 +77,7 @@ The service validates its configuration **before** it binds a port, and refuses 
 | `AUTH_MODE=none` with a non-loopback `MARITES_LISTEN` | Refuses to start; the message names the address |
 | `AUTH_MODE=entra` with a missing tenant or audience | Refuses to start |
 | `MARITES_MESSAGE_STORE` present but unreachable | Starts, **live-only**, and says so on every degraded screen — a store that is down must not stop recovery |
-| `MARITES_MESSAGE_STORE` present with a schema version older than the binary | Refuses to start; `ERR-MIG-001`, naming the version |
+| `MARITES_MESSAGE_STORE` present with a schema version older than the binary | Refuses to start; `ERR-MIG-001`, naming the installed and required versions |
 | `MARITES_BOOKKEEPING_PATH` unwritable | Refuses to start. There is no audit without it, and no recovery without an audit |
 | `MARITES_EVIDENCE_RETENTION_DAYS` above 365, or below 1 | Refuses to start. A retention longer than the ceiling is a payload kept for a term the product never promised, and a value of zero would delete evidence as it is written |
 

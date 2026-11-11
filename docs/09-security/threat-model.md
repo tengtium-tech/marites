@@ -2,9 +2,9 @@
 document_id: DOC-SEC-001
 title: Threat Model
 product: Marites
-version: 0.1
+version: 0.2
 date: 2026-11
-status: Draft — controls are designed, none implemented or tested
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-SEC-001 — Threat Model
@@ -19,7 +19,7 @@ status: Draft — controls are designed, none implemented or tested
 | Captured payloads | Arbitrary business data; may contain PII, tokens, card numbers (DEC-006: stored verbatim) | `message_capture`, object store |
 | The audit log | The only evidence of who did what during an incident | `operation_audit`, append-only |
 | Counting integrity | The number an executive reports; a wrong count is worse than no count | `message_rollup` |
-| Capability policies | Decide who may purge, replay or publish | `Marites.Identity`, role claims |
+| Capability policies | Decide who may purge, replay or publish | `Marites.Application` authorization orchestration, role claims |
 | The adopter's broker | Marites is a client with write rights; a defect here damages production | Shadow queues and bindings under `marites.*` |
 
 **Nothing here is implemented.** Every control below is a designed mechanism recorded in a specification. The evidence category is *technical proposal*, not *executed evidence*, and this document does not change that.
@@ -31,7 +31,7 @@ status: Draft — controls are designed, none implemented or tested
 | B1 — Browser ↔ API | Bearer token, queue names, message payloads, operation commands | Both |
 | B2 — API ↔ broker | Credentials, publish, peek, management reads | Outbound only |
 | B3 — Worker ↔ broker | Credentials, consume, topology declare | Outbound, plus delivery back over the same connection |
-| B4 — API and worker ↔ PostgreSQL | Rows, counters, credentials at rest | Local network |
+| B4 — API and worker ↔ stores | SQLite bookkeeping holds configuration, audit, operation evidence and credential metadata; the optional PostgreSQL or SQL Server message store holds traffic rows and counters | Local network / managed database connection |
 | B5 — API ↔ Entra ID | Token validation keys | Outbound |
 | B6 — Operator ↔ broker management UI | Human action outside Marites | Not controlled here |
 
@@ -54,7 +54,7 @@ Method: STRIDE applied to each boundary, filtered to what this product can actua
 
 | ID | Category | Threat | Control | Residual |
 |---|---|---|---|---|
-| THR-005 | Information disclosure | An executive or a viewer role reads message bodies | Viewer has no message endpoints; `GET /messages*` returns `ERR-AUTH-002` (DEC-002). No redacted variant exists to drift | A shared Viewer account sees aggregate volume, which is intended |
+| THR-005 | Information disclosure | An executive or a viewer role reads message bodies | Viewer has no message endpoints; `QUERY /messages` and `GET /messages/{messageId}` return `ERR-AUTH-002` (DEC-002). No redacted variant exists to drift | A shared Viewer account sees aggregate volume, which is intended |
 | THR-006 | Information disclosure | A stolen disk or backup exposes payloads | Volume encryption at rest is the baseline; it protects against media theft, not against database access (DEC-006) | Anyone with database access reads everything. Stated in onboarding §1.7 rather than implied |
 | THR-007 | Information disclosure | A content hash is used to confirm a guessed sensitive value | `content_hash` is HMAC-SHA256 keyed per tenant, not a bare digest ([DOC-DATA-001 §2](../07-data-and-contracts/data-model.md)) | The key lives with the tenant; compromise of the key restores the oracle |
 | THR-008 | Information disclosure | Payloads outlive their stated retention | Row retention is per capture rule and enforced by partition drop, not by ad-hoc `DELETE`; the sweeper is the only deleter ([DOC-DATA-001 §4](../07-data-and-contracts/data-model.md)). **Audit payload evidence is a second place this can happen**, and it is now the longer-lived one: `operation_payload.retained_until` is `max(row retention, the evidence retention)` — 90 days by default, settable to 365 — written at insert and swept by the same pass (DEC-017). Spilled objects go with them: the sweeper deletes an object only when no remaining row carries its `content_hash` ([data dictionary](../07-data-and-contracts/data-dictionary.md) §6) | An object survives a failed sweep until the next pass — the same window a partition has. Evidence outliving its message rows is deliberate and stated, not a leak — the exposure is the evidence setting (365 days at most) whenever it exceeds the queue's row retention, and the row retention itself whenever that is longer |
@@ -142,8 +142,8 @@ Every threat above has a control. What follows is what the control does **not** 
 | TC-021 | Invalid publish body publishes nothing; one key publishes once | THR-011 |
 | TC-022 | Cross-tenant read returns `ERR-CMN-002` | THR-020 |
 
-Six of the twenty-four threats have a planned case. The rest are controls asserted by review, or risks accepted rather than mitigated — which is the honest ratio for a product with no code.
+Six planned test cases explicitly cover ten of the twenty-six threats. The rest are controls asserted by design review, or risks accepted rather than mitigated — which is the honest ratio for a product with no code.
 
 ## 7. Document control
 
-Revision 0.1 records the first threat model. It was written in November 2026 because the [security index](README.md) had listed "no threat model" as a gap since the fourteen-section restructure. Threats are added, never renumbered. No control has been implemented, exercised or reviewed by anyone other than the author, and no penetration test has been performed.
+Revision 0.2 records the message-search method alignment and corrects the verification coverage count. Threats are added, never renumbered. No control has been implemented or exercised; the model has not received a full independent security review, and no penetration test has been performed.

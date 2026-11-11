@@ -1,6 +1,6 @@
 # Capture lifecycle
 
-Version 0.1 | November 2026 | Status: Draft
+Version 0.1 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 How a published message becomes a counted row, and the four points where this stops working.
 

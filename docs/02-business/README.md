@@ -1,6 +1,6 @@
 # Business requirements
 
-Version 0.2 | November 2026 | Status: Drafted; requirements carry acceptance criteria, and none has been verified.
+Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 What Marites must do, for whom, and what it will not do, independent of runtime, database, deployment or transport details.
 
@@ -8,7 +8,7 @@ What Marites must do, for whom, and what it will not do, independent of runtime,
 
 | Record | Shared coverage |
 | --- | --- |
-| [Requirements (DOC-SRS-001)](requirements.md) | 28 functional and 8 non-functional requirements, each with one testable acceptance criterion and a milestone; actors, the four-step recovery loop, constraints C-001 to C-003, out-of-scope list and requirement traceability |
+| [Requirements (DOC-SRS-001)](requirements.md) | 29 functional and 8 non-functional requirements, each with one testable acceptance criterion and a milestone; actors, the four-step recovery loop, constraints C-001 to C-003, out-of-scope list and requirement traceability |
 | [Verification plan](../10-testing/verification-plan.md) | The 29 cases the acceptance criteria cite, and the milestone gates they belong to |
 | [Terms](../14-reference/vocabulary.md) | The glossary lives in VOCABULARY §11 (shadow queue, tap, relay, backfill, adopter, dead letter) |
 | [Decision register](../01-project/decisions-and-open-questions.md) | The eight scope and policy questions that shaped the requirements |

@@ -4,7 +4,7 @@ title: Provider Adapter Design
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — design only; no adapter exists
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-ARCH-003 — Provider Adapter Design

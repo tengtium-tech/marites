@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Marites bookkeeping logical model",
+    "locale": "en",
+    "output": "docs/07-data-and-contracts/diagrams/bookkeeping-logical-model.html",
+    "quality_profile": "showcase"
+  },
+  "layout": { "mode": "grid" },
+  "types": [
+    {
+      "id": "tenant",
+      "label": "tenant",
+      "kind": "record",
+      "sublabel": "Tenant identity and isolation boundary",
+      "row": 0,
+      "col": 0,
+      "attributes": [
+        { "name": "id", "type": "record id" },
+        { "name": "slug", "type": "queue-name prefix" }
+      ]
+    },
+    {
+      "id": "broker_profile",
+      "label": "broker_profile",
+      "kind": "record",
+      "sublabel": "Provider connection configuration",
+      "row": 0,
+      "col": 1,
+      "attributes": [
+        { "name": "id", "type": "record id" },
+        { "name": "tenant_id", "type": "logical reference" },
+        { "name": "provider_kind", "type": "provider" }
+      ]
+    },
+    {
+      "id": "queue_ref",
+      "label": "queue_ref",
+      "kind": "record",
+      "sublabel": "Watched queue, exchange, topic, or subscription",
+      "row": 0,
+      "col": 2,
+      "attributes": [
+        { "name": "id", "type": "record id" },
+        { "name": "broker_profile_id", "type": "profile reference" },
+        { "name": "source_kind", "type": "entity kind" }
+      ]
+    },
+    {
+      "id": "app_user",
+      "label": "app_user",
+      "kind": "record",
+      "sublabel": "Local identity and role mapping",
+      "row": 1,
+      "col": 0,
+      "attributes": [
+        { "name": "id", "type": "record id" },
+        { "name": "tenant_id", "type": "logical reference" },
+        { "name": "role", "type": "capability set" }
+      ]
+    },
+    {
+      "id": "replay_job",
+      "label": "replay_job",
+      "kind": "record",
+      "sublabel": "Progress for a replay operation",
+      "row": 1,
+      "col": 1,
+      "attributes": [
+        { "name": "id", "type": "record id" },
+        { "name": "queue_ref_id", "type": "queue reference" },
+        { "name": "created_by", "type": "user reference" }
+      ]
+    },
+    {
+      "id": "capture_rule",
+      "label": "capture_rule",
+      "kind": "record",
+      "sublabel": "Per-entity capture and retention policy",
+      "row": 1,
+      "col": 2,
+      "attributes": [
+        { "name": "id", "type": "record id" },
+        { "name": "queue_ref_id", "type": "unique queue reference" }
+      ]
+    },
+    {
+      "id": "operation_intent",
+      "label": "operation_intent",
+      "kind": "record",
+      "sublabel": "Short-lived hold before a broker command",
+      "row": 2,
+      "col": 0,
+      "attributes": [
+        { "name": "id", "type": "record id" },
+        { "name": "tenant_id", "type": "logical reference" },
+        { "name": "state", "type": "held / promoted / abandoned" }
+      ]
+    },
+    {
+      "id": "operation_audit",
+      "label": "operation_audit",
+      "kind": "record",
+      "sublabel": "Permanent record of an action or proposal",
+      "row": 2,
+      "col": 1,
+      "attributes": [
+        { "name": "id", "type": "record id" },
+        { "name": "tenant_id", "type": "logical reference" },
+        { "name": "actor_id / on_behalf_of", "type": "optional user refs" }
+      ]
+    },
+    {
+      "id": "operation_payload",
+      "label": "operation_payload",
+      "kind": "record",
+      "sublabel": "Time-limited message evidence",
+      "row": 2,
+      "col": 2,
+      "attributes": [
+        { "name": "id", "type": "record id" },
+        { "name": "audit_id", "type": "audit reference" },
+        { "name": "retained_until", "type": "evidence expiry" }
+      ]
+    }
+  ],
+  "relationships": [
+    { "id": "tenant_profiles", "from": "tenant", "to": "broker_profile", "kind": "association", "label": "one tenant → many profiles · FK" },
+    { "id": "profile_entities", "from": "broker_profile", "to": "queue_ref", "kind": "association", "label": "one profile → many entities · FK", "labelDy": -46 },
+    { "id": "entity_rule", "from": "queue_ref", "to": "capture_rule", "kind": "association", "label": "1 → 0..1 · unique FK", "labelDx": -70 },
+    { "id": "entity_jobs", "from": "queue_ref", "to": "replay_job", "kind": "association", "label": "one entity → many replay jobs · FK" },
+    { "id": "user_jobs", "from": "app_user", "to": "replay_job", "kind": "association", "label": "created_by · FK" },
+    { "id": "user_audit", "from": "app_user", "to": "operation_audit", "kind": "association", "label": "actor_id / on_behalf_of · nullable FK" },
+    { "id": "audit_evidence", "from": "operation_audit", "to": "operation_payload", "kind": "association", "label": "one audit → many evidence rows · FK", "labelDy": 87 },
+    { "id": "intent_promotion", "from": "operation_intent", "to": "operation_audit", "kind": "dependency", "label": "promotes to on success · lifecycle, not FK", "labelDy": 74 }
+  ]
+}

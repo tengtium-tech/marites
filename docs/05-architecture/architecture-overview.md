@@ -4,7 +4,7 @@ title: Solution Architecture Specification
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — all decisions resolved; no implementation
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-ARCH-001 — Solution Architecture Specification
@@ -64,11 +64,9 @@ The design is therefore *possible* via Federation, at the cost of a second clust
 
 **4. It is not needed.** The capture worker is already a tap:
 
-```
-Adopter's broker  ──AMQP──▶  Marites capture worker  ──COPY──▶  Postgres
-        ▲                                                          │
-        └────────────── Marites API ──── reads ────────────────────┘
-```
+![The one-hop capture path](diagrams/one-hop-tap.png)
+
+**Diagram source:** [one-hop capture path](diagrams/one-hop-tap.architecture.json).
 
 Marites requires **AMQP and management access to whichever broker holds the queues**. What publishes into that broker, or what feeds it upstream, is invisible to Marites and irrelevant to this architecture.
 
@@ -110,16 +108,10 @@ src/
   Marites.Contracts/     # OpenAPI-generated DTOs, enums, error codes. Zero dependencies.
   Marites.Domain/        # ~6 types: BrokerProfile, QueueRef, CaptureRule, MessageCapture,
                          # OperationKind, Role. Behaviour only where it prevents a bug.
-  Marites.Brokers/       # Ports, provider registry, capability model. References no SDK.
-  Marites.Brokers.RabbitMq/    # AMQP 0-9-1 + Management API — reference implementation
-  Marites.Brokers.ServiceBus/  # AMQP 1.0 + Azure.Messaging.ServiceBus
-  Marites.Brokers.PubSub/      # gRPC + Google.Cloud.PubSub.V1
-  Marites.Storage/       # DbContext, migrations, COPY-based bulk writer, partition sweeper.
-  Marites.Operations/    # Guard chain: authorize → validate → dry-run → confirm → rate-limit → execute → audit.
-  Marites.Capture/       # Worker logic: topology setup, consume loop, batching, backpressure.
-  Marites.Identity/      # Entra ID JWT validation, role→capability mapping, policies.
-  Marites.Api/           # Minimal API endpoints, one folder per slice. Composition root.
-  Marites.Worker/        # Capture host. Same image, different entrypoint.
+  Marites.Application/   # Use cases, commands, queries, orchestration and ports.
+  Marites.Infrastructure/ # SQLite/message-store and broker adapters, capture writer, external clients.
+  Marites.Api/           # Thin HTTP presentation layer and composition root.
+  Marites.Worker/        # Application/Infrastructure host. Same image, different entrypoint.
 tests/
   Marites.UnitTests/
   Marites.IntegrationTests/   # Testcontainers: real Postgres + real RabbitMQ
@@ -200,76 +192,29 @@ The frontend holds a **screen registry** keyed by `addressing_model` and `kind`:
 
 A provider ships on the baseline and gains bespoke screens later without blocking its release. This is what keeps "provider-specific screens" from becoming "write a separate screen set for every provider before shipping one".
 
-Twelve projects, split by **capability**, not by layer. `Operations` exists because replay, discard, and publish share a guard chain and an audit obligation — a real boundary. There is no `Application` project holding everything, because that is where layered architectures rot.
+The backend uses four dependency layers under the modular-monolith deployment: `Marites.Domain`, `Marites.Application`, `Marites.Infrastructure`, and `Marites.Api`. Feature slices remain inside Application and the API endpoint groups; they no longer combine endpoint, persistence, and business rules in one file. The detailed context, aggregate, persistence, and event boundaries are owned by [backend DDD architecture](backend-ddd.md) (ADR-025).
 
-### Why vertical slices rather than a full onion (ADR-005)
+`Marites.Contracts` remains a generated, dependency-free HTTP contract package. The API and worker hosts are composition roots. Only Infrastructure contains concrete database and provider SDK adapters. Application depends on Domain; Infrastructure implements Application ports; API calls Application use cases and wires implementations. No Domain type depends on a framework, database, provider SDK, HTTP type, or contract DTO.
 
-The onion's promise is swappable infrastructure. Here only one infrastructure is genuinely swappable — **the broker**. PostgreSQL is a commitment, not a choice, so `IRepository<T>` over EF Core is ceremony. The HTTP boundary is protected by the OpenAPI contract rather than by interfaces, because the other implementations are in different languages and a C# interface cannot help them.
+ADR-013 remains in force: use the small in-house dispatcher, not a third-party mediator. Vertical slices are a way to organize use cases within the layers, not a substitute for the layers. `IBrokerAdmin`, `IMessageTap` / `IMessagePublisher`, `IClock`, and the storage port remain explicit seams. Capture retains its direct batch write path and Npgsql binary `COPY` (ADR-011); ordinary bookkeeping and query persistence use the adapters described in [backend DDD architecture](backend-ddd.md).
 
-Dependency inversion is applied at exactly three seams:
-
-| Port | Why it is a real seam |
-|---|---|
-| `IBrokerAdmin` | Management API is HTTP and mockable; managed providers differ. Preflight needs a fake. |
-| `IMessageTap` / `IMessagePublisher` | AMQP client specifics; capture must be testable without a live broker. |
-| `IClock` | `x-death` timestamps, retention sweeps, confirm-token TTL — all clock-dependent. |
-
-Everything else uses concrete types.
-
-### Slice anatomy
-
-One file per use case — endpoint, handler, request, response, validation together:
-
-```
-Marites.Api/Features/
-  Queues/ListQueues.cs          Messages/SearchMessages.cs
-  Queues/GetQueueDetail.cs      Messages/GetMessagePayload.cs
-  Operations/ReplayMessages.cs  Brokers/AddBrokerProfile.cs
-  Operations/PurgeQueue.cs      Brokers/RunPreflight.cs
-```
-
-A slice may call `Storage` and `Operations` directly. It may not hold a business rule another slice needs — those move to `Domain` or `Operations`. Sizing test: *if you delete the feature, you delete one file.*
-
-Dispatch goes through a **~50-line in-house dispatcher** (ADR-013): `IRequest<TResponse>`, `IHandler<TRequest, TResponse>`, a registry, and `Send<T>`. It is deliberately not a framework — no pipeline behaviours, no conventions, no scanning magic. Cross-cutting concerns are explicit decorators in the composition root. If the dispatcher grows beyond that, it has become the dependency we rejected on licensing grounds, and the argument only moves from licence risk to maintenance cost.
-
-### The rule that keeps it honest
-
-One architecture test using ArchUnitNET:
-
-- `Marites.Api` must **not** reference `Npgsql` or any provider SDK (`RabbitMQ.Client`, `Azure.Messaging.ServiceBus`, `Google.Cloud.PubSub.V1`)
-- `Marites.Brokers` must reference **no** provider SDK — only `Marites.Brokers.*` implementations may
-- `Marites.Storage` must **not** reference `Marites.Api` or any provider SDK
-- `Marites.Contracts` must reference **nothing**
-
-That test delivers most of what a four-project onion promises, and it fails the build the moment someone shortcuts a boundary.
+The dependency rule is enforced at project boundaries: Domain references no outer layer; Application references Domain; Infrastructure references Application and Domain; API references Application and the Infrastructure composition root. Provider SDKs and database packages do not flow into Domain, Application, or endpoint code.
 
 ## 7. Read and capture paths
 
 **Read:**
 
-```
-React (MSAL token) → /api/v1/... → slice handler → EF Core query
-                   → Postgres → DTO from Marites.Contracts → JSON
-```
+![Stored message read path](diagrams/read-path.png)
 
-Reads are thin: projections straight to contract DTOs, no domain logic in the query path.
+**Diagram source:** [stored-message read sequence](diagrams/read-path.sequence.json).
+
+Reads are thin: Application query handlers project read models to contract response DTOs without loading aggregate graphs for rules that do not apply. API/Infrastructure mapping keeps external DTOs out of Domain. See [backend DDD architecture §4–6](backend-ddd.md).
 
 **Capture:**
 
-```
-Worker host
-  → topology setup (shadow queue + bindings, bounded)
-  → AsyncEventingBasicConsumer, prefetch 1,000   ← at least 2× the batch size
-  → normalize (x-death, hash, inline-vs-spill)
-  → Channel<CapturedMessage> buffer          ← decouples AMQP thread from DB
-  → batch: 500 rows or 1 s
-  → BEGIN
-  → skip redelivered duplicates via ledger   ← ADR-019
-  → Npgsql binary COPY into message_capture  ← not EF Core
-  → upsert message_rollup counters           ← same transaction
-  → COMMIT
-  → ack multiple=true to the batch's last delivery tag (only after durable commit)
-```
+![Capture batch and durable acknowledgement](diagrams/capture-batch.png)
+
+**Diagram source:** [capture batch sequence](diagrams/capture-batch.sequence.json).
 
 Two non-obvious choices:
 
@@ -278,7 +223,7 @@ Two non-obvious choices:
 
 The `ack` comes after the commit. A crash mid-batch produces redelivery, not a gap — the correct trade for a monitor.
 
-**Prefetch must exceed the batch size.** With ack-after-commit, at most `prefetch` messages are in flight. A prefetch below the batch size means the 500-row trigger can never fire, every flush waits for the 1 s timer, and throughput collapses to `prefetch ÷ 1 s` (200 msg/s at the old value of 200) against an NFR-001 target of 5,000. Sustained throughput per channel is bounded by `prefetch ÷ commit round-trip`, so 1,000 leaves headroom for a 200 ms commit. Verify with a load test at M2.
+**Prefetch must exceed the batch size.** With ack-after-commit, at most `prefetch` messages are in flight. A prefetch below the batch size means the 500-row trigger can never fire, every flush waits for the 1 s timer, and throughput collapses to `prefetch ÷ 1 s` against an NFR-001 target of 5,000. Sustained throughput per channel is bounded by `prefetch ÷ commit round-trip`, so the default of 1,000 reaches the 5,000 msg/s target only while a commit round-trip stays at or under 200 ms. That is the ceiling, not headroom: a slower commit needs a higher in-flight limit, and the setting is a starting point rather than a validated value. Operators can tune the in-flight limit with `MARITES_PREFETCH_COUNT` (configuration reference §2); verify the setting with a load test at M2.
 
 **Redelivery is not free for counters.** Rows tolerate a duplicate; additive rollup counters do not, and rollups are never rebuilt from rows (ADR-007). A crash between `COMMIT` and `ack` would therefore over-count permanently. ADR-019 adds a redelivery ledger, so a redelivered message is counted once.
 
@@ -286,7 +231,7 @@ The `ack` comes after the commit. A crash mid-batch produces redelivery, not a g
 
 Entra ID via OIDC (ADR-008). React uses MSAL.js with auth code + PKCE; the API validates JWT bearer tokens. Roles are **Entra App Roles** arriving in the `roles` claim — cleaner than security groups, which require a Graph call per request.
 
-Roles map to **capabilities**, not endpoints. Policy-based authorization, with the role→capability table living in exactly one place (`Marites.Identity`). The matrix is owned by [DOC-UX-001 §2](../08-experience/dashboard-and-operations.md).
+Roles map to **capabilities**, not endpoints. Policy-based authorization, with the role→capability table owned by `Marites.Application` as part of authorization orchestration. The matrix is owned by [DOC-UX-001 §2](../08-experience/dashboard-and-operations.md).
 
 Two things that will bite if left implicit:
 
@@ -309,11 +254,9 @@ Splitting is a deployment concern, not a code concern — the same assemblies ei
 
 Adopters run more than one cluster — prod and staging, per-region, per-team. This does not add hops. Marites is a client of **N clusters in a star**:
 
-```
-          ┌── prod cluster ──────┐
-Marites ──┼── staging cluster ───┤   one hop per cluster,
-          └── eu-west cluster ───┘   independent connections
-```
+![Independent capture across clusters](diagrams/multiple-clusters.png)
+
+**Diagram source:** [multiple-cluster topology](diagrams/multiple-clusters.architecture.json).
 
 Each cluster gets its own `broker_profile`, preflight result, health state, and capture worker with its own connection — **bulkhead isolation**. One unreachable or slow cluster must not stall the others.
 
@@ -323,14 +266,14 @@ Each cluster gets its own `broker_profile`, preflight result, health state, and 
 
 **Dedupe.** If clusters are linked by Federation or Shovel, the same message exists in more than one cluster and is captured once per cluster. Policy choice is DEC-008; the default is per-cluster scoping, because aggressive cross-cluster dedupe can mask a genuine double-publish.
 
-**Storage:** one PostgreSQL for all clusters. Do not give each cluster its own database — cross-cluster comparison is the reason people want a single dashboard.
+**Storage:** one shared adopter message store for all clusters, plus the always-present SQLite bookkeeping store. Do not give each cluster its own message database — cross-cluster comparison is the reason people want a single dashboard. PostgreSQL is the first supported message-store engine; SQL Server follows at M7.
 
 **Ceiling:** dozens of clusters, not hundreds. Beyond roughly fifty, add regional relays that aggregate per zone — the relay from §3, not a second broker.
 
 ## 11. Why not microservices
 
-One team, one database, and capture writes to the store the API reads. Splitting now buys network partitions and distributed transactions for nothing. The worker boundary in §9 is already the seam to cut along if capture outgrows the API, and because `Marites.Capture` has no dependency on `Marites.Api`, that cut stays cheap.
+One team and one shared message store; capture writes to the store the API reads. The separate SQLite bookkeeping store does not participate in capture transactions. Splitting now buys network partitions and distributed transactions for nothing. The worker boundary in §9 is already the seam to cut along if capture outgrows the API, and because the worker host has no dependency on the API presentation layer, that cut stays cheap.
 
 ## 12. Document control
 
-Revision 0.1 records the initial architecture. ADR-001 to ADR-019 are Accepted (ADR-019, redelivery-safe counting, was added and accepted in November 2026). Reviewed November 2026: prefetch sized above the batch, `read` added to the shadow-queue grant, SSE settled as the live transport, and "redact" removed from the capture path (DEC-006). No code exists and no behaviour has been observed.
+Revision 0.2 records the current architecture. ADR-001 to ADR-025 stand; ADR-004 and ADR-005 are superseded. Reviewed November 2026: DDD layers and two-store responsibilities follow ADR-025 and ADR-022, prefetch is configurable above the batch size, `read` is included in the shadow-queue grant, SSE is the live transport, and "redact" is removed from the capture path (DEC-006). No code exists and no behaviour has been observed.

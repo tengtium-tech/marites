@@ -4,7 +4,7 @@ title: Error Catalog
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — codes binding on data-and-contracts/openapi/openapi.yaml
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-API-003 — Error Catalog
@@ -112,6 +112,12 @@ Every error body is `application/problem+json`:
 
 **`ERR-AUD-001` is not a failure.** The audit is permanent; the evidence is not. Returning `404` would suggest the operation never happened, which is the one thing the audit exists to prevent.
 
-## 11. Document control
+## 11. Migration
+
+| Code | HTTP | Outcome | Retryable | Meaning | Remedy |
+|---|---|---|---|---|---|
+| `ERR-MIG-001` | 503 | Unavailable | yes, after migration | The message-store schema version is older than the binary requires; the error names both versions | Run the documented migration with the migration role, then restart the service |
+
+## 12. Document control
 
 Revision 0.1 establishes the initial codes. Adding a code requires amending this document first, then the contract. Codes are never renumbered and never removed — a code that stops being produced is marked `Retired` with the revision that retired it.

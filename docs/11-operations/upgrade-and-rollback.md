@@ -4,7 +4,7 @@ title: Upgrade and Rollback
 product: Marites
 version: 0.1
 date: 2026-11
-status: Planned — no released version exists
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-OPS-003 — Upgrade and Rollback

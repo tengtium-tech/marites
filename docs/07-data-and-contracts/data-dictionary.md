@@ -4,16 +4,32 @@ title: Data Dictionary
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — column-level definition; no schema applied
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-DATA-002 — Data Dictionary
 
-**Source:** [data model](data-model.md). Owning document for column types, nullability, defaults and constraints. The model owns the tables and their relationships; this document owns the columns.
+**Source:** [data model](data-model.md). Owning document for column types, nullability, defaults and constraints. The model owns the tables and their relationships; this document owns the columns. The Outbox section below is a planned infrastructure record and is not in the current twelve-table schema.
+
+Type names in this dictionary use PostgreSQL notation for the first message-store implementation. The bookkeeping tables live in SQLite, but their physical SQLite type mapping is not specified yet. The message-store ERD below therefore shows the PostgreSQL-first schema only; it does not present the full model as deployed DDL.
 
 Conventions used throughout: `uuid` values are server-assigned v4, never reused. Every timestamp is `timestamptz` and stored in UTC. Enumerated values are checked against [VOCABULARY](../14-reference/vocabulary.md) rather than against a database `ENUM` type, because adding a value to a Postgres enum requires a migration while the vocabulary is amended by prose first — and a check constraint can be replaced in one statement.
 
 **Nullability rule.** A nullable column means "this fact may genuinely not exist", never "we did not get round to it". Where a value is absent because a policy or a provider does not supply it, the column is nullable and the reason is in the note.
+
+## Schema view
+
+![Message store schema](diagrams/message-store-schema.png)
+
+**Diagram source:** [message-store schema](diagrams/message-store-schema.erd.json).
+
+Rebuild the inline preview from the repository root with:
+
+```bash
+python docs/05-architecture/diagrams/build.py docs/07-data-and-contracts/diagrams/message-store-schema.erd.json
+```
+
+The message store keeps three traffic tables. Its `tenant_id`, `broker_profile_id` and `queue_ref_id` values identify records in the SQLite bookkeeping store; they are logical references, not database foreign keys across stores.
 
 ## 1. `tenant`
 
@@ -100,7 +116,7 @@ The counting tier. Small, permanent, never derived from rows.
 
 | Column | Type | Null | Default | Constraint / note |
 |---|---|---|---|---|
-| `queue_ref_id` | uuid | no | — | FK `queue_ref(id)`; part of the primary key |
+| `queue_ref_id` | uuid | no | — | logical reference to `queue_ref(id)` in SQLite; part of the primary key, not a cross-store database FK |
 | `granularity` | text | no | — | check in (`minute`, `hour`, `day`); part of the primary key |
 | `bucket_start` | timestamptz | no | — | UTC, truncated to the granularity; part of the primary key |
 | `published` | bigint | no | `0` | additive |
@@ -122,9 +138,9 @@ The investigation tier. Partitioned by day; the only table whose size is a probl
 | Column | Type | Null | Default | Constraint / note |
 |---|---|---|---|---|
 | `id` | uuid | no | `gen_random_uuid()` | primary key with `captured_at` |
-| `tenant_id` | uuid | no | — | denormalised from `queue_ref` so a partition can be pruned without a join |
-| `broker_profile_id` | uuid | no | — | denormalised for the same reason |
-| `queue_ref_id` | uuid | no | — | FK `queue_ref(id)` |
+| `tenant_id` | uuid | no | — | denormalised identifier from SQLite's `tenant` record so a partition can be pruned without a join |
+| `broker_profile_id` | uuid | no | — | denormalised identifier from SQLite's `broker_profile` record |
+| `queue_ref_id` | uuid | no | — | logical reference to SQLite's `queue_ref(id)`; no cross-store database FK |
 | `exchange` | text | yes | — | RabbitMQ exchange, or topic name |
 | `routing_key` | text | yes | — | routing key, or subscription filter |
 | `message_id` | text | yes | — | the producer's id; null when the producer set none |
@@ -227,7 +243,7 @@ The redelivery ledger (ADR-019). Short-lived, swept with the partitions.
 
 | Column | Type | Null | Default | Constraint / note |
 |---|---|---|---|---|
-| `queue_ref_id` | uuid | no | — | part of the primary key |
+| `queue_ref_id` | uuid | no | — | logical reference to SQLite's `queue_ref(id)`; part of the primary key, not a cross-store database FK |
 | `identity` | bytea | no | — | `message_id` digest, else the HMAC `content_hash` plus routing key; part of the primary key |
 | `remaining` | smallint | no | `1` | a multiset count, so genuinely identical messages are each counted |
 | `committed_at` | timestamptz | no | `now()` | swept after the redelivery window (default 1 hour) |
@@ -288,6 +304,30 @@ The durable hold for a destructive operation (ADR-023). Written and committed **
 
 **Why the window is short.** An intent that is neither promoted nor abandoned within the reconciliation window means the operations executor died. Anything older is stale by definition, and holding payloads in a staging table longer than necessary is the same exposure the retention rules exist to bound.
 
+## Planned infrastructure record: `domain_event_outbox`
+
+This record is added to the bookkeeping store only when an integration-event sink is configured. It is not part of the current schema and has no migration applied. SQLite physical types are intentionally not fixed here; the following are logical field types.
+
+| Column | Logical type | Null | Constraint / note |
+|---|---|---|---|
+| `id` | uuid | no | Stable event ID and primary key; consumers use it for deduplication |
+| `tenant_id` | uuid | yes | Tenant scope when the event belongs to one tenant |
+| `aggregate_type` | text | no | Stable aggregate name, not a CLR type name |
+| `aggregate_id` | text | no | Strongly typed aggregate ID serialized as an opaque string |
+| `event_type` | text | no | Versioned integration event name |
+| `schema_version` | integer | no | Positive payload contract version |
+| `payload_json` | JSON text | no | IDs and outcome facts only; never credentials or message bodies |
+| `occurred_at` | UTC timestamp | no | When the domain transition committed |
+| `attempt_count` | integer | no | Non-negative delivery attempts |
+| `next_attempt_at` | UTC timestamp | no | Earliest retry time after a transient failure |
+| `locked_until` | UTC timestamp | yes | Lease expiry for one dispatcher; prevents indefinite ownership after a crash |
+| `published_at` | UTC timestamp | yes | Set only after the integration sink acknowledges delivery |
+| `last_error_code` | text | yes | Sanitized stable failure code; no body, token, or secret |
+
+Delivery is at least once. A publisher crash after sink acceptance but before `published_at` can redeliver, so the sink or consumer deduplicates by `id`. Retention after successful delivery is a separate policy to decide before implementation; pending and poison events are never silently deleted.
+
+The planned dispatcher index is `(published_at, next_attempt_at, locked_until)`; it is not part of the current PostgreSQL index list below.
+
 ## 13. Indexes
 
 | Index | Table | Purpose |
@@ -308,4 +348,4 @@ No index on `payload_ref` or on `exchange`. Neither is used as a filter, and an 
 
 ## 14. Document control
 
-Revision 0.1 records the column-level definition for twelve tables, written November 2026 to close the gap named in the [data-and-contracts index](README.md). It is a definition, not a migration: no schema has been applied, and the types have not been exercised against PostgreSQL. The first migration is planned in [migration-plan.md](migration-plan.md).
+Revision 0.2 records the column-level definition for twelve current tables and the planned Outbox record, written November 2026 to close the gap named in the [data-and-contracts index](README.md). It is a definition, not a migration: no schema has been applied, and the types have not been exercised against either store. Separate migration streams are planned in [migration-plan.md](migration-plan.md).

@@ -4,7 +4,7 @@ title: Accessibility Requirements
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — requirements only; nothing built or audited
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-UX-002 — Accessibility Requirements

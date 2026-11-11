@@ -4,7 +4,7 @@ title: Verification Plan
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — verification designed as named cases; nothing executed
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-TEST-001 — Verification Plan
@@ -33,10 +33,10 @@ Every case is `Planned`. None has been written, and no result exists. A case ass
 
 | Case | Level | Milestone | Asserts | Verifies |
 | --- | --- | --- | --- | --- |
-| TC-001 | Contract | M0 | Every served operation returns only documented statuses, and every 2xx body validates against its schema | FR-019, NFR-005 |
+| TC-001 | Contract | M0 | Every served operation, including method/body metadata, returns only documented statuses; every 2xx body validates against its schema; generated-client tooling preserves the deferred QUERY operation when promoted | FR-019, NFR-005 |
 | TC-002 | Idempotency | M0 | A repeated command key returns `AlreadyApplied` with no second effect; a stale `If-Match` returns `ERR-CMN-006` | FR-012 |
 | TC-003 | Integration | M0 | No response body and no log line produced during the credential lifecycle contains a credential value | NFR-003 |
-| TC-004 | Deployment | M0 | `docker compose up` on a clean host serves a working UI against a test broker with one container and one PostgreSQL, and applies the documented defaults | NFR-006, FR-023 |
+| TC-004 | Deployment | M0 | `docker compose up` on a clean host serves a working UI against a test broker with one Marites container, creates its SQLite bookkeeping store, requires no adopter-supplied database, and applies the documented defaults | NFR-006, FR-023 |
 | TC-005 | Integration | M0 | A broker profile is created, read, updated and deleted against a real broker, and preflight returns one result per check with a remedy per failure | FR-012, FR-013 |
 | TC-006 | Integration | M1 | Depth, rates, consumers and unacked match the broker's own management reading in the same poll interval | FR-001 |
 | TC-007 | Integration | M1 | Each role is refused every operation outside its capability matrix and permitted every operation inside it | FR-017 |

@@ -16,12 +16,12 @@ Marites observes message traffic on a broker an adopter already runs — RabbitM
 ## What is in the repository
 
 ```
-docs/                    the specification set: 14 sections, 45 documents, 16 indexes
-  01-project/            overview, decisions, risks, standard, structure, changelog
+docs/                    the specification set: 14 sections, 48 substantive documents, 17 indexes
+  01-project/            overview, decisions, risks, standard, structure
   02-business/           requirements and acceptance criteria
   03-workflows/          capture, recovery, onboarding, retention
   04-domains/            five documentation areas and their handoffs
-  05-architecture/       the one-hop tap, failure modes, adapters, 24 decisions
+  05-architecture/       the one-hop tap, failure modes, adapters, 25 decisions
   06-platform-foundation/ capture, identity, audit, configuration (index)
   07-data-and-contracts/ tables, dictionary, migrations, the OpenAPI contract
   08-experience/         metric rules, wireframes, screenshots, accessibility
@@ -48,7 +48,7 @@ The documents already contain the structure a project board needs, so the board 
 | Epic | A milestone, M0 to M7 — [deployment and onboarding §6](docs/11-operations/deployment-and-onboarding.md) |
 | Story | An operation in the [API catalog](docs/07-data-and-contracts/api-catalog.md), or a named gap in a risk |
 | Definition of done | The milestone's gate in [verification plan §3](docs/10-testing/verification-plan.md) |
-| Test task | A case, TC-001 to TC-028, with its level and milestone |
+| Test task | A case, TC-001 to TC-029, with its level and milestone |
 
 Two rules keep the board from drifting away from the specification: **a story that needs data the contract does not serve is a contract change first**, and **a milestone does not close until its gate passes** — not until its tickets are closed.
 

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Capture batch and durable acknowledgement",
+    "locale": "en",
+    "output": "docs/05-architecture/diagrams/capture-batch.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {"id": "broker", "type": "messagebus", "label": "RabbitMQ", "sublabel": "shadow queue"},
+    {"id": "worker", "type": "backend", "label": "Capture worker", "sublabel": "consumer + batch writer"},
+    {"id": "channel", "type": "messagebus", "label": "Bounded Channel", "sublabel": "in-process buffer"},
+    {"id": "store", "type": "database", "label": "Message store", "sublabel": "three capture tables"}
+  ],
+  "messages": [
+    {"id": "declare", "from": "worker", "to": "broker", "y": 170, "label": "Declare bounded shadow queue + binding"},
+    {"id": "deliver", "from": "broker", "to": "worker", "y": 215, "label": "AMQP delivery · prefetch 1,000", "variant": "emphasis"},
+    {"id": "enqueue", "from": "worker", "to": "channel", "y": 265, "label": "Normalize + enqueue", "note": "Parse x-death, hash the message, choose inline or spill; the bounded buffer keeps database writes off the delivery thread."},
+    {"id": "batch-ready", "from": "channel", "to": "worker", "y": 360, "label": "Flush at 500 rows or 1 s", "variant": "dashed"},
+    {"id": "begin", "from": "worker", "to": "store", "y": 410, "label": "BEGIN · check redelivery ledger", "note": "Skip identities already committed for a redelivery."},
+    {"id": "eligible", "from": "store", "to": "worker", "y": 485, "label": "New identities only", "variant": "return"},
+    {"id": "write", "from": "worker", "to": "store", "y": 530, "label": "Binary COPY rows + upsert rollups", "variant": "emphasis", "note": "Capture rows, dedupe entries and counters share one transaction."},
+    {"id": "commit", "from": "store", "to": "worker", "y": 615, "label": "COMMIT", "variant": "return"},
+    {"id": "ack", "from": "worker", "to": "broker", "y": 660, "label": "ACK multiple=true", "variant": "emphasis", "note": "Acknowledge through the batch's last delivery tag only after the commit is durable."}
+  ],
+  "activations": [
+    {"participant": "worker", "from": 170, "to": 700, "type": "backend"},
+    {"participant": "channel", "from": 265, "to": 365, "type": "messagebus"},
+    {"participant": "store", "from": 410, "to": 625, "type": "database"}
+  ],
+  "cards": [
+    {"dot": "amber", "title": "Correctness rule", "items": ["The commit precedes the broker acknowledgement.", "If the worker stops before acknowledgement, redelivery is absorbed by the ledger rather than counted twice."]}
+  ]
+}

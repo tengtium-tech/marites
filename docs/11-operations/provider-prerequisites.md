@@ -4,7 +4,7 @@ title: Provider Prerequisites
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — least-privilege sets designed; no provider has been configured
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-OPS-002 — Provider Prerequisites

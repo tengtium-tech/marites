@@ -1,6 +1,6 @@
 # Documentation standard
 
-Version 0.1 | November 2026 | Status: adopted
+Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 How this documentation set is organised and maintained. It is a working rule, not a manifesto: everything below exists because its absence caused a specific problem.
 
@@ -49,7 +49,9 @@ Status is always one of:
 | Status | Meaning |
 |---|---|
 | Draft | Written, not reviewed |
-| Adopted | Reviewed and in force |
+| Reviewed | A named documentation review found no open finding at the stated scope |
+| Approved | The document owner accepts a Reviewed baseline; record the approver and date in document control. This does not imply implementation or verification has run |
+| Adopted | Reviewed and in force as a project standard |
 | Controlled | Single source for the values it holds; changes require amendment first |
 | Superseded | Retained for history; not authority |
 
@@ -63,6 +65,7 @@ Used in dashboards, indexes and reviews. Do not invent other words.
 | Drafted | Written to the intended scope and awaiting review |
 | Partial | Written, with named gaps that change behaviour |
 | Reviewed | A named review found no open finding at the stated scope |
+| Approved | The document owner accepts a Reviewed baseline; record the approver and date in document control. This does not imply implementation or verification has run |
 | Proposed | Added by a specification or review and not yet accepted |
 | Accepted | Chosen and recorded as a decision |
 | Deferred | Deliberately postponed |
@@ -70,7 +73,7 @@ Used in dashboards, indexes and reviews. Do not invent other words.
 | Executed | Run, with linked evidence of the result |
 | Unverified | Stated without evidence |
 
-At this baseline nothing is Executed.
+At this baseline no application verification case is `Executed`. Static documentation and contract checks are recorded separately and do not count as application evidence.
 
 ## Identifier register
 
@@ -88,7 +91,7 @@ Identifiers are stable. Do not renumber, reuse or delete one; supersede it and n
 | `TC` | TC-nnn | Verification case | [Verification plan](../10-testing/verification-plan.md) |
 | `THR` | THR-nnn | Security threat | [Threat model](../09-security/threat-model.md) |
 | `OP` | OP-AAA-nnn | API operation (AAA is three letters: CAP, BRK, QUE, MSG, MET, OPR, AUD) | [API catalog](../07-data-and-contracts/api-catalog.md) |
-| `ERR` | ERR-AREA-nnn | Error code (AREA is one of CMN, AUTH, CAP, BRK, QUE, MSG, OPR, MET — `AUTH` is four letters, so the area is not a fixed width) | [Error catalog](../07-data-and-contracts/error-catalog.md) |
+| `ERR` | ERR-AREA-nnn | Error code (AREA is one of CMN, AUTH, CAP, BRK, QUE, MSG, OPR, MET, AUD, MIG — `AUTH` is four letters, so the area is not a fixed width) | [Error catalog](../07-data-and-contracts/error-catalog.md) |
 | `DOC` | DOC-XXX-nnn | Citation key from revision 0.1 | [Root index](../README.md) |
 | `M` | Mn | Milestone, M0 to M7 | [Deployment and onboarding](../11-operations/deployment-and-onboarding.md) §6 |
 
@@ -114,12 +117,14 @@ Five categories are never allowed to imply one another:
 |---|---|
 | Requirement | Yes |
 | Technical proposal | Yes |
-| Designed verification | Partly — traceability rows say "not yet designed" |
+| Designed verification | Yes — requirements cite named planned cases; none has been executed |
 | Executed evidence | **No** |
-| Sign-off | **No** |
+| Sign-off | Documentation baseline approved by the project owner; no implementation or release sign-off |
 
-A document is not evidence of implementation. No code exists, no test has run, and no behaviour has been observed against a broker. Where a document states what the system *will* do, it describes intent.
+A document is not evidence of implementation. No test has run, and no behaviour has been observed against a broker. The recorded sign-off accepts this documentation baseline only. Where a document states what the system *will* do, it describes intent.
 
 ## Review
 
-The set is reviewed mechanically, because a solo project has no second reviewer: the contract is parsed and its references resolved on every change, every relative link is checked, every cited identifier is resolved against the document that defines it, and every claim of the form "N operations" or "N decisions" is checkable against the file that owns it. Numbers in prose that cannot be verified should not be written.
+The set is reviewed mechanically, because a solo project has no second reviewer. `tools/docs_check.py` is that review: it resolves every relative link and anchor, resolves every cited identifier against the document that defines it, checks every stated total against the file that owns the number, and asserts that each requirement has exactly one acceptance row. It exits non-zero on a finding, so it can gate a merge; it is not yet wired to a pipeline, which is why it is run by hand and why defects survive between passes.
+
+**It checks that the documents agree with themselves, and nothing more.** It cannot tell whether a statement is true of the system, because there is no system. Numbers in prose that no file owns cannot be checked by it and should not be written.

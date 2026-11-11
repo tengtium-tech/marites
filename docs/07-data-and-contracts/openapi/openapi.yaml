@@ -1,8 +1,11 @@
-openapi: 3.1.0
+openapi: 3.2.1
 
 info:
   title: Marites API
   version: 0.2.0
+  license:
+    name: MIT
+    identifier: MIT
   summary: RabbitMQ, Azure Service Bus and Google Pub/Sub message monitoring
   description: |
     Marites observes message traffic crossing an adopter-supplied messaging platform.
@@ -46,6 +49,8 @@ paths:
         Lets the client adapt to a partially complete backend. A feature absent here is not
         rendered, rather than attempted and failed.
       responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
         '200':
           description: Backend capability set
           content:
@@ -66,6 +71,8 @@ paths:
           in: query
           schema: { $ref: '#/components/schemas/ProviderKind' }
       responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
         '200':
           description: Broker profiles
           content:
@@ -90,6 +97,8 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/CreateBrokerRequest' }
       responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
         '201':
           description: Created
           content:
@@ -116,6 +125,8 @@ paths:
       operationId: getBroker
       summary: Retrieve one broker profile
       responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
         '200':
           description: Broker profile
           content:
@@ -139,6 +150,8 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/UpdateBrokerRequest' }
       responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
         '200':
           description: Updated
           content:
@@ -161,6 +174,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
         '204': { description: Removed }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -180,6 +195,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
         '200':
           description: Preflight result, passing or failing
           content:
@@ -204,6 +221,8 @@ paths:
         Read by the client to decide which controls exist. Where `canReplay` is false the
         replay control is omitted, not disabled.
       responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
         '200':
           description: Provider capabilities
           content:
@@ -233,6 +252,8 @@ paths:
           description: Matches queue name
           schema: { type: string }
       responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
         '200':
           description: Queue list
           content:
@@ -250,6 +271,8 @@ paths:
       operationId: getQueue
       summary: One queue with metadata and capture policy
       responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
         '200':
           description: Queue detail
           content:
@@ -299,6 +322,24 @@ components:
       schema: { type: integer, minimum: 1 }
 
   responses:
+    ClientError:
+      description: Client error returned as RFC 9457 Problem Details; explicit status codes take precedence.
+      headers:
+        Retry-After:
+          description: Present for 429 responses as delay seconds or an HTTP date.
+          schema:
+            oneOf:
+              - type: integer
+                minimum: 0
+              - type: string
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ServerError:
+      description: Dependency or unexpected server failure returned as RFC 9457 Problem Details.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
     BadRequest:
       description: Malformed request — ERR-CMN-001
       content:

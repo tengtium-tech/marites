@@ -1,6 +1,6 @@
 # C4 model
 
-Version 0.1 | November 2026 | Status: Draft
+Version 0.1 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 The system at three zoom levels, in the C4 notation. Each level answers a different question for a different reader; none of them restates the others.
 
@@ -11,7 +11,7 @@ The system at three zoom levels, in the C4 notation. Each level answers a differ
 | **3 — Components** | What is inside the one container that does real work? | Whoever implements or debugs capture |
 | 4 — Code | — | **Deliberately omitted.** See §5. |
 
-Each C4 level links to an interactive Archify view and its JSON source in the `diagrams/` folder. This document owns scope and interpretation; the views describe the specification, not implemented software.
+Each C4 level links to an interactive diagram and its JSON source in the `diagrams/` folder. This document owns scope and interpretation; the views describe the specification, not implemented software.
 
 ## 1. System context
 

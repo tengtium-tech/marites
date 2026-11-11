@@ -4,7 +4,7 @@ title: Architecture Decision Register
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — 23 accepted, 1 superseded, none proposed
+status: Approved — Product owner, 2026-11-11
 ---
 
 # Architecture Decision Register
@@ -118,12 +118,15 @@ The guard is not a marker table. It is the arithmetic: **compaction computes the
 
 | ADR | Decision | Status |
 |---|---|---|
-| ADR-005 | Vertical slices organised by capability, with dependency inversion at exactly three ports (`IBrokerAdmin`, `IMessageTap`/`IMessagePublisher`, `IClock`) — not a four-project onion | Accepted |
+| ADR-005 | Vertical slices organised by capability, with dependency inversion at exactly three ports (`IBrokerAdmin`, `IMessageTap`/`IMessagePublisher`, `IClock`) — not a four-project onion | Superseded by ADR-025 |
 | ADR-006 | `07-data-and-contracts/openapi/openapi.yaml` is the product boundary; all implementations conform and the frontend client is generated from it | Accepted |
 | ADR-009 | Modular monolith with one image and three entrypoints (`api`, `worker`, `all`) | Accepted |
 | ADR-013 | No third-party mediator; a ~50-line in-house dispatcher (`IRequest`, `IHandler`, registry, `Send<T>`) | Accepted |
+| ADR-025 | DDD with four inward backend layers; feature slices remain inside Application/API, with transactional Outbox for integration events | Accepted |
 
 **ADR-005 — rationale.** Only one infrastructure here is genuinely swappable — the broker. PostgreSQL is a commitment, and the HTTP boundary is protected by the contract rather than by interfaces, because the other implementations are in different languages. Enforced by a single ArchUnitNET test rather than by folder ceremony. **Consequence:** `Marites.Api` may not reference `RabbitMQ.Client` or `Npgsql`, and `Marites.Contracts` references nothing.
+
+*Superseded November 2026 by ADR-025.* Its project-layering choice is replaced by DDD and Clean Architecture; its useful constraints remain: provider SDKs stay in adapters, the HTTP boundary remains contract-first, and the capture hot path keeps its specialized storage port.
 
 **ADR-006 — rationale.** The frontend and backend are separate codebases; without an executable contract they drift, and the drift appears at runtime rather than at compile time. Writing the contract first also makes the API reviewable as a design artefact before any code exists. **Consequence:** the OpenAPI spec is written and reviewed before the first C# endpoint, the React client is generated from it, and a black-box conformance suite defines "done" for the service.
 
@@ -146,6 +149,16 @@ MediatR is dual-licensed under **RPL-1.5** (a strong copyleft licence obliging s
 | **No mediator at all** | — | Workable, but dispatch ergonomics were explicitly requested; a 50-line dispatcher delivers them without the licence or the framework |
 
 The decisive constraint is not licence cost but **distribution model and code ownership**: a dependency must not impose obligations on the people who deploy this software, and must not shape the codebase in ways that make it harder to reason about, audit, or replace.
+
+**ADR-025 — Backend DDD and Clean Architecture.** The backend is organized as four inward layers: `Marites.Domain`, `Marites.Application`, `Marites.Infrastructure`, and `Marites.Api`. Aggregate repositories are ports; adapters implement them; API endpoints are thin. Vertical slices remain a feature-organization technique inside Application and API, not a substitute for the dependency rule. `Marites.Contracts` remains a generated, dependency-free HTTP boundary package. API and worker hosts are composition roots within the existing modular monolith.
+
+**Rationale.** Domain invariants, application orchestration, external adapters, and HTTP policy have different change reasons and must be reviewable independently. This preserves the language-independent OpenAPI boundary (ADR-006) while making domain behavior testable without ASP.NET Core, a database, or a broker.
+
+**Consequences.** DEC-007/ADR-013 still applies: dispatch uses the small in-house dispatcher, not a third-party mediator. EF Core and Dapper serve ordinary persistence/projection work; the capture path remains Npgsql binary `COPY` (ADR-011). The two stores remain distinct (ADR-022), so a unit of work never spans SQLite and the optional message store. Broker mutations remain outside database transactions and use the staged hold/reconciliation protocol (ADR-023).
+
+Domain events that need durable integration delivery use a transactional Outbox record committed with the owning aggregate. Delivery is at least once and consumers deduplicate by event ID. No sink is mandatory until a named integration consumer exists. The Outbox does not make external broker effects atomic and is distinct from `operation_intent`.
+
+**Status (November 2026): Accepted.** ADR-005 is superseded; ADR-006, ADR-009, ADR-011, ADR-013, ADR-022, and ADR-023 remain binding.
 
 ---
 
@@ -193,4 +206,4 @@ The decisive constraint is not licence cost but **distribution model and code ow
 
 ## Document control
 
-Revision 0.1 records eighteen decisions, all Accepted; a review in November 2026 added ADR-019, the agent-access work in November 2026 added ADR-020 and ADR-021, the storage decision superseded ADR-004 with ADR-022, the operation-ordering decision added ADR-023, and the counting decision added ADR-024. No decision remains Proposed: every question they depended on has been answered in [DECISION-LOG](../01-project/decisions-and-open-questions.md). Changing an accepted decision requires a superseding ADR rather than an edit.
+Revision 0.2 records ADR-001 through ADR-025: 23 accepted decisions and two superseded decisions (ADR-004 and ADR-005). The storage decision added ADR-022, operation ordering added ADR-023, compaction added ADR-024, and the DDD/Clean Architecture direction added ADR-025. No decision remains Proposed. Changing an accepted decision requires a superseding ADR rather than an edit.

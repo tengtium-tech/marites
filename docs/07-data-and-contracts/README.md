@@ -1,6 +1,6 @@
 # Data and contracts
 
-Version 0.4 | November 2026 | Status: shared documentation section and coverage index.
+Version 0.4 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 What is stored, what the counting means, and the HTTP contract itself.
 
@@ -8,14 +8,15 @@ What is stored, what the counting means, and the HTTP contract itself.
 
 | Record | Shared coverage |
 | --- | --- |
-| [Data model](data-model.md) | Twelve tables in two stores, the counting-versus-storing split, rollup tiers, retention, storage ceiling, access strategy |
-| [Data dictionary](data-dictionary.md) | Column-level types, nullability, defaults and constraints for all twelve tables, plus the index list |
-| [First migration plan](migration-plan.md) | Migration order, partitioning, row-level security, post-migration checks, rollback, and four named gaps |
-| [Contract conventions](contract-conventions.md) | Outcome classes, idempotency, revision guard, confirmation, paging, versioning, security. Binding on the contract |
-| [API catalog](api-catalog.md) | 25 operations (10 served, 15 deferred) with roles, capabilities, guards and milestones |
-| [Error catalog](error-catalog.md) | 26 codes with HTTP status, outcome class and remedy |
-| [Served contract](openapi/openapi.yaml) | OpenAPI 3.1, 10 operations |
-| [Deferred contract](openapi/openapi.deferred.yaml) | OpenAPI 3.1, 15 designed operations not yet served |
+| [Data model](data-model.md) | Twelve current tables in two stores, with ownership and bookkeeping relationship diagrams, aggregate mapping, counting-versus-storing split, retention, storage ceiling and access strategy |
+| [Data dictionary](data-dictionary.md) | Column-level types, nullability, defaults and constraints, a planned Outbox record, PostgreSQL-first message-store ERD and index list |
+| [First migration plan](migration-plan.md) | Separate SQLite/PostgreSQL migration streams, partitioning, tenant isolation, post-migration checks, rollback, and named gaps |
+| [Contract conventions](contract-conventions.md) | OpenAPI 3.2.1, QUERY semantics, outcome classes, idempotency, revision guard, confirmation, paging, versioning, security. Binding on the contract |
+| [API catalog](api-catalog.md) | 25 operations (10 served, 15 deferred) with roles, capabilities, guards, HTTP methods and milestones |
+| [Error catalog](error-catalog.md) | 27 codes with HTTP status, outcome class and remedy |
+| [API architecture and NFRs](../05-architecture/api-architecture-and-nfrs.md) | Security, reliability, caching, performance, tooling, observability, and API verification rules |
+| [Served contract](openapi/openapi.yaml) | OpenAPI 3.2.1, 10 operations; static lint passed 2026-11-11 |
+| [Deferred contract](openapi/openapi.deferred.yaml) | OpenAPI 3.2.1, 15 designed operations not yet served; static lint passed 2026-11-11 |
 | [Controlled vocabulary](../14-reference/vocabulary.md) | Every enumerated value the schema and contract use |
 
 ## Why the contract lives here

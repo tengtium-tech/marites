@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "diagram_type": "erd",
+  "meta": {
+    "title": "Message store schema · PostgreSQL first",
+    "locale": "en",
+    "output": "docs/07-data-and-contracts/diagrams/message-store-schema.html",
+    "quality_profile": "showcase",
+    "views": [
+      {"id": "counts", "label": "Long-lived counts", "focus": ["message_rollup"], "note": "Exact counts persist after individual message rows expire."},
+      {"id": "inspection", "label": "Message inspection", "focus": ["message_capture"], "note": "Rows are partitioned by captured_at and may carry an inline body or object-store reference."},
+      {"id": "redelivery", "label": "Redelivery correctness", "focus": ["capture_dedupe", "message_capture", "message_rollup"], "note": "The ledger, message rows and rollup update share one transaction."}
+    ]
+  },
+  "layout": {"mode": "grid", "gapX": 60, "gapY": 36},
+  "entities": [
+    {
+      "id": "message_rollup",
+      "label": "message_rollup",
+      "tag": "counting",
+      "row": 0,
+      "col": 0,
+      "width": 245,
+      "attributes": [
+        {"name": "queue_ref_id", "type": "uuid", "key": "pk"},
+        {"name": "granularity", "type": "text", "key": "pk"},
+        {"name": "bucket_start", "type": "timestamptz", "key": "pk"},
+        {"name": "published", "type": "bigint"},
+        {"name": "dead_lettered", "type": "bigint"},
+        {"name": "bytes", "type": "bigint"},
+        {"name": "peak_rate", "type": "double precision"},
+        {"name": "death_reasons_json", "type": "jsonb"}
+      ]
+    },
+    {
+      "id": "message_capture",
+      "label": "message_capture",
+      "tag": "inspection",
+      "row": 0,
+      "col": 1,
+      "width": 300,
+      "attributes": [
+        {"name": "id", "type": "uuid", "key": "pk"},
+        {"name": "tenant_id", "type": "uuid"},
+        {"name": "broker_profile_id", "type": "uuid"},
+        {"name": "queue_ref_id", "type": "uuid"},
+        {"name": "exchange", "type": "text"},
+        {"name": "routing_key", "type": "text"},
+        {"name": "message_id", "type": "text"},
+        {"name": "correlation_id", "type": "text"},
+        {"name": "headers_json", "type": "jsonb"},
+        {"name": "payload_inline", "type": "bytea"},
+        {"name": "payload_ref", "type": "text"},
+        {"name": "payload_size", "type": "integer"},
+        {"name": "content_type", "type": "text"},
+        {"name": "content_hash", "type": "bytea"},
+        {"name": "captured_at", "type": "timestamptz", "key": "pk"},
+        {"name": "is_dead_letter", "type": "boolean"},
+        {"name": "death_reason", "type": "text"},
+        {"name": "native_reason", "type": "text"},
+        {"name": "death_count", "type": "integer"},
+        {"name": "first_dead_at", "type": "timestamptz"},
+        {"name": "origin_source", "type": "text"},
+        {"name": "origin_capture_id", "type": "uuid"},
+        {"name": "replay_of_id", "type": "uuid"}
+      ]
+    },
+    {
+      "id": "capture_dedupe",
+      "label": "capture_dedupe",
+      "tag": "redelivery",
+      "row": 0,
+      "col": 2,
+      "width": 255,
+      "attributes": [
+        {"name": "queue_ref_id", "type": "uuid", "key": "pk"},
+        {"name": "identity", "type": "bytea", "key": "pk"},
+        {"name": "remaining", "type": "smallint"},
+        {"name": "committed_at", "type": "timestamptz"}
+      ]
+    }
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Composite keys", "items": ["message_rollup is keyed by queue_ref_id + granularity + bucket_start.", "message_capture uses primary key (id, captured_at) because the partition key must be included.", "capture_dedupe is keyed by queue_ref_id + identity."]},
+    {"dot": "amber", "title": "Cross-store identifiers", "items": ["queue_ref_id, broker_profile_id and tenant_id identify bookkeeping records in SQLite; they are logical references, not PostgreSQL foreign keys.", "The store boundary is real: a database constraint cannot span the two engines."]},
+    {"dot": "emerald", "title": "Planned schema", "items": ["These PostgreSQL types describe the first message-store implementation.", "No database schema has been applied; this view documents the intended model."]}
+  ]
+}

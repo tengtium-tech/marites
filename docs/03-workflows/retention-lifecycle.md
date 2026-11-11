@@ -1,6 +1,6 @@
 # Retention and compaction lifecycle
 
-Version 0.1 | November 2026 | Status: Draft
+Version 0.1 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 Counts are kept; rows expire. This document draws the machine that does that, because the order of its steps is the difference between a total that is right and a total that quietly doubles.
 

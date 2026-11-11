@@ -1,16 +1,17 @@
 # Documentation areas
 
-Version 0.1 | November 2026 | Status: Drafted; the catalog maps each area to the documents that own it. This section holds no specification of its own — the areas are specified where they live, and the catalog is the index that stops the same behaviour being described twice.
+Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
-Organize Marites knowledge into cohesive documentation areas with responsibilities, exclusions, records and handoffs.
+Document Marites bounded contexts with their responsibilities, exclusions, record ownership and handoffs.
 
 ## Current Marites records
 
 | Record | Shared coverage |
 | --- | --- |
-| [Documentation area catalog](domain-catalog.md) | Five areas: broker connections and providers, capture and counting, dead-letter recovery, reporting and metrics, access, roles and audit |
-| [Architecture](../05-architecture/README.md) | Module map, capability model and the decisions behind the area boundaries |
-| [Data model](../07-data-and-contracts/data-model.md) | The records each area owns |
+| [Bounded-context catalog](domain-catalog.md) | Five bounded contexts, persistence ownership, and documented handoffs |
+| [Backend DDD architecture](../05-architecture/backend-ddd.md) | Aggregate roots, invariants, typed identifiers, value objects, events, repositories, and layer rules |
+| [Architecture](../05-architecture/README.md) | Module map, capability model and the decisions behind the context boundaries |
+| [Data model](../07-data-and-contracts/data-model.md) | The records and stores each context owns |
 | [Workflows](../03-workflows/README.md) | The three lifecycles that cross these areas |
 
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

@@ -4,7 +4,7 @@ title: Visual Design Tokens
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — tokens proposed and measured; no visual design review
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-UX-004 — Visual Design Tokens

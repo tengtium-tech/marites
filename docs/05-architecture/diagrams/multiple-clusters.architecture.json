@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Independent capture across clusters",
+    "locale": "en",
+    "output": "docs/05-architecture/diagrams/multiple-clusters.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {"id": "api", "type": "backend", "label": "Marites API", "sublabel": "profile setup · preflight", "pos": [40, 195], "size": [185, 78]},
+    {"id": "bookkeeping", "type": "database", "label": "SQLite bookkeeping", "sublabel": "profile · preflight · health", "pos": [40, 350], "size": [225, 84]},
+    {"id": "brokerprod", "type": "messagebus", "label": "Prod cluster", "sublabel": "adopter-run", "pos": [300, 40], "size": [190, 76]},
+    {"id": "brokerstage", "type": "messagebus", "label": "Staging cluster", "sublabel": "adopter-run", "pos": [535, 40], "size": [190, 76]},
+    {"id": "brokereu", "type": "messagebus", "label": "eu-west cluster", "sublabel": "adopter-run", "pos": [770, 40], "size": [190, 76]},
+    {"id": "workerprod", "type": "backend", "label": "Capture worker · prod", "sublabel": "profile=prod · own connection", "pos": [300, 225], "size": [205, 82]},
+    {"id": "workerstage", "type": "backend", "label": "Capture worker · staging", "sublabel": "profile=staging · own connection", "pos": [535, 225], "size": [215, 82]},
+    {"id": "workereu", "type": "backend", "label": "Capture worker · eu-west", "sublabel": "profile=eu-west · own connection", "pos": [770, 225], "size": [215, 82]},
+    {"id": "messagestore", "type": "database", "label": "Shared message store", "sublabel": "one PostgreSQL database for all profiles", "pos": [520, 500], "size": [260, 88]}
+  ],
+  "boundaries": [
+    {"kind": "region", "label": "Marites", "wraps": ["api", "bookkeeping", "workerprod", "workerstage", "workereu"], "pad": 28}
+  ],
+  "connections": [
+    {"id": "api-book", "from": "api", "to": "bookkeeping", "label": "profiles · preflight · health"},
+    {"id": "prod-capture", "from": "brokerprod", "to": "workerprod", "label": "Dedicated AMQP connection", "variant": "emphasis"},
+    {"id": "stage-capture", "from": "brokerstage", "to": "workerstage", "label": "Dedicated AMQP connection", "variant": "emphasis"},
+    {"id": "eu-capture", "from": "brokereu", "to": "workereu", "label": "Dedicated AMQP connection", "variant": "emphasis"},
+    {"id": "prod-store", "from": "workerprod", "to": "messagestore", "label": "Rows + counts + dedupe"},
+    {"id": "stage-store", "from": "workerstage", "to": "messagestore"},
+    {"id": "eu-store", "from": "workereu", "to": "messagestore"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Bulkhead isolation", "items": ["Each broker profile has its own worker and broker connection.", "A slow or unreachable cluster does not stall capture from the other profiles."]},
+    {"dot": "emerald", "title": "One shared history", "items": ["Every profile writes to the same message store for cross-cluster comparison.", "The example clusters are illustrative; the design is not limited to three."]}
+  ]
+}

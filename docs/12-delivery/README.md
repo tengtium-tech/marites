@@ -1,6 +1,6 @@
 # Delivery management
 
-Version 0.3 | November 2026 | Status: Partial; readiness, review and the delivery plan written; no code.
+Version 0.4 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 Keep the documentation baseline, milestone ownership and review evidence traceable.
 
@@ -21,11 +21,12 @@ Keep the documentation baseline, milestone ownership and review evidence traceab
 | Category | Present | Evidence |
 | --- | --- | --- |
 | Requirement | Yes | 29 FR, 8 NFR with acceptance criteria |
-| Technical proposal | Yes | 24 ADRs (23 accepted, 1 superseded), 19 decisions, twelve tables, a contract |
+| Technical proposal | Yes | 25 ADRs (23 accepted, 2 superseded), 19 decisions, twelve current tables, a contract |
 | Designed verification | Yes | 29 cases, 8 gates, all `Planned` |
 | Executed evidence | **No** | No test has run |
-| Sign-off | **No** | No second party has approved anything |
+| Documentation approval | **Yes** | The project owner approved the documentation baseline on 2026-11-11 |
+| Independent review / implementation sign-off | **No** | No second party has reviewed the set; no implementation or release has been accepted |
 
-Most of the five are absent or partial, and this table is the only place that says so in one glance. A milestone cannot exit on the strength of the third row.
+The first three are designed in documentation. The owner-approved documentation baseline is a separate sign-off; executed evidence, independent review and implementation sign-off are absent. A milestone cannot exit on the strength of planned cases alone.
 
 Use the [documentation structure](../01-project/documentation-structure.md) for the common writing standard, current-versus-planned status and the rules for index-only sections. Each linked document is maintained in its section as the authoritative record for that topic.

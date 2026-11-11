@@ -4,7 +4,7 @@ title: Deployment and Onboarding Specification
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — all decisions resolved; no implementation
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-OPS-001 — Deployment and Onboarding Specification
@@ -241,15 +241,15 @@ Deploy  →  Open UI  →  Add broker profile  →  Preflight  →  Pick queues
 
 ## 6. Deployment profiles and milestones
 
-Same `marites` binary in every profile; the difference is authentication and scale, never the storage engine.
+Same `marites` binary in every profile. SQLite is always present for Marites' bookkeeping; the adopter's message store is optional for live-only operation. PostgreSQL is the first supported message-store engine and SQL Server follows at M7.
 
-| Profile | Store | Auth | Isolation |
+| Profile | Bookkeeping store | Optional message store | Auth | Isolation |
 |---|---|---|---|
-| Local / single broker | PostgreSQL (Compose) | `MARITES_AUTH_MODE=none`, loopback only | single implicit tenant |
-| Multi-broker | PostgreSQL | Entra ID + JWT | tenant column, capability policies |
-| K8s / multi-team | PostgreSQL (managed) | Entra ID, one app registration (ADR-014: one install, several teams) | row-level tenant policy, per-tenant keys |
+| Local / single broker | SQLite, created at install | None for live-only mode; PostgreSQL when history and capture are enabled | `MARITES_AUTH_MODE=none`, loopback only | single implicit tenant |
+| Multi-broker | SQLite, created at install | PostgreSQL | Entra ID + JWT | tenant column, capability policies |
+| K8s / multi-team | SQLite, created at install | PostgreSQL (managed); SQL Server is planned at M7 | Entra ID, one app registration (ADR-014: one install, several teams) | row-level tenant policy, per-tenant keys |
 
-**SQLite is deliberately unsupported** (ADR-004). The data layer depends on binary `COPY`, native partitioning, `JSONB`, and GIN indexes — all Postgres-only. A second provider would mean two code paths for the most performance-critical component, and the "lightweight" profile would silently lose partitioning, which is what keeps retention from becoming a DELETE storm.
+The two stores have different jobs. SQLite is always present for configuration, roles, audit, operation evidence and replay progress. The optional message store holds traffic tables only; when it is absent, the product remains fully operable in live-only mode. ADR-004's rejection of SQLite applies to the high-throughput message store; ADR-022 establishes SQLite for bookkeeping and PostgreSQL first for message storage.
 
 Ships as a Docker image plus Helm chart. Capture workers scale by sharding `queue_ref` across replicas, each queue owned by exactly one worker via PostgreSQL advisory lock.
 
@@ -264,6 +264,7 @@ Ships as a Docker image plus Helm chart. Capture workers scale by sharding `queu
 | M4 | Multi-broker + tenancy | Bulkhead isolation across clusters, environment-scoped confirmations, per-tenant isolation tests (broker CRUD and encrypted credentials ship in M0) |
 | M5 | Provider #2 — Azure Service Bus | Adapter passing the shared conformance suite at `full` tier |
 | M6 | Provider #3 — Google Pub/Sub | Adapter passing the shared conformance suite at `full` tier |
+| M7 | SQL Server message store | SQL Server adapter passes the shared message-store conformance suite; existing PostgreSQL deployments remain supported |
 
 **Why live operations moved from M4 to M1.** Support is the primary actor (DOC-SRS-001 §2), and steps Detect and Act do not depend on the capture pipeline — they act on the live queue through the broker API. Holding them until M4 would mean three milestones in which the primary user can look but not act.
 

@@ -4,7 +4,7 @@ title: Open Decision Log
 product: Marites
 version: 0.1
 date: 2026-11
-status: 0 open — all answered
+status: Approved — Product owner, 2026-11-11
 ---
 
 # Decision Log
@@ -419,7 +419,7 @@ Mode B is the same shape as the broker answer in DEC-003: the platform team keep
 
 **Why not "any database" for the message store.** Four features carry the capture path — bulk insert, retention by dropping a partition, JSON indexing for headers, an atomic counter upsert — and each has a different shape per engine. An engine is supported only when it passes the same conformance suite, and adding one is a milestone, not a configuration.
 
-**What it changes.** ADR-004 (PostgreSQL only) is **superseded by ADR-022**, which is amended again here: the storage port covers **two** stores with different engines. `NFR-006` speaks of "an adopter-supplied message store". The wizard keeps a storage step, now marked optional, and its consequence text is corrected: skipping it costs **history**, not recovery ([DEC-016](#dec-016--may-the-product-run-without-storage-and-what-stops-working)).
+**What it changes.** ADR-004 (PostgreSQL only) is **superseded by ADR-022**, which is amended again here: the storage port covers **two** stores with different engines. `NFR-006` speaks of "an adopter-supplied message store". The wizard keeps a storage step, now marked optional, and its consequence text is corrected: skipping it costs **history**, not recovery ([DEC-016](#dec-016--running-without-storage)).
 
 **Resolution owner:** technical. **Recorded in:** ADR-022; [data model](../07-data-and-contracts/data-model.md) §2 (two stores); [storage prerequisites](../11-operations/storage-prerequisites.md); DOC-UX-003 §3.5, §3.10.
 
@@ -670,11 +670,11 @@ Revision 0.1 records nineteen questions; **all nineteen are answered.** No decis
 | DEC-009 | MIT licence; documents and future code under the same terms | November 2026 |
 | DEC-010 | An agent acts as the person whose credential it holds: `CanExecute` decides whether it executes or only proposes, and every action is attributed to that person with `via` | November 2026 |
 | DEC-011 | Replay may override the body for one message; the audit records the hash sent | November 2026 |
-| DEC-012 | Adopter supplies the database; PostgreSQL and SQL Server; Marites creates the tables | November 2026 |
+| DEC-012 | Two stores: Marites keeps its own SQLite bookkeeping store, always present; the adopter supplies an optional message store — PostgreSQL or SQL Server — and Marites creates the tables | November 2026 |
 | DEC-013 | A queue may be counted without storing its messages (`capture_mode = counts`) | November 2026 |
 | DEC-014 | Migrations run as a separate step with the migration credential, never at startup | November 2026 |
 | DEC-015 | Marites hosts an AI assistant on an adopter-supplied model; local runtime first-class; payloads off by default | November 2026 |
-| DEC-016 | Storage may be skipped; the install then runs live-only with recovery disabled; history begins at enablement | November 2026 |
+| DEC-016 | Storage may be skipped; the install then runs live-only — recovery and audit still work, history and search do not, and counts begin at enablement | November 2026 |
 | DEC-017 | The audit keeps payload evidence in a separate store, never inside the audit row — and it expires on its own clock, `max(row retention, the evidence retention)`, because it is Marites' record rather than the adopter's traffic | November 2026 |
 | DEC-018 | Evidence is complete, not sampled: one row per message, `before` and `after` for replay, truncated at a stated bound | November 2026 |
 | DEC-019 | An operation is not atomic across the broker and the store: the bodies are held durably first, the audit row is written only after the broker confirms, and reconciliation closes the one window | November 2026 |

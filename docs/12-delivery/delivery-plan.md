@@ -2,6 +2,9 @@
 document_id: DOC-DEL-002
 title: Delivery Plan
 product: Marites
+status: Approved — Product owner, 2026-11-11
+version: 0.1
+date: 2026-11
 ---
 
 # Delivery plan
@@ -19,7 +22,7 @@ The milestone names and exit criteria are owned by [deployment and onboarding §
 | Package | Finishes when |
 |---|---|
 | `WP-M0-1` Contract freeze | `openapi.yaml` validates in CI and every operation is tagged; changes after this point require a decision record |
-| `WP-M0-2` Skeleton | Three entrypoints (`api`, `worker`, `all`), the three ports, and the architecture test that enforces the reference rules |
+| `WP-M0-2` Skeleton | Three entrypoints (`api`, `worker`, `all`), the four ports, and the architecture test that enforces ADR-025's dependency rules |
 | `WP-M0-3` Bookkeeping store | SQLite file created at install, migrations applied, audit table writable |
 | `WP-M0-4` Identity | Entra JWT validated, role→capability map enforced, `ERR-AUTH-001/002` returned |
 | `WP-M0-5` Capabilities | `/capabilities` served from the provider record; `can_*` flags drive the UI |
@@ -70,7 +73,7 @@ The milestone names and exit criteria are owned by [deployment and onboarding §
 
 ### M7 — SQL Server message store
 
-`WP-M7-1` the second storage-port implementation. **This milestone was referenced by ADR-022 and the storage prerequisites but was missing from the milestone table** — recorded here so it has an owner and a place in the order.
+`WP-M7-1` the second storage-port implementation. M7 is owned by [deployment and onboarding §6](../11-operations/deployment-and-onboarding.md), follows the M2 PostgreSQL implementation, and exits when SQL Server passes the shared message-store conformance suite.
 
 ## 2. Definition of done
 

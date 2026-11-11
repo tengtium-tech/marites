@@ -2,6 +2,9 @@
 document_id: DOC-DEL-004
 title: GitHub Project
 product: Marites
+status: Approved — Product owner, 2026-11-11
+version: 0.1
+date: 2026-11
 ---
 
 # GitHub project
@@ -22,6 +25,7 @@ marites/
 │   └── fixtures/         the harness itself
 ├── migrations/           one folder per store
 ├── deploy/               compose, Helm chart, manifests
+├── tools/                repository scripts — docs_check.py guards the specification set
 ├── .github/              workflows, issue and PR templates
 └── README.md
 ```

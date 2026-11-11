@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Stored message read path",
+    "locale": "en",
+    "output": "docs/05-architecture/diagrams/read-path.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {"id": "react", "type": "frontend", "label": "React SPA", "sublabel": "generated API client"},
+    {"id": "api", "type": "backend", "label": "API slice", "sublabel": "handler · EF Core projection"},
+    {"id": "store", "type": "database", "label": "Message store", "sublabel": "PostgreSQL first"}
+  ],
+  "messages": [
+    {"id": "request", "from": "react", "to": "api", "y": 170, "label": "GET /api/v1/... · bearer JWT", "variant": "emphasis", "note": "React sends its MSAL token; the API validates it."},
+    {"id": "query", "from": "api", "to": "store", "y": 225, "label": "EF Core projection query", "variant": "emphasis", "note": "The slice handler reads directly; the query path has no domain logic."},
+    {"id": "rows", "from": "store", "to": "api", "y": 300, "label": "Projected rows", "variant": "return"},
+    {"id": "response", "from": "api", "to": "react", "y": 345, "label": "Marites.Contracts DTO · JSON", "variant": "return", "note": "The response uses the shared contract DTO."}
+  ],
+  "activations": [
+    {"participant": "react", "from": 170, "to": 375, "type": "frontend"},
+    {"participant": "api", "from": 170, "to": 365, "type": "backend"},
+    {"participant": "store", "from": 225, "to": 310, "type": "database"}
+  ],
+  "cards": [
+    {"dot": "slate", "title": "Scope", "items": ["This is the stored-data read path; live-only mode has no historical message query.", "The diagram describes the specification; no runtime is implemented yet."]}
+  ]
+}

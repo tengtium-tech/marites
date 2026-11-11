@@ -4,7 +4,7 @@ title: Canonical Vocabulary and Enumerations
 product: Marites
 version: 0.1
 date: 2026-11
-status: Controlled — single source for enumerated values
+status: Approved — Product owner, 2026-11-11
 ---
 
 # Canonical Vocabulary and Enumerations
@@ -38,20 +38,14 @@ Prose cannot prevent this. A single shared definition can.
 
 ## 1. Modules
 
-The twelve .NET source projects. Fixed by ADR-005; structure owned by [DOC-ARCH-001 §6](../05-architecture/architecture-overview.md).
+The four backend layers are fixed by ADR-025; `Marites.Contracts` is the generated HTTP contract package and `Marites.Worker` is a host, not a fifth layer. Project structure is owned by [DOC-ARCH-001 §6](../05-architecture/architecture-overview.md) and [backend DDD §3](../05-architecture/backend-ddd.md).
 
 | ID | Project | Responsibility |
 |---|---|---|
 | `Contracts` | `Marites.Contracts` | OpenAPI-generated DTOs, enums, error codes. Zero dependencies. |
 | `Domain` | `Marites.Domain` | The six domain types. Behaviour only where it prevents a bug. |
-| `Brokers` | `Marites.Brokers` | The four ports (`IBrokerAdmin`, `IMessageTap`, `IMessagePublisher`, `IMessageInspector`), the provider registry and the capability model. References no provider SDK. |
-| `Brokers.RabbitMq` | `Marites.Brokers.RabbitMq` | AMQP 0-9-1 and Management API adapter — the reference implementation. |
-| `Brokers.ServiceBus` | `Marites.Brokers.ServiceBus` | AMQP 1.0 adapter over `Azure.Messaging.ServiceBus`. |
-| `Brokers.PubSub` | `Marites.Brokers.PubSub` | gRPC adapter over `Google.Cloud.PubSub.V1`. |
-| `Storage` | `Marites.Storage` | DbContext, migrations, COPY bulk writer, partition sweeper. |
-| `Operations` | `Marites.Operations` | Guard chain, dry-run, rate limiting, audit. |
-| `Capture` | `Marites.Capture` | Topology setup, consume loop, batching, backpressure. |
-| `Identity` | `Marites.Identity` | Entra ID validation, role→capability mapping, policies. |
+| `Application` | `Marites.Application` | Use cases, commands, queries, authorization orchestration and ports. |
+| `Infrastructure` | `Marites.Infrastructure` | SQLite and message-store persistence, broker adapters, capture writer and external clients. |
 | `Api` | `Marites.Api` | HTTP endpoints, one folder per slice. Composition root. |
 | `Worker` | `Marites.Worker` | Capture host entrypoint. |
 

@@ -1,6 +1,6 @@
 # Recovery lifecycle
 
-Version 0.2 | November 2026 | Status: Draft
+Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 The loop Support actually runs, and why each step exists.
 

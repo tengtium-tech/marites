@@ -2,9 +2,9 @@
 document_id: DOC-UX-003
 title: Wireframes and Navigation
 product: Marites
-version: 0.6
+version: 0.7
 date: 2026-11
-status: Draft — every screen captured from the prototype; tokens in DOC-UX-004
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-UX-003 — Wireframes and Navigation
@@ -47,7 +47,7 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 | `/setup` | Console | First-run wizard | `POST /brokers`, `POST /brokers/{id}/preflight` |
 | `/queues` | Console | Queue tree and list | `GET /queues` |
 | `/queues/:id` | Console | Queue detail, capture policy | `GET /queues/{id}`, `PUT /queues/{id}/capture-policy` |
-| `/queues/:id/messages` | Console | Message list — the table inside the queue detail (§3.3) | `GET /messages` |
+| `/queues/:id/messages` | Console | Message list — the table inside the queue detail (§3.3) | `QUERY /messages` |
 | `/messages/:id` | Console | Message detail — the read-only payload dialog (§3.11.1) | `GET /messages/{id}` |
 | `/operations/:id` | Console | Operation progress | `GET /operations/{id}` |
 | `/brokers` | Console | Broker profiles | `GET /brokers`, `GET /brokers/{id}/capabilities` |
@@ -469,3 +469,5 @@ Revision 0.1 recorded the navigation model, nine routes and the operation dialog
 *Amended November 2026:* the route map gained `/login`, `/publish` and `/audit` — three screens the contract served and this document had omitted, found while building the prototype. Added §3.6 (publish composer), §3.7 (dead-letter selection and header actions), §3.8 (agent proposals) and §5 (authentication states, including the expired-token rule). Visual design moved out to [DOC-UX-004](visual-design.md). A further amendment added §3.9 (the assistant drawer), the `/ai` and drawer routes, and the unconfigured state.
 
 *Amended November 2026:* the block mockups were removed and replaced by the prototype's own screenshots, one set per section — a mockup beside a photograph is the same information twice, and the mockup is the copy that drifts. §3.8 was rewritten for both credential states after DEC-010 was revised; §3.3 stopped claiming a separate message-list screen; §6 lost two rows that contradicted DEC-016 and DEC-010; §7 became scope decisions rather than a list of what was unwritten.
+
+*Amended November 2026:* the queue message-list route now names the deferred `QUERY /messages` operation from the API contract.

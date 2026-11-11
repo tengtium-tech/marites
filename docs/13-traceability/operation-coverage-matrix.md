@@ -1,10 +1,10 @@
 # Operation coverage matrix
 
-Version 0.2 | November 2026 | Status: Partial; a derived trace of Planned verification, not execution evidence.
+Version 0.3 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 Counts: 25 operations, 10 served, 15 deferred, 25 tied to a requirement and at least one case, 0 with an executed verification
 
-This matrix connects every operation in the [API catalog](../07-data-and-contracts/api-catalog.md) to the requirement it serves, the role allowed to call it, its milestone, the verification level and the cases that would prove it. It is a Planned trace: no case has been written in detail or executed, and no operation exists as running software. Levels and cases are defined once in the [verification plan](../10-testing/verification-plan.md); this table cites them.
+This matrix connects every operation in the [API catalog](../07-data-and-contracts/api-catalog.md) to the requirement it serves, the role allowed to call it, its milestone, the verification level and the cases that would prove it. Verification remains Planned: no test code has been written or executed, and no operation exists as running software. Levels and cases are defined once in the [verification plan](../10-testing/verification-plan.md); this table cites them.
 
 How it was derived. Operation, method, path and roles are read from the catalog tables. The requirement column is a reviewable judgment: each operation is assigned to the requirement whose text it performs. A reviewer who disagrees should change the row and say why. Milestones follow [DOC-OPS-001 §6](../11-operations/deployment-and-onboarding.md), which owns them. FR-017 (role enforcement) applies to every operation and is not repeated per row; TC-007 covers it once.
 
@@ -21,13 +21,13 @@ How it was derived. Operation, method, path and roles are read from the catalog 
 | OP-QUE-001 | ListQueues | `GET /queues` | FR-001, FR-018 | All | M0 (served) | Contract, integration (real broker) | TC-001, TC-006 |
 | OP-QUE-002 | GetQueue | `GET /queues/{queueId}` | FR-001, FR-003, FR-018 | All | M0 (served) | Contract, integration (real broker) | TC-001, TC-006, TC-019 |
 | OP-QUE-003 | SetCapturePolicy | `PUT /queues/{queueId}/capture-policy` | FR-015, FR-023 | Admin | M2 (deferred) | Contract, idempotency | TC-001, TC-002, TC-017 |
-| OP-MSG-001 | SearchMessages | `GET /messages` | FR-006 | Support, Admin | M3 (deferred) | Contract, integration (real broker) | TC-001, TC-020 |
+| OP-MSG-001 | SearchMessages | `QUERY /messages` | FR-006 | Support, Admin | M3 (deferred) | Contract, integration (real broker) | TC-001, TC-020 |
 | OP-MSG-002 | GetMessage | `GET /messages/{messageId}` | FR-007 | Support, Admin | M3 (deferred) | Contract, integration (real broker) | TC-001, TC-020 |
 | OP-MET-001 | GetMetricSummary | `GET /metrics/summary` | FR-004, FR-005 | All | M2 (deferred) | Contract, integration (real broker) | TC-001, TC-016, TC-019 |
 | OP-MET-002 | GetMetricSeries | `GET /metrics/timeseries` | FR-004, FR-020 | All | M2 (deferred) | Contract, integration (real broker) | TC-001, TC-016 |
 | OP-MET-003 | GetMetricAvailability | `GET /metrics/availability` | FR-021 | All | M2 (deferred) | Contract, integration (real broker) | TC-001, TC-016 |
 | OP-OPR-001 | PeekQueue | `POST /operations/peek` | FR-008 | Support, Admin | M1 (deferred) | Contract, idempotency, integration (real broker) | TC-001, TC-002, TC-008, TC-010 |
-| OP-OPR-002 | DiscardMessages | `POST /operations/discard` | FR-009 | Support, Admin | M1 (deferred) | Contract, idempotency, dry run, integration (real broker) | TC-001, TC-002, TC-008 |
+| OP-OPR-002 | DiscardMessages | `POST /operations/discard` | FR-009, FR-028 | Support, Admin | M1 (deferred) | Contract, idempotency, dry run, durable-intent/reconciliation integration | TC-001, TC-002, TC-008, TC-028 |
 | OP-OPR-003 | PurgeQueue | `POST /operations/purge` | FR-009 | Admin | M1 (deferred) | Contract, idempotency, dry run, integration (real broker) | TC-001, TC-002, TC-008 |
 | OP-OPR-004 | ReplayMessages | `POST /operations/replay` | FR-010 | Support, Admin | M1 (deferred) | Contract, idempotency, dry run, integration (real broker) | TC-001, TC-002, TC-009 |
 | OP-OPR-005 | PublishMessage | `POST /operations/publish` | FR-011 | Support, Admin | M3 (deferred) | Contract, idempotency, integration (real broker) | TC-001, TC-002, TC-021 |
@@ -38,7 +38,10 @@ How it was derived. Operation, method, path and roles are read from the catalog 
 
 ## Gaps
 
-- **No case asserts a refusal by capability.** `ERR-CAP-001` is specified for a client that asks for an operation the provider cannot perform, but no v1 provider lacks an operation, so the case cannot be written against real software. It is deferred with M5, when a second adapter makes the branch reachable.
+- **Provider-capability refusal is deferred to M5.** `ERR-CAP-001` is specified for a request the provider cannot perform. No v1 provider currently lacks an operation, so verification against a real adapter is scheduled with the second adapter; the branch remains covered by the documented error contract until then.
 - **`GetOperation` is tied to FR-010 and FR-011** because replay and publish return an operation record; no requirement names it directly.
-- **The generated client (FR-019) is verified indirectly**, by the frontend build failing when a contract field is renamed. That is a build assertion, not a case, and it is recorded here rather than in the verification plan because it has no runtime.
+- **Generated-client compatibility (FR-019) is a planned build assertion**, to be exercised when a client generator and frontend build exist. TC-001 also checks that the promoted QUERY request survives generation; neither check has run.
 - **`ListBrokers` carries FR-014** although multi-cluster grouping only becomes testable at M4. The operation is served at M0; the requirement is met later. That gap is deliberate and is why FR-014's criterion is M4 in [requirements §3.1](../02-business/requirements.md).
+- **`ReplayMessages` shows one milestone for two deliveries.** The catalog's scope-by-revision table ships live redrive at M1 and adds captured-message replay at M3; this matrix records the first delivery only. The M3 expansion is covered by TC-020's capture-path integration and by FR-010, but it has no row of its own here.
+
+The Codex documentation review on 2026-11-11 confirmed all 25 operations have a requirement, role, milestone, and planned verification case. The deferred capability branch and milestone timing above are documented scope boundaries, not missing mappings. No case has been executed.

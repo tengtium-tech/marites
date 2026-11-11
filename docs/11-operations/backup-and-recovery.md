@@ -4,7 +4,7 @@ title: Backup and Recovery
 product: Marites
 version: 0.1
 date: 2026-11
-status: Planned — no backup has been taken, no restore has been tested
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-OPS-004 — Backup and Recovery

@@ -1,10 +1,10 @@
 # Failure paths
 
-Version 0.1 | November 2026 | Status: Draft
+Version 0.1 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 The three lifecycles describe what happens when things work. This document draws what happens when they do not, because a failure path that exists only as a table row is a failure path nobody has looked at end to end.
 
-Each section has an inline PNG preview generated from an Archify JSON source, with a link to the interactive HTML view. The diagrams clarify paths; the owning documents remain the source of rules.
+Each section has an inline PNG preview generated from an editable JSON source, with a link to the interactive HTML view. The diagrams clarify paths; the owning documents remain the source of rules.
 
 ## 1. Capture: the three ways a queue stops being observed
 
@@ -61,7 +61,7 @@ Two of the three exits are hard stops and one is a degraded success. The distinc
 
 ## 5. What these diagrams do not show
 
-- **Timing.** No timeouts, thresholds or retry intervals are drawn, because none are set ([failure modes §10](../05-architecture/failure-modes.md)).
+- **Timing.** The diagrams do not repeat timing values. The configured broker poll default and capture-stale threshold are in the [configuration reference](../11-operations/configuration-reference.md); provider timeout and retry budgets remain implementation settings and must be recorded before release ([failure modes §10](../05-architecture/failure-modes.md)).
 - **Multi-cluster.** A failure in one profile does not propagate, but the diagrams show one profile ([architecture overview](../05-architecture/architecture-overview.md) §10).
 - **Broker-side failure.** If the broker loses messages, every path above reports what Marites observed, not what happened.
 

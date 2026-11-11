@@ -1,6 +1,6 @@
 # Documentation structure
 
-Version 0.1 | November 2026 | Status: adopted navigation structure; content completeness is tracked separately in the [readiness dashboard](../12-delivery/readiness-dashboard.md).
+Version 0.1 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 ## Purpose
 
@@ -12,7 +12,7 @@ A folder or index is not a completed specification. Each document lives in exact
 
 | Section | Purpose | Present versus planned |
 | --- | --- | --- |
-| [project](README.md) | Decisions, assumptions, risks, the documentation standard and the changelog | Complete first draft, including the portfolio overview |
+| [project](README.md) | Decisions, assumptions, risks, the documentation standard and structure | Complete first draft, including the portfolio overview |
 | [business](../02-business/README.md) | What Marites must do, for whom and what it will not do, independent of runtime or storage | Requirements with acceptance criteria drafted; no user research |
 | [workflows](../03-workflows/README.md) | A message's path, an operator's path and an adopter's path | Five records: three lifecycles, failure paths, retention and compaction |
 | [domains](../04-domains/README.md) | Five documentation areas with responsibilities, records and handoffs | Catalog drafted; per-area specifications live in the owning documents |
@@ -52,7 +52,7 @@ Call the documentation complete for the planned system only after:
 - Identity, audit, reliable capture, security, operations and delivery requirements have explicit owners and verification.
 - Review status, implementation evidence, executed tests and deployment results are distinguishable. Neither a folder count nor a rendered diagram proves any of them.
 
-At this baseline the specification is a drafted first pass. No code, test or deployment exists.
+The project owner approved the documentation baseline against these coverage criteria on 2026-11-11. This approval covers the described planned system, assumptions, deferred scope and risks; no application code, test execution or deployment exists.
 
 ## Maintenance
 

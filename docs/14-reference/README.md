@@ -1,6 +1,6 @@
 # Reference
 
-Version 0.4 | November 2026 | Status: shared documentation section and coverage index.
+Version 0.4 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 Canonical vocabulary: every enumerated value, defined once.
 

@@ -4,7 +4,7 @@ title: Storage Prerequisites
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — grants designed; no database has been connected
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-OPS-006 — Storage Prerequisites

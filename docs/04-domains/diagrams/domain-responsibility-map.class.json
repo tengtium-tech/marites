@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Documented domain responsibilities",
+    "locale": "en",
+    "output": "docs/04-domains/diagrams/domain-responsibility-map.html",
+    "quality_profile": "showcase"
+  },
+  "layout": { "mode": "grid" },
+  "types": [
+    {
+      "id": "broker_connections",
+      "label": "Broker connections & providers",
+      "kind": "class",
+      "sublabel": "Configure profiles and verify readiness",
+      "row": 0,
+      "col": 0,
+      "attributes": [
+        { "name": "broker_profile", "type": "record" },
+        { "name": "credentials", "type": "protected data" },
+        { "name": "provider capabilities", "type": "provider facts" }
+      ]
+    },
+    {
+      "id": "capture_counting",
+      "label": "Capture & counting",
+      "kind": "class",
+      "sublabel": "Observe traffic and maintain exact rollups",
+      "row": 0,
+      "col": 1,
+      "attributes": [
+        { "name": "queue_ref / capture_rule", "type": "configuration" },
+        { "name": "message_capture", "type": "inspection rows" },
+        { "name": "message_rollup", "type": "counts" },
+        { "name": "capture_dedupe", "type": "redelivery ledger" }
+      ]
+    },
+    {
+      "id": "reporting_metrics",
+      "label": "Reporting & metrics",
+      "kind": "class",
+      "sublabel": "Read rollups; never derive counts from rows",
+      "row": 0,
+      "col": 2,
+      "attributes": [
+        { "name": "message_rollup", "type": "counting source" },
+        { "name": "dashboard tiles", "type": "reporting surface" }
+      ]
+    },
+    {
+      "id": "access_audit",
+      "label": "Access, roles & audit",
+      "kind": "class",
+      "sublabel": "Map identity to capabilities and preserve evidence",
+      "row": 1,
+      "col": 0,
+      "attributes": [
+        { "name": "tenant / app_user", "type": "identity" },
+        { "name": "operation_audit", "type": "append-only record" }
+      ]
+    },
+    {
+      "id": "dead_letter_recovery",
+      "label": "Dead-letter recovery",
+      "kind": "class",
+      "sublabel": "Guarded peek, discard, purge, replay and publish",
+      "row": 1,
+      "col": 1,
+      "attributes": [
+        { "name": "replay_job", "type": "progress" },
+        { "name": "operation_intent", "type": "pre-command hold" },
+        { "name": "operation_audit", "type": "append-only record" },
+        { "name": "operation_payload", "type": "evidence" }
+      ]
+    }
+  ],
+  "relationships": [
+    { "id": "profile_to_capture", "from": "broker_connections", "to": "capture_counting", "kind": "dependency", "label": "hands off queue identity", "labelDy": 82 },
+    { "id": "capture_to_reporting", "from": "capture_counting", "to": "reporting_metrics", "kind": "dependency", "label": "supplies rollup counts", "labelDy": 82 },
+    { "id": "access_and_recovery", "from": "access_audit", "to": "dead_letter_recovery", "kind": "dependency", "label": "authorizes guarded actions", "labelDy": -54 },
+    { "id": "recovery_to_capture", "from": "dead_letter_recovery", "to": "capture_counting", "kind": "dependency", "label": "optional captured rows for replay dry-run" }
+  ]
+}

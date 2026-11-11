@@ -4,14 +4,14 @@ title: First Migration Plan
 product: Marites
 version: 0.1
 date: 2026-11
-status: Planned — no schema exists and nothing has been applied
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-DATA-003 — First Migration Plan
 
 **Source:** [data model](data-model.md), [data dictionary](data-dictionary.md). Owning document for the order in which the schema is created and what has to be true after it is.
 
-This is a plan, not a migration. No database has been created, no DDL has been executed, and no PostgreSQL version has been chosen beyond "16 or later". Everything below is `Planned`.
+This is a plan, not a migration. No database has been created, no DDL has been executed, and no PostgreSQL version has been chosen beyond "16 or later". Bookkeeping SQLite and the adopter's message store have separate migration streams. Everything below is `Planned`.
 
 ## 1. Preconditions
 
@@ -25,28 +25,43 @@ This is a plan, not a migration. No database has been created, no DDL has been e
 
 **One database for all clusters** (ADR-010). A per-cluster database would defeat the reason people want one dashboard.
 
-## 2. Migration order
+## 2. Migration streams
 
-Each step is a separate EF Core migration so a failure leaves a known prefix applied. The order is dependency order, not importance order.
+The two stores have separate migration histories, credentials, engines, and transactions. A migration in one store cannot refer to a foreign key in the other. The table prefixes below are logical plan names; the concrete migration tool remains an implementation choice.
+
+### 2.1 Bookkeeping SQLite
+
+Marites creates this store. Its nine current records are migrated independently in dependency order:
 
 | Step | Creates | Notes |
 |---|---|---|
-| `0001_tenant` | `tenant` | Must exist before anything is tenant-scoped |
-| `0002_identity` | `app_user` | Break-glass row is created by the application on first start, not by the migration — a migration that inserts a user is a migration with a password in it |
-| `0003_broker_profile` | `broker_profile` | Includes `revision`, `credentials_updated_at`, `capabilities_json` |
-| `0004_queue_ref` | `queue_ref` | Depends on `broker_profile` |
-| `0005_capture_rule` | `capture_rule` | Unique on `queue_ref_id` |
-| `0006_message_rollup` | `message_rollup` | Natural primary key, no surrogate |
-| `0007_message_capture` | `message_capture` parent, partitioned | See §3; the parent is created empty and every partition is a separate DDL statement |
-| `0008_capture_dedupe` | `capture_dedupe` | ADR-019 ledger |
-| `0009_replay_job` | `replay_job` | Depends on `queue_ref` and `app_user` |
-| `0010_operation_audit` | `operation_audit` | Append-only; the runtime role gets `INSERT` and `SELECT` only, never `UPDATE` or `DELETE` |
-| `0011_indexes` | Every index in the dictionary §11 | Created after load-free table creation, which is the only time it is cheap |
-| `0012_row_level_security` | Policies on configuration tables | See §4 |
-| `0013_operation_payload` | `operation_payload` and its two indexes | DEC-017. Created before the audit screen ships, because an audit row without its evidence is a claim with no proof |
-| `0014_operation_intent` | `operation_intent` and its reconciliation index | ADR-023. The durable hold must exist before any destructive operation is served: without it, a command whose bodies were never written has nothing to record |
+| `sqlite/0001_tenant` | `tenant` | Must exist before tenant-scoped records |
+| `sqlite/0002_app_user` | `app_user` | Break-glass user is provisioned by the application, never inserted with a password by a migration |
+| `sqlite/0003_broker_profile` | `broker_profile` | Includes credential metadata, capability snapshot, and revision |
+| `sqlite/0004_queue_ref` | `queue_ref` | Depends on `broker_profile` |
+| `sqlite/0005_capture_rule` | `capture_rule` | Unique on `queue_ref_id` |
+| `sqlite/0006_replay_job` | `replay_job` | Depends on queue and user identity |
+| `sqlite/0007_operation_audit` | `operation_audit` | Append-only; runtime may insert/read, never update/delete |
+| `sqlite/0008_operation_payload` | `operation_payload` | Evidence body rows and expiry index |
+| `sqlite/0009_operation_intent` | `operation_intent` | ADR-023 durable hold and reconciliation index |
+| `sqlite/0010_domain_event_outbox` | `domain_event_outbox` | Planned only; add before enabling a named integration sink. Aggregate and event envelope commit together. |
 
-**Why `message_capture` comes seventh rather than first.** It is the table that matters, and it is also the only one that cannot be created and forgotten. Putting it after the configuration tables means the partitioning and index statements are written against a schema whose dependencies already exist, rather than being debugged while five other tables are missing.
+The first nine steps create the current bookkeeping schema. Step 10 remains conditional until a subscriber/sink is selected. The dispatcher leases pending rows, delivers at least once, retries transient failures with bounded backoff, and retains poison events for operator action. The Outbox does not replace `operation_intent` and no event is published until the sink is configured.
+
+### 2.2 Adopter message store
+
+The adopter creates the database and grants separate migration/runtime roles. PostgreSQL is the first supported engine; SQL Server is a separate later milestone (ADR-022). The PostgreSQL schema contains only the three traffic tables:
+
+| Step | Creates | Notes |
+|---|---|---|
+| `message/0001_message_rollup` | `message_rollup` | Natural primary key, no surrogate |
+| `message/0002_message_capture` | `message_capture` partitioned parent | See §3; create parent empty, then each partition explicitly |
+| `message/0003_capture_dedupe` | `capture_dedupe` | ADR-019 ledger; write shares the capture batch transaction |
+| `message/0004_message_indexes` | Dictionary indexes | Created after load-free table creation where possible |
+
+Do not add tenant, broker, role, audit, or operation-intent tables to this store. Those remain in Marites' SQLite bookkeeping store. No cross-store migration or foreign key is possible.
+
+The message-store migration creates the `message_capture` parent before its partitions. The first daily partitions must exist before capture begins; the partition-maintenance function then creates future partitions idempotently. Keeping this stream separate from bookkeeping migrations makes its partition prerequisites explicit and avoids implying cross-store dependencies.
 
 ## 3. Partitioning
 
@@ -61,28 +76,32 @@ Each step is a separate EF Core migration so a failure leaves a known prefix app
 
 **Dropping a partition is irreversible.** There is no soft delete and no archive. That is the intended trade: rows are the investigation window, not the record (data model §3.1.1).
 
-## 4. Row-level security
+## 4. Tenant isolation
 
-| Table | Policy | Rationale |
+The bookkeeping store is SQLite and does not use PostgreSQL row-level security. Every Application repository method receives an authenticated tenant scope; callers cannot pass an arbitrary tenant ID to widen access. Repository queries must constrain that scope before mapping results.
+
+| Store/table | Policy | Rationale |
 |---|---|---|
-| `broker_profile`, `queue_ref`, `capture_rule`, `replay_job`, `app_user`, `operation_audit` | `USING (tenant_id = current_setting('marites.tenant_id')::uuid)` | Configuration is read and written per request, so the tenant context is always set |
-| `message_rollup`, `message_capture`, `capture_dedupe` | **No policy at M0–M3** | The worker writes across tenants in one batch; a per-row policy would require setting the tenant per batch and would make the `COPY` path unusable. Access is constrained by tenant-scoped keys and by the API's query shape |
+| Bookkeeping tables | Application/repository tenant scope; no PostgreSQL RLS | These records live in Marites-owned SQLite, not the adopter PostgreSQL store |
+| `message_rollup`, `message_capture`, `capture_dedupe` | **No RLS at M0–M3** | The worker writes across tenants in one batch; a per-row policy would require setting tenant per batch and would make the `COPY` path unusable. API projections are tenant-scoped in the query shape. |
 
-That asymmetry is a decision, and it is the weakest point in the isolation story. It is recorded as a risk in the [threat model](../09-security/threat-model.md) (THR-020) and it is why TC-022 exists. Moving capture tables to RLS requires either a per-tenant `COPY` or a `SECURITY DEFINER` writer — both change the write path, so it is not a migration-time decision to make casually.
+This is the weakest point in the isolation story and remains THR-020 / TC-022. Moving the message tables to RLS requires either a per-tenant `COPY` or a `SECURITY DEFINER` writer; both change the write path and require a separate decision.
 
 ## 5. Verification after applying
 
 | Check | Expected |
 |---|---|
-| `\dt` | Twelve tables — nine in Marites' own store, three in the message store — plus one partition per day in range |
-| `\d+ message_capture` | `Partitioned table`, range on `captured_at` |
-| Insert a row with a `captured_at` outside every partition | Error naming the missing partition — proves partitioning is active rather than decorative |
-| Insert two rows with the same `(queue_ref_id, granularity, bucket_start)` | Second is an upsert, not a duplicate |
-| `UPDATE operation_audit` as the runtime role | Permission denied |
-| `SELECT` from `broker_profile` with no tenant context set | Error, not a full table read |
-| Drop a partition, then read the rollup for that period | Totals unchanged (TC-015) |
+| Inspect SQLite schema | Nine current bookkeeping tables; ten only after the conditional Outbox migration |
+| PostgreSQL `\dt` | Three message-store parent tables plus range partitions; no bookkeeping tables |
+| PostgreSQL `\d+ message_capture` | Partitioned table, range on `captured_at` |
+| Insert a row outside every `captured_at` partition | Error naming the missing partition |
+| Insert the same rollup key twice | Second write upserts rather than duplicates |
+| `UPDATE operation_audit` through the runtime repository | Refused; audit is append-only |
+| Request another tenant's broker/queue/message record | Repository/API refuses access; no cross-tenant result |
+| Drop a message partition, then read the rollup for that period | Totals unchanged (TC-015) |
+| Commit aggregate plus Outbox event, then interrupt dispatcher | Aggregate and event both persist; later delivery is retried and consumers deduplicate by event ID |
 
-The fourth check is the one that catches a natural key implemented as a surrogate. The sixth catches an RLS policy that was enabled and never forced.
+The rollup-key check catches a natural key implemented as a surrogate. The tenant-isolation check catches an Application query that is missing authenticated scope.
 
 ## 6. Rollback
 
@@ -113,4 +132,4 @@ The fourth check is the one that catches a natural key implemented as a surrogat
 
 ## 9. Document control
 
-Revision 0.1 records the first migration plan, written November 2026 to close the gap named in the [data-and-contracts index](README.md). Nothing has been applied. The three items in §8 are operational procedures that a released version makes necessary, not unspecified behaviour: the object-store schema was specified in the [data dictionary](data-dictionary.md) §6 and is no longer among them.
+Revision 0.1 records the first migration plan, written November 2026 to close the gap named in the [data-and-contracts index](README.md). Nothing has been applied. The three items in §8 are operational procedures that a released version makes necessary; they are not unspecified table definitions.

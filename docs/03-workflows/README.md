@@ -1,6 +1,6 @@
 # Workflows
 
-Version 0.3 | November 2026 | Status: shared documentation section and coverage index.
+Version 0.3 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 The paths this system actually has: a message's, an operator's, an adopter's, and two that describe what happens when they break.
 
@@ -14,7 +14,7 @@ The paths this system actually has: a message's, an operator's, an adopter's, an
 | [Failure paths](failure-paths.md) | Four diagrams: the three ways capture stops, the dead-letter blind spot, where the recovery loop breaks, and the three onboarding exits |
 | [Retention and compaction lifecycle](retention-lifecycle.md) | Tier lifecycle, one sweeper pass in order, the ceiling state machine, and the six ways it can still go wrong |
 
-All workflow diagrams use Archify sources. PNG previews render inline in Markdown; the JSON files are the editable sources. These are design specifications; the project has no implemented runtime.
+Workflow diagrams are maintained as editable JSON sources with PNG previews for inline Markdown display. These are design specifications; the project has no implemented runtime.
 
 ## Diagram sources
 
@@ -35,10 +35,10 @@ All workflow diagrams use Archify sources. PNG previews render inline in Markdow
 Rebuild the inline previews from the repository root with the shared diagram builder:
 
 ```bash
-python docs/05-architecture/diagrams/build.py docs/03-workflows/diagrams/*.json
+python docs/05-architecture/diagrams/build.py docs/03-workflows/diagrams/*.sequence.json docs/03-workflows/diagrams/*.workflow.json docs/03-workflows/diagrams/*.lifecycle.json
 ```
 
-See [architecture diagrams](../05-architecture/diagrams/README.md) for the Archify and Chrome prerequisites, and for the interactive HTML view, which is a local build product and not committed.
+See [architecture diagrams](../05-architecture/diagrams/README.md) for build prerequisites and details about interactive HTML views, which are local build products and not committed.
 
 ## Reading order within this section
 

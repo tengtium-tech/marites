@@ -2,9 +2,9 @@
 document_id: DOC-SRS-001
 title: Software Requirements Specification
 product: Marites
-version: 0.1
+version: 0.2
 date: 2026-11
-status: Draft — all decisions resolved; no implementation
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-SRS-001 — Software Requirements Specification
@@ -17,7 +17,7 @@ Marites is a self-hosted web application that observes message traffic crossing 
 
 It is a **client**. It connects to brokers the adopter already runs. It does not provision, host, upgrade, or repair them, and it does not create or modify dead-letter topology.
 
-**This specification is complete, and completeness is the scope rule.** Every behaviour the product has is written down in one of the fourteen sections. A behaviour that is not described here is not in the product — it is not "to be decided later", not an implied edge of something adjacent, and not something an implementation may add because it seemed reasonable. The list in §6 names the omissions a reader is most likely to look for; the rule covers the rest. Where a reader finds a gap, the gap is in the reading, not in the set: the behaviour is either specified somewhere they have not reached, or it is out of scope by this paragraph.
+**This specification defines the approved scope, and gaps are review findings.** Every currently approved behaviour should be traceable through these requirements and their owning specifications. A behaviour not described in the set is not implied and must not be added by implementation without review. The list in §6 names omissions a reader is most likely to look for; it is not a guarantee that the set has no other gaps. When a reader finds one, reconcile the owning requirement or record the behaviour as out of scope before implementation.
 
 ## 2. Actors and the primary workflow
 
@@ -122,7 +122,7 @@ Each requirement has exactly one testable criterion and one outcome. A criterion
 | FR-016 | M1 | Every mutating operation writes exactly one `operation_audit` row with actor, action, target, result and count, and no endpoint can modify or delete one | TC-008, TC-009 |
 | FR-017 | M1 | Each of the three roles is refused every operation outside its capability matrix with `ERR-AUTH-002` and permitted every operation inside it | TC-007 |
 | FR-018 | M2 | A queue whose capture stops while its depth grows reports `captureState = stale` with a last-seen timestamp, and its count is never reported as zero | TC-018 |
-| FR-019 | M0 | The served contract validates as OpenAPI 3.1, the generated client compiles, and renaming a contract field fails the frontend build | TC-001 |
+| FR-019 | M0 | The served contract validates as OpenAPI 3.2.1, the generated client compiles, and renaming a contract field fails the frontend build | TC-001 |
 | FR-020 | M2 | A day, week, month, quarter and year query over the same period returns totals that agree to the message | TC-016 |
 | FR-021 | M2 | For a range whose finer tiers have been compacted, availability reports only the tiers that exist, and requesting an unavailable one returns `ERR-MET-001` | TC-016 |
 | FR-022 | M2 | With the ceiling reached, `published` and `deadLettered` keep incrementing while row writes stop, and the queue reports `captureState = capped` | TC-017 |
@@ -208,10 +208,11 @@ Designed verification exists as named cases; no test has been written, no code e
 | FR-025 | DOC-DATA-001 §3; VOCABULARY §16 | TC-025 |
 | FR-026 | DOC-ARCH-004 §9; VOCABULARY §17; DEC-015 | TC-026 |
 | FR-027 | DOC-DATA-001 §2, §4; DEC-017, DEC-018 | TC-027 |
+| FR-028 | DOC-DATA-001 §2.2; DOC-ARCH-006 §4; DOC-ARCH-007 §7; ADR-023 | TC-028 |
 | FR-029 | DOC-DATA-001 §2.2, §4; ADR-024 | TC-029 |
 
 ## 8. Document control
 
-Revision 0.1 records the initial requirement set. Priorities assume the MVP boundary in DOC-OPS-001 §6. All nineteen decisions in [DECISION-LOG](../01-project/decisions-and-open-questions.md) are answered; none blocks M0.
+Revision 0.2 records the initial requirement set and the complete requirement-to-specification crosswalk. Priorities assume the MVP boundary in DOC-OPS-001 §6. All nineteen decisions in [DECISION-LOG](../01-project/decisions-and-open-questions.md) are answered; none blocks M0.
 
 *Amended November 2026:* acceptance criteria added for every FR (§3.1) and NFR (§4.1), each with one outcome and a milestone; §7 now cites planned test cases rather than reading "not yet designed". **NFR-008 (accessibility) added**, because both surfaces are used under incident pressure and keyboard-only operation was recorded as a gap in the experience section with no requirement behind it. No existing requirement changed text or priority.

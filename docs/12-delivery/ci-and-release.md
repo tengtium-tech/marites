@@ -2,6 +2,9 @@
 document_id: DOC-DEL-003
 title: CI and Release
 product: Marites
+status: Approved — Product owner, 2026-11-11
+version: 0.1
+date: 2026-11
 ---
 
 # CI and release
@@ -27,14 +30,14 @@ What runs on a pull request, what runs on a tag, and what a release *is* for thi
 | Unit | A test fails, or coverage of a changed file drops below the floor | Merge |
 | Contract validation | `openapi.yaml` or `openapi.deferred.yaml` does not validate, an operation is untagged, or a `$ref` does not resolve | Merge |
 | Contract breaking-change check | A required field is added, a type narrows, or an operation is removed without a new version | Merge — the frontend is generated from this file |
-| Architecture test | A project reference violates the rules in ADR-005 | Merge |
-| Docs checks | A relative link does not resolve, or a cited identifier is not defined | Merge |
+| Architecture test | A project reference violates ADR-025's inward dependency rules | Merge |
+| Docs checks | `tools/docs_check.py` exits non-zero: a relative link or anchor does not resolve, a cited identifier is not defined in its owner, a stated total disagrees with the file that owns it, a requirement lacks exactly one acceptance row, or a retired project name is used | Merge |
 | Conformance suite | An implementation of the contract returns a shape the spec does not allow | Release |
 | Integration | A case against a real broker fails — the [traffic harness](../10-testing/traffic-harness.md) seeds it | Release |
 | Performance | `perf-sustained` falls below NFR-001, or the curve regresses against the last run | Release |
 | Upgrade | A database at the previous version cannot be migrated forward | Release |
 
-**The docs checks are a gate, not a courtesy.** The review has caught broken links and undefined identifiers three times; a rule that is only checked by hand is a rule that decays between reviews.
+**The docs checks are a gate, not a courtesy.** The review has caught broken links, dead anchors and undefined identifiers three times; a rule that is only checked by hand is a rule that decays between reviews. The check itself now exists — `python tools/docs_check.py`, non-zero on a finding — but it runs by hand, because **no pipeline exists yet**. CI/CD is a later increment; until it lands, every stage in this table is a specification of what the pipeline will do, and this one is also a command a person can run today.
 
 ## 3. What must be green to merge
 
@@ -50,7 +53,7 @@ Build, unit, contract validation, the breaking-change check, the architecture te
 |---|---|
 | Migrations are append-only | A released migration is never edited; a correction is a new migration |
 | Migrations are forward-only | There is no down-migration. Rollback is restore ([upgrade and rollback](../11-operations/upgrade-and-rollback.md)) |
-| The binary refuses to start against an older schema | `ERR-MIG-001` names both versions; running newer code on an older schema fails loudly rather than subtly |
+| The binary refuses to start against an older schema | `ERR-MIG-001` names the installed and required versions; running newer code on an older schema fails loudly rather than subtly |
 | One migration set per store | The bookkeeping store and the message store migrate independently, because they are separate databases (DEC-012) |
 
 ## 5. Artifacts
@@ -70,7 +73,7 @@ Build, unit, contract validation, the breaking-change check, the architecture te
 1. **Migrations rehearsed on a copy** of a database at the previous version — not on an empty one, which proves nothing about an upgrade.
 2. **Upgrade test green** from the previous minor to this one.
 3. **The dashboard updated** — no milestone claimed that the gates did not earn.
-4. **The changelog entry written** in the same voice as the documentation changelog: what changed and why, not a list of commits.
+4. **The release notes written** in the same voice as the specification: what changed and why, not a list of commits.
 5. **The contract diff read** — every removed or narrowed field accounted for.
 6. **Rollback stated** — what an adopter does if this release is wrong, with the restore path tested.
 

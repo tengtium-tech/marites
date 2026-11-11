@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "The one-hop capture path",
+    "locale": "en",
+    "output": "docs/05-architecture/diagrams/one-hop-tap.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "broker",
+      "type": "messagebus",
+      "label": "Adopter's broker",
+      "sublabel": "watched source queues",
+      "pos": [40, 60],
+      "size": [205, 84]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Capture worker",
+      "sublabel": "declares bounded tap · consumes copies",
+      "pos": [370, 60],
+      "size": [245, 84]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "Message store",
+      "sublabel": "PostgreSQL first · adopter supplied",
+      "pos": [790, 60],
+      "size": [225, 84]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Marites API",
+      "sublabel": "reads stored traffic",
+      "pos": [790, 285],
+      "size": [185, 78]
+    }
+  ],
+  "connections": [
+    {"id": "broker-copy", "from": "broker", "to": "worker", "label": "AMQP · shadow copies", "variant": "emphasis"},
+    {"id": "worker-copy", "from": "worker", "to": "postgres", "label": "Direct batch COPY", "variant": "emphasis"},
+    {"id": "api-read", "from": "api", "to": "postgres", "label": "Read captures + rollups"}
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "One hop",
+      "items": [
+        "The worker declares a bounded shadow queue on the broker it watches.",
+        "The broker delivers copies straight to the worker; the worker writes straight to the message store.",
+        "There is no tap broker, HTTP ingest tier, or second Marites cluster in this path."
+      ]
+    }
+  ]
+}

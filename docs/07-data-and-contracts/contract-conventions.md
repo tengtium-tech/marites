@@ -2,9 +2,9 @@
 document_id: DOC-API-001
 title: Contract Conventions
 product: Marites
-version: 0.1
+version: 0.2
 date: 2026-11
-status: Draft — binding on data-and-contracts/openapi/openapi.yaml
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-API-001 — Contract Conventions
@@ -17,7 +17,7 @@ status: Draft — binding on data-and-contracts/openapi/openapi.yaml
 
 | Choice | Detail |
 |---|---|
-| Specification | OpenAPI 3.1, a single document at `07-data-and-contracts/openapi/openapi.yaml` |
+| Specification | OpenAPI 3.2.1 for the served and deferred contract documents |
 | Format | YAML. More conventional for OpenAPI and reviews better in a pull request; JSON is a mechanical conversion if a tool needs it |
 | Path prefix | `/api/v1` — the major version lives in the path |
 | Transport | HTTPS only. SSE for live updates, on the same origin |
@@ -25,6 +25,8 @@ status: Draft — binding on data-and-contracts/openapi/openapi.yaml
 | Client generation | The React client is generated from the contract. Hand-written request types are a defect |
 
 One document rather than one per area: Marites is a single service, and splitting it would invent boundaries the system does not have.
+
+The served and deferred files are two lifecycle views of one contract and use the same OpenAPI version. The native `query` Path Item operation in OpenAPI 3.2.1 describes RFC 10008 QUERY requests. The generated client and interactive documentation must preserve the method and JSON request body before the operation is promoted to the served contract.
 
 ## 2. Data conventions
 
@@ -47,6 +49,14 @@ A **command** changes state. A **query** does not. Every command is identified a
 4. **Dry run first.** `replay`, `discard` and `purge` accept `dryRun`. The client must call with `dryRun: true` and display the result before executing. The API does not enforce the ordering — it cannot know what was displayed — but the conformance suite asserts the dry-run response shape.
 5. **Capability check.** A command whose provider cannot perform it returns `ERR-CAP-001`, never a silent no-op. The client should not have offered the control; the error exists because clients can be wrong.
 6. **Rate limiting.** Mutating operations are rate limited per tenant. Exceeding it returns `ERR-CMN-004` with `Retry-After`.
+
+## 3.1 Read method conventions
+
+- `GET` is used for retrieval by identifier, simple collection reads, and bounded scalar query parameters.
+- `QUERY` is used only for safe, idempotent complex reads whose structured filter/sort/page body is unsuitable for a URI. The body is required to be valid JSON with `Content-Type: application/json`; it must not change target state.
+- `POST` is not used for search. `POST /operations/peek` remains a command because provider behavior can have effects; `POST /operations/replay` remains a command because execution changes broker state even though the request may contain filters.
+- A QUERY response is cacheable by HTTP semantics, but application caches must use a key that includes the request content and tenant/authorization scope. Sensitive message and evidence responses are not placed in a shared cache.
+- CORS allowlists include `QUERY` where the client uses it. CORS `OPTIONS` preflight is infrastructure behavior, not a product operation.
 
 ## 4. Outcome classes and HTTP
 
@@ -86,6 +96,7 @@ Every error body is a `Problem`:
 - `code` is stable and machine-readable. Clients branch on it, never on `detail` text.
 - `remedy` is present whenever the operator can fix the cause. It is written for an operator, not a developer.
 - `retryable` states whether the same request may be repeated unchanged. It is `false` for every `Rejected` outcome.
+- Operation-specific error codes and remedies are documented explicitly. Shared OpenAPI 3.2.1 response ranges `4XX` and `5XX` cover other client and server errors with this same `Problem` schema; an explicit status response takes precedence over a range ([OpenAPI 3.2.1 §4.16](https://spec.openapis.org/oas/v3.2.1.html#responses-object)). The `4XX` response advertises `Retry-After` for rate-limited requests. Ranges do not replace a known error code or its remedy.
 
 ## 6. Paging
 
@@ -120,4 +131,4 @@ Implementation language, framework, database, deployment topology, or the intern
 
 ## 10. Document control
 
-Revision 0.1 establishes the conventions. `07-data-and-contracts/openapi/openapi.yaml` was written before this document existed and has been reconciled to it; future contract changes follow these rules first and amend the contract second.
+Revision 0.2 establishes the OpenAPI 3.2.1 and QUERY conventions. The Codex documentation review on 2026-11-11 found no open convention or contract mismatch. Runtime and generated-client compatibility remain Planned under TC-001. Future contract changes follow these rules first and amend the served/deferred contract pair second.

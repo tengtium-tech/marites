@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Marites data stores and ownership",
+    "locale": "en",
+    "output": "docs/05-architecture/diagrams/data-stores.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {"id": "api", "type": "backend", "label": "API + operations", "sublabel": "configuration · users · audit", "pos": [40, 95], "size": [225, 82]},
+    {"id": "sqlite", "type": "database", "label": "Bookkeeping store", "sublabel": "SQLite · always present", "pos": [420, 95], "size": [235, 88]},
+    {"id": "worker", "type": "backend", "label": "Capture worker", "sublabel": "traffic · counts · redelivery ledger", "pos": [40, 395], "size": [245, 86]},
+    {"id": "postgres", "type": "database", "label": "Message store", "sublabel": "PostgreSQL first · optional", "pos": [550, 395], "size": [255, 88]}
+  ],
+  "boundaries": [
+    {"kind": "region", "label": "Marites-owned bookkeeping", "wraps": ["api", "sqlite"], "pad": 28},
+    {"kind": "region", "label": "Adopter-owned message store", "wraps": ["postgres"], "pad": 28}
+  ],
+  "connections": [
+    {"id": "api-sqlite", "from": "api", "to": "sqlite", "label": "Config + audit"},
+    {"id": "api-postgres", "from": "api", "to": "postgres", "label": "Read captures + rollups"},
+    {"id": "worker-postgres", "from": "worker", "to": "postgres", "label": "COPY + counters + dedupe", "variant": "emphasis"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Nine bookkeeping tables", "items": ["tenant, broker_profile, queue_ref, capture_rule, replay_job, operation_audit, app_user, operation_payload and operation_intent stay in SQLite.", "Recovery and audit remain available when the optional message store is absent."]},
+    {"dot": "emerald", "title": "Three traffic tables", "items": ["message_capture, message_rollup and capture_dedupe share the adopter's message database.", "The dedupe ledger commits with each capture batch so redelivery cannot double-count."]},
+    {"dot": "amber", "title": "Store boundary", "items": ["Identifiers copied into the message store are logical references; a database foreign key cannot cross from PostgreSQL to SQLite.", "Bodies above 64 KB may spill to an adopter-owned object store; message_capture keeps payload_ref.", "No database schema has been applied; the diagram shows the documented design."]}
+  ]
+}

@@ -4,7 +4,7 @@ title: Data Model Specification
 product: Marites
 version: 0.1
 date: 2026-11
-status: Draft — all decisions resolved; no implementation
+status: Approved — Product owner, 2026-11-11
 ---
 
 # DOC-DATA-001 — Data Model Specification
@@ -15,11 +15,15 @@ status: Draft — all decisions resolved; no implementation
 
 - **Tenant-scoped from day one.** A tenant is a team inside one organisation (ADR-014), not a customer of a hosted service. Retrofitting tenancy is a rewrite.
 - **One writer per table.** `message_capture` is written only by capture workers; `operation_audit` only by the operations executor; configuration tables only by the API. This is what allows the API to stay stateless and scale horizontally.
-- **PostgreSQL only** (ADR-004). Binary `COPY`, native partitioning, `JSONB`, and GIN are all Postgres-specific and all load-bearing.
+- **Two stores, two roles** (ADR-022). Bookkeeping uses embedded SQLite; the optional message store uses PostgreSQL first, with SQL Server as a later supported engine. The message-store port preserves the capture semantics across engines.
 
 ## 2. Tables
 
-Twelve tables in **two stores** ([DEC-012](../01-project/decisions-and-open-questions.md)). Nine are Marites' own bookkeeping and always exist; three hold the traffic and exist only when the adopter connects a message store. The asymmetry is the whole design: one table is enormous, eleven are not, and only the enormous one belongs to the adopter.
+Twelve tables in **two stores** ([DEC-012](../01-project/decisions-and-open-questions.md)). Nine are Marites' own bookkeeping and always exist; three hold traffic and exist only when the adopter connects a message store. The asymmetry is the whole design: one table is enormous, eleven are not, and only the enormous one belongs to the adopter.
+
+![Marites data stores and ownership](../05-architecture/diagrams/data-stores.png)
+
+**Diagram source:** [data-store ownership](../05-architecture/diagrams/data-stores.architecture.json).
 
 ### 2.1 Marites' own store — always present
 
@@ -65,9 +69,29 @@ operation_intent  (id, tenant_id, actor_id, actor_kind, on_behalf_of, proposal_i
                    -- marked abandoned if the command did not take effect. Swept in minutes.
 ```
 
+### Planned integration-event Outbox
+
+When an integration-event sink is configured, the bookkeeping store gains a `domain_event_outbox` record. It is a planned infrastructure record, not part of the twelve current product tables or the current logical-model image. The aggregate update and outbox envelope commit in the same SQLite transaction. The event envelope contains IDs and outcome facts only; it never contains broker credentials or message bodies. The delivery and retry contract is specified in [backend DDD architecture §5](../05-architecture/backend-ddd.md), and the logical columns are listed in the [data dictionary](data-dictionary.md).
+
+The Outbox does not replace `operation_intent`: the latter holds bodies before an external broker command and is reconciled under ADR-023. Capture-originated integration events are excluded until the message-store transaction and storage port explicitly include their Outbox write.
+
+#### Marites-owned logical relationships
+
+![Marites bookkeeping logical model](diagrams/bookkeeping-logical-model.png)
+
+**Diagram source:** [bookkeeping logical model](diagrams/bookkeeping-logical-model.class.json).
+
+This view shows the nine current SQLite records, selected key references, and the operation-intent promotion path. It does not include the planned Outbox record. It is a logical relationship map: SQLite physical type mappings are not specified, and fields such as `tenant_id` remain logical scope references unless the dictionary explicitly declares a foreign key.
+
+Rebuild the preview from the repository root with:
+
+```bash
+python docs/05-architecture/diagrams/build.py docs/07-data-and-contracts/diagrams/bookkeeping-logical-model.class.json
+```
+
 ### 2.2 The message store — optional, and the adopter's
 
-PostgreSQL (recommended) or SQL Server. Created and granted by the adopter ([DEC-012](../01-project/decisions-and-open-questions.md), [storage prerequisites](../11-operations/storage-prerequisites.md)). Without it the product runs **live-only**: no counts over time, no message list, no search — and full recovery, because the audit is in §2.1 ([DEC-016](../01-project/decisions-and-open-questions.md)).
+PostgreSQL first; SQL Server is planned for M7 (ADR-022). The database is created and granted by the adopter ([DEC-012](../01-project/decisions-and-open-questions.md), [storage prerequisites](../11-operations/storage-prerequisites.md)). Without it the product runs **live-only**: no counts over time, no message list, no search — and full recovery, because the audit is in §2.1 ([DEC-016](../01-project/decisions-and-open-questions.md)).
 
 ```sql
 message_rollup    (queue_ref_id, granularity, bucket_start, published,
@@ -238,17 +262,18 @@ Retention is enforced per capture rule by the background sweeper — day-partiti
 
 | Concern | Choice |
 |---|---|
-| CRUD (brokers, rules, users) | EF Core 9 + Npgsql |
+| Bookkeeping CRUD (brokers, rules, users) | EF Core adapter for the SQLite bookkeeping store |
+| Message-store projections | EF Core or Dapper adapter per supported message-store provider; no tracking for read paths |
 | Message capture | Raw binary `COPY`, batched 500 rows or 1 s |
 | Header queries | `headers_json` as `JSONB` + GIN index |
 | Payload | Inline `bytea` up to 64 KB (TOAST handles it); larger spills to object store |
 | Text search | `pg_trgm` on `routing_key` / `message_id` at M3; full-text on payload only if demanded |
-| Rollup upsert | `ON CONFLICT DO UPDATE` with additive increments, keyed `(queue_ref_id, granularity, bucket_start)`; `peak_rate` merges with `GREATEST` |
+| Rollup upsert | Capture-time `ON CONFLICT DO UPDATE` uses additive increments; compaction assigns recomputed absolute totals (ADR-024), keyed `(queue_ref_id, granularity, bucket_start)`; `peak_rate` merges with `GREATEST` |
 
 The rollup upsert is the one place where two writers on the same key would serialise. Queue-shard ownership (DOC-ARCH-001 §9) guarantees exactly one worker per queue, so contention is negligible — and that guarantee is a correctness requirement, not an optimisation.
 
 ## 6. Document control
 
-Revision 0.1 records the initial model. DEC-005 set the `sampled` default and DEC-006 settled verbatim storage; both are answered. `peak_rate` was added to `message_rollup` in November 2026 because the dashboard tile and the contract's `peakRate` cannot be derived from summed rows. ADR-019 added a tenth table, `capture_dedupe`. No migration exists and no schema has been applied.
+Revision 0.1 records the initial model. DEC-005 set the `sampled` default and DEC-006 settled verbatim storage; both are answered. `peak_rate` was added to `message_rollup` in November 2026 because the dashboard tile and the contract's `peakRate` cannot be derived from summed rows. ADR-019 added the twelfth table, `capture_dedupe`. No migration exists and no schema has been applied.
 
 *Amended November 2026:* four columns added that the contract already required and the model did not carry — `broker_profile.revision` and `credentials_updated_at`, `capture_rule.revision` and `sample_rate`. Without them `If-Match` had nothing to match and the `sampled` policy had no rate to sample at. `payload_ref` split into `payload_inline` and `payload_ref`, because one column cannot hold both an inline body and an object key without a discriminator that already means something else. The [data dictionary](data-dictionary.md) now owns the column-level definition.

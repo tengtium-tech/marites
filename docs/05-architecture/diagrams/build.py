@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Render an Archify diagram spec to a PNG that embeds in Markdown.
+"""Render a diagram specification to a PNG that embeds in Markdown.
 
-Archify's own output is a self-contained HTML page with an interactive SVG and
+The renderer's output is a self-contained HTML page with an interactive SVG and
 ~300 KB of inlined fonts. That is the right artefact for a browser and the
 wrong one for a document: GitHub will not render it inline, and the SVG alone
 loses the CSS cascade it depends on (the theme variables live on <html>).
@@ -14,7 +14,7 @@ regenerable rather than an artefact nobody can edit.
     python docs/05-architecture/diagrams/build.py docs/05-architecture/diagrams/01-architecture-baseline.architecture.json
 
 Run from the repository root; source paths can point to any documentation folder.
-Requires: the Archify checkout (set ARCHIFY to its directory) and Chrome.
+Requires: the configured diagram renderer checkout and Chrome.
 """
 import json
 import os
@@ -35,7 +35,7 @@ SCALE = 2
 
 
 def render(spec: pathlib.Path) -> pathlib.Path:
-    """Run the Archify CLI and return the HTML it wrote.
+    """Run the diagram renderer CLI and return the HTML it wrote.
 
     Renders into a temp directory, not the repository: the CLI writes through a
     hard link for atomic replacement, and refuses a target that already has
@@ -52,7 +52,7 @@ def render(spec: pathlib.Path) -> pathlib.Path:
 
 
 def cards_of(src: str) -> str:
-    """Return the info-card block Archify renders beside the canvas, or ''.
+    """Return the info-card block rendered beside the canvas, or ''.
 
     The cards are content, not chrome: they carry rules the arrows only point
     at ("a partial replay is 202 Unresolved: poll and reconcile"). Dropping

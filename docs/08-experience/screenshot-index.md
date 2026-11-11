@@ -2,6 +2,9 @@
 document_id: DOC-UX-005
 title: Screenshot Index
 product: Marites
+status: Approved — Product owner, 2026-11-11
+version: 0.1
+date: 2026-11
 ---
 
 # Screenshot index
