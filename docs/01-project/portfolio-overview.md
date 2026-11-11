@@ -93,9 +93,9 @@ The first profile is React/TypeScript with a C#/.NET backend. The planned portfo
 
 The current approved architecture set contains stack-specific guidance alongside shared rules. React frontend architecture, ASP.NET Core API guidance, C#/.NET backend architecture, provider/storage adapters, deployment, and CI choices describe the initial profile. Before another profile starts, its implementation guidance must be separated from shared behavior so a different stack can follow the same contract without inheriting framework-specific instructions.
 
-The repository will keep shared specifications under `docs/` and implementation code under `implementations/`, grouped by frontend and backend technology. Short-lived feature branches are for changes in progress; long-lived technology variants live in their directories so the shared contract and completed implementations remain visible together on `main`.
+The repository uses long-lived `main`, `react`, `csharp`, and `react-csharp` branches. `main` is the authoritative source for shared specifications and the API contract. The implementation branches inherit those files as part of their Git snapshots; shared-document changes are made on `main` and then merged into the implementation branches. React code is developed on `react`, C#/.NET code on `csharp`, and the pairing guide on `react-csharp`. Short-lived task branches are created from the relevant long-lived branch and merged back by pull request.
 
-Each backend profile gets a GitHub Project. The first project covers React + .NET; later Python and Go projects reuse the same requirements, contract, and verification gates. Frontend pairings are tracked as implementation work against each backend's conformance suite.
+Track each frontend and backend implementation in its own GitHub Project, rather than creating a new Project for every pairing. The React Project is reused as React is paired with future backends; each backend implementation has its own Project. A shared issue can appear in both relevant Projects while remaining one repository issue. Every pairing uses the same shared requirements, API contract, and verification gates.
 
 ## 8. Document control
 
