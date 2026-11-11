@@ -257,7 +257,7 @@ Ships as a Docker image plus Helm chart. Capture workers scale by sharding `queu
 
 | # | Deliverable | Exit criteria |
 |---|---|---|
-| M0 | Contract + skeleton + preflight + deploy | `openapi.yaml` reviewed; `/capabilities` and `/brokers/{id}/preflight` served; setup wizard blocks save on failure; `docker compose up` yields a working UI against a test broker; CI green |
+| M0 | Contract + skeleton + preflight + deploy | `openapi.yaml` reviewed; backend and provider capabilities plus `/brokers/{id}/preflight` are served; reachability/credential failures block profile saving, while topology-permission failure saves a `failing` profile and blocks capture enablement with `ERR-BRK-001` and a named remedy; `docker compose up` yields a working UI against a test broker; CI green |
 | M1 | Metadata dashboard + **live support console** | Queue tree, depths, rates, DLQ badges; live peek, discard-one, purge and redrive against the broker; audit log writing; RBAC enforced. **A Support user can complete a recovery without leaving the UI** |
 | M2 | Capture pipeline | Shadow binding + backfill; rollups written every second; rows land in store; retention sweeper runs |
 | M3 | Message explorer + historical actions | Search and filters, payload viewer, duplicate grouping; replay a captured message; publish |

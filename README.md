@@ -53,7 +53,7 @@ The documents already contain the structure a project board needs, so the board 
 | Epic | A milestone, M0 to M7 — [deployment and onboarding §6](docs/11-operations/deployment-and-onboarding.md) |
 | Story | An operation in the [API catalog](docs/07-data-and-contracts/api-catalog.md), or a named gap in a risk |
 | Definition of done | The milestone's gate in [verification plan §3](docs/10-testing/verification-plan.md) |
-| Test task | A case, TC-001 to TC-029, with its level and milestone |
+| Test task | A case, TC-001 to TC-030, with its level and milestone |
 
 Two rules keep the board from drifting away from the specification: **a story that needs data the contract does not serve is a contract change first**, and **a milestone does not close until its gate passes** — not until its tickets are closed.
 

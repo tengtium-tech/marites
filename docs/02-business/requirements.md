@@ -115,8 +115,8 @@ Each requirement has exactly one testable criterion and one outcome. A criterion
 | FR-009 | M1 | Discard with a matching typed confirmation removes exactly the selected messages; a mismatched confirmation returns `ERR-OPR-001` and removes nothing | TC-008 |
 | FR-010 | M1 | A replay dry run returns the count and death reasons and publishes nothing; execution publishes at no more than `maxPerMinute`; exactly one audit row records actor, target and count | TC-009 |
 | FR-011 | M3 | A body failing content-type validation returns `ERR-CMN-001` and publishes nothing; a valid body publishes once per idempotency key and twice for two different keys | TC-021 |
-| FR-012 | M0 | A broker profile can be created, read, updated and deleted, and no response in that sequence contains a credential value | TC-005, TC-003 |
-| FR-013 | M0 | Preflight returns one result per check with pass/fail and a remedy on each failure, and enabling capture while a mandatory check fails returns `ERR-BRK-001` | TC-005 |
+| FR-012 | M0 | A broker profile can be created, read, updated and deleted, and no response in that sequence contains a credential value | TC-005, TC-003, TC-030 |
+| FR-013 | M0 | Preflight returns one result per check with pass/fail and a remedy on each failure, and enabling capture while a mandatory check fails returns `ERR-BRK-001` | TC-005, TC-030 |
 | FR-014 | M4 | Two profiles in different environments are reported separately, each with its own health, and making one unreachable leaves the other's figures unchanged | TC-023 |
 | FR-015 | M2 | Lowering row retention drops the partitions past the new window and leaves every `message_rollup` total unchanged | TC-015 |
 | FR-016 | M1 | Every mutating operation writes exactly one `operation_audit` row with actor, action, target, result and count, and no endpoint can modify or delete one | TC-008, TC-009 |
