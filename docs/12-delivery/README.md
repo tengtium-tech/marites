@@ -20,7 +20,7 @@ Keep the documentation baseline, milestone ownership and review evidence traceab
 | --- | --- | --- |
 | Requirement | Yes | 29 FR, 8 NFR with acceptance criteria |
 | Technical proposal | Yes | 25 ADRs (23 accepted, 2 superseded), 19 decisions, twelve current tables, a contract |
-| Designed verification | Yes | 29 cases, 8 gates, all `Planned` |
+| Designed verification | Yes | 30 cases, 8 gates, all `Planned` |
 | Executed evidence | **No** | No test has run |
 | Documentation approval | **Yes** | The project owner approved the documentation baseline on 2026-11-11 |
 | Independent review / implementation sign-off | **No** | No second party has reviewed the set; no implementation or release has been accepted |

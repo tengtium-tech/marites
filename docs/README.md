@@ -21,7 +21,7 @@ The documentation uses numbered sections — `01-project` to `14-reference` — 
 | [Data and contracts](07-data-and-contracts/README.md) | Tables, the data dictionary, the migration plan, counting semantics, the HTTP contract and error codes |
 | [Experience](08-experience/README.md) | Metric presentation, role capabilities, wireframes and navigation, accessibility |
 | [Security](09-security/README.md) | The [threat model](09-security/threat-model.md), credentials, payload responsibility and operation safeguards |
-| [Testing](10-testing/README.md) | The [verification plan](10-testing/verification-plan.md): levels, 29 cases, eight gates; nothing executed |
+| [Testing](10-testing/README.md) | The [verification plan](10-testing/verification-plan.md): levels, 30 cases, eight gates; nothing executed |
 | [Operations](11-operations/README.md) | Adopter prerequisites for all three providers, deployment, upgrade, backup, runbook and milestones |
 | [Delivery](12-delivery/README.md) | The [readiness dashboard](12-delivery/readiness-dashboard.md), the delivery plan, CI and the project board |
 | [Traceability](13-traceability/README.md) | The operation-to-requirement matrix and the verification crosswalks |
@@ -37,7 +37,7 @@ For a first read: [requirements](02-business/requirements.md) §2, then the [thr
 | Requirements and decisions | Approved. 29 FR, 8 NFR, each with one acceptance criterion; 19 DEC answered, 25 ADRs (23 accepted, ADR-004 and ADR-005 superseded) |
 | Architecture and data model | Approved design. Twelve tables in two stores, four backend layers, four ports, nine components with failure modes |
 | API contract | Approved: 10 served and 15 deferred OpenAPI 3.2.1 operations; both pass static lint, running-service and generated-client conformance remain Planned |
-| Verification | Approved plan only: 29 cases, 8 gates, 0 executed — [verification plan](10-testing/verification-plan.md) |
+| Verification | Approved plan only: 30 cases, 8 gates, 0 executed — [verification plan](10-testing/verification-plan.md) |
 | Traceability | Approved — all 29 FRs, 8 NFRs and 25 API operations link to owning specifications and planned cases |
 | Security | Approved design. 26 threats; six planned cases cover ten, six stated residuals; no penetration test |
 | Application code and tests | Not started; no implementation exists |

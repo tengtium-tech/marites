@@ -38,6 +38,7 @@ Every case is `Planned`. None has been written, and no result exists. A case ass
 | TC-003 | Integration | M0 | No response body and no log line produced during the credential lifecycle contains a credential value | NFR-003 |
 | TC-004 | Deployment | M0 | `docker compose up` on a clean host serves a working UI against a test broker with one Marites container, creates its SQLite bookkeeping store, requires no adopter-supplied database, and applies the documented defaults | NFR-006, FR-023 |
 | TC-005 | Integration | M0 | A broker profile is created, read, updated and deleted against a real broker, and preflight returns one result per check with a remedy per failure | FR-012, FR-013 |
+| TC-030 | Integration | M0 | Against the test broker, the setup wizard blocks saving when reachability or credentials fail; when topology permissions fail, it saves the profile as `failing`, prevents capture enablement with `ERR-BRK-001`, and shows the missing grant and remedy; passing checks allow the documented next step | FR-012, FR-013 |
 | TC-006 | Integration | M1 | Depth, rates, consumers and unacked match the broker's own management reading in the same poll interval | FR-001 |
 | TC-007 | Integration | M1 | Each role is refused every operation outside its capability matrix and permitted every operation inside it | FR-017 |
 | TC-008 | Integration | M1 | Peek leaves depth unchanged; discard with a matching typed confirmation removes exactly the selection; a mismatch removes nothing | FR-008, FR-009, FR-016 |
@@ -70,7 +71,7 @@ A milestone does not exit until its gate passes. Each gate names the cases that 
 | Gate | Cases | Milestone | If it fails |
 | --- | --- | --- | --- |
 | Contract conformance | TC-001, TC-002 | M0 | The contract or the conventions are wrong; fix the owner, then the contract |
-| Deployment smoke | TC-004 | M0 | NFR-006 or the default set is wrong; fix before M1 builds on it |
+| Deployment and onboarding | TC-004, TC-030 | M0 | NFR-006, the setup flow, or the failure-specific save/enable behavior is wrong; fix before M1 builds on it |
 | Live console | TC-006, TC-007, TC-008, TC-009, TC-010 | M1 | M1's exit criteria are unmet: Support cannot complete a recovery |
 | Capture | TC-012, TC-013, TC-014, TC-018, TC-019 | M2 | **ADR-011 or ADR-019 is wrong.** A failure here invalidates the counting claim, so it needs a superseding ADR, not a patch |
 | Retention and reporting | TC-015, TC-016, TC-017, TC-029 | M2 | The two-tier design or the degradation order is wrong; DOC-DATA-001 §3–§4 changes first |
@@ -86,4 +87,4 @@ A green document check is not an application test. Link resolution, identifier r
 
 ## 5. Document control
 
-Revision 0.1 establishes the level vocabulary, 29 planned cases and eight milestone gates. Cases are added, never renumbered; a case that stops being relevant is marked `Withdrawn` with its reason. No case has a result, and no level has been exercised.
+Revision 0.1 establishes the level vocabulary, 30 planned cases and eight milestone gates. Cases are added, never renumbered; a case that stops being relevant is marked `Withdrawn` with its reason. No case has a result, and no level has been exercised.
