@@ -1,76 +1,56 @@
-# Marites
+# Marites — React + C# pairing
 
-Marites observes message traffic on a broker an adopter already runs — RabbitMQ, Azure Service Bus or Google Pub/Sub — counts it exactly, shows why messages failed, and lets a support engineer retry, discard or publish from one screen. It is a **client** of that broker: it never provisions, hosts, upgrades or repairs one.
+This branch is the guide for combining the React frontend and C#/.NET backend. Application code belongs on the stack branches; shared product requirements and the API contract are maintained on `main`.
 
-## Where to start
+## Start here
 
-| If you have | Read |
-|---|---|
-| Five minutes | [Requirements §2](docs/02-business/requirements.md) — the four-step recovery loop that scopes the product |
-| Twenty minutes | [Portfolio overview](docs/01-project/portfolio-overview.md) — what this set demonstrates and what is weak in it |
-| A specific question | [Documentation index](docs/README.md) — fourteen sections, each with an index that lists its own gaps |
-| Doubt about the status | [Readiness dashboard](docs/12-delivery/readiness-dashboard.md) — one table, no percentages |
-
-## What is in the repository
-
-```
-docs/                    the specification set: 14 sections, 48 substantive documents, 17 indexes
-  01-project/            overview, decisions, risks, standard, structure
-  02-business/           requirements and acceptance criteria
-  03-workflows/          capture, recovery, onboarding, retention
-  04-domains/            five documentation areas and their handoffs
-  05-architecture/       the one-hop tap, failure modes, adapters, 25 decisions
-  06-platform-foundation/ capture, identity, audit, configuration (index)
-  07-data-and-contracts/ tables, dictionary, migrations, the OpenAPI contract
-  08-experience/         metric rules, wireframes, screenshots, accessibility
-  09-security/           threat model
-  10-testing/            verification plan, traffic harness
-  11-operations/         prerequisites, deploy, config, upgrade, backup, runbook
-  12-delivery/           plan, CI, project board, readiness, review
-  13-traceability/       operation-to-requirement matrix
-  14-reference/          controlled vocabulary
-```
-
-The contract at [docs/07-data-and-contracts/openapi/openapi.yaml](docs/07-data-and-contracts/openapi/openapi.yaml) is the shared API boundary every implementation will be measured against.
-
-## One product, multiple stack profiles
-
-The requirements, workflows, domain rules, experience, API contract, and acceptance criteria are shared across implementations. The current architecture and operations documents describe the first profile: a React/TypeScript frontend and a C#/.NET backend. They include stack-specific choices and should be read as that profile's guidance, not as requirements for every future implementation.
-
-| | First profile | Planned alternatives |
+| Workstream | Branch | GitHub Project |
 |---|---|---|
-| Frontend | React | Angular, Svelte |
-| Backend | C#/.NET | Python, Go |
+| React frontend | [react](https://github.com/tengtium-tech/marites/tree/react) | [Marites — React Frontend](https://github.com/users/tengtium-tech/projects/6) |
+| C#/.NET backend | [csharp](https://github.com/tengtium-tech/marites/tree/csharp) | [Marites — C# Backend](https://github.com/users/tengtium-tech/projects/7) |
+| Shared requirements and API contract | [main](https://github.com/tengtium-tech/marites/tree/main) | Tracked in the relevant Project issue(s) |
 
-The goal is to exercise all nine frontend/backend pairings against the same product behavior and HTTP contract. Shared requirements or API changes belong in `docs/`; implementation-specific code and guidance belong with their stack profile. The repository plan is documented in [the portfolio overview](docs/01-project/portfolio-overview.md).
+The [OpenAPI contract](https://github.com/tengtium-tech/marites/blob/main/docs/07-data-and-contracts/openapi/openapi.yaml) defines the HTTP boundary the frontend and backend must share. See the [shared decisions and open questions](https://github.com/tengtium-tech/marites/blob/main/docs/01-project/decisions-and-open-questions.md) for decisions that affect the product across stacks.
 
-## How this becomes a sprint plan
+## Where tasks and changes go
 
-The documents already contain the structure a project board needs, so the board is derived rather than invented:
+- Track React implementation tasks in the React Frontend Project and make their code changes on `react`.
+- Track C#/.NET implementation tasks in the C# Backend Project and make their code changes on `csharp`.
+- Track a cross-stack task as one repository issue and add that issue to both Projects when both teams need to see it. Split its implementation between `react` and `csharp` as needed; the issue remains the shared record.
+- Keep shared, technology-neutral requirements and API contract changes on `main`. Make those changes through a pull request so both implementation branches can follow the same contract.
+- Keep pairing instructions and the local integration guide on `react-csharp`. This branch does not hold the application source code.
 
-| Board level | Derived from |
-|---|---|
-| Epic | A milestone, M0 to M7 — [deployment and onboarding §6](docs/11-operations/deployment-and-onboarding.md) |
-| Story | An operation in the [API catalog](docs/07-data-and-contracts/api-catalog.md), or a named gap in a risk |
-| Definition of done | The milestone's gate in [verification plan §3](docs/10-testing/verification-plan.md) |
-| Test task | A case, TC-001 to TC-029, with its level and milestone |
+For implementation work, branch from the matching stack branch and open a pull request back to it. Use `react` for frontend changes and `csharp` for backend changes.
 
-Two rules keep the board from drifting away from the specification: **a story that needs data the contract does not serve is a contract change first**, and **a milestone does not close until its gate passes** — not until its tickets are closed.
+## Projects, milestones, and sprints
 
-There will be a GitHub Project for each backend profile. The first is React + .NET; Python and Go follow. Each project uses the shared requirements, API contract, and verification gates while tracking its own implementation work.
+Both Projects use a Kanban flow with these statuses: **Backlog → Ready → In Progress → In Review → Done**. Milestones M0–M7 organize delivery scope. The Sprint Backlog view groups work into two-week iterations that start on Monday; Sprint 1 starts November 16, 2026.
 
-## A note on what these documents are not
+Issues currently start in Backlog. Move an issue into a sprint when the team commits to doing it in that iteration. A milestone describes the delivery goal; a sprint is the timebox for selected work.
 
-They are not evidence. Every verification case is marked `Planned`, the review is a self-review, and no behaviour has been observed. Where a document states what the system will do, it describes intent — and the set is written so that a reader can tell the difference without being told.
+## Recording open decisions
 
-## Contributing
+Discovery may raise questions that need a decision. Record each unresolved question in the relevant issue or a dedicated decision issue, including the context, viable options, impact, and who will resolve it.
 
-Not yet open. The specification is at **documentation baseline 1.0**; changes to an accepted decision require a superseding record rather than an edit — see [the documentation standard](docs/01-project/documentation-standard.md).
+- A React-only decision belongs with the React work and React Project.
+- A C#-only decision belongs with the C# work and C# Project.
+- A decision that affects both stacks or the shared API should be visible from both Projects. Keep the decision record and any resulting shared requirement or contract change on `main`.
 
-## Licence
+When a decision is resolved, record the choice and reason, link the affected issues, and update the relevant specification or stack guidance. Keep superseded decisions traceable instead of silently rewriting an accepted shared decision.
 
-**MIT** — see [LICENSE](LICENSE). Use it, fork it, sell a product built on it; keep the copyright notice.
+## Clone the implementation branches
 
-MIT rather than Apache-2.0 because the difference that matters here is the explicit patent grant, and nothing in this design reads a patent. If that changes, Apache-2.0 is a one-commit replacement. The copyright line names "Marites contributors" so it does not have to be edited per author; put your own name in it if you prefer.
+Use separate local directories so you can check out both branches at the same time:
 
-The choice is recorded as [DEC-009](docs/01-project/decisions-and-open-questions.md), because a licence is the one project decision an adopter inherits with the software — the same reasoning that rejected a copyleft dependency in ADR-013.
+```bash
+git clone --branch react --single-branch https://github.com/tengtium-tech/marites.git marites-react
+git clone --branch csharp --single-branch https://github.com/tengtium-tech/marites.git marites-csharp
+```
+
+Follow the setup, configuration, run, and verification instructions in each stack branch. Configure the React app to use the running backend's API address as specified by the frontend setup and shared contract. Verify the pairing against the shared API contract and the applicable acceptance criteria.
+
+The branches are planning baselines until implementation code and stack-specific setup instructions are added. Update each stack branch's README with supported tool versions and exact setup, run, and verification commands as its implementation is built. Do not guess those commands here; they depend on the code and configuration in each branch.
+
+## Adding other stack pairings
+
+Future pairings can reuse the React frontend with another backend when that backend implements the same API contract and passes integration verification. Create a backend Project for each backend implementation. Add a separate pairing guide only when that combination needs distinct setup or integration instructions.
