@@ -161,4 +161,4 @@ TC-… (or: none — and why that is acceptable)
 
 ## 8. Document control
 
-Revision 0.2, November 2026. The repository is initialized locally; its GitHub remote and profile project boards are pending publication. The layout supports one shared product specification with independently implemented frontend and backend profiles. The label and field lists are intentionally short — the failure mode of a project board is taxonomy, not scarcity.
+Revision 0.2, November 2026. The public repository is [tengtium-tech/marites](https://github.com/tengtium-tech/marites). It holds one shared product specification and independently implemented frontend and backend profiles. The React + .NET project board is to be created from the delivery plan; later backend profiles get their own boards. The label and field lists are intentionally short — the failure mode of a project board is taxonomy, not scarcity.
