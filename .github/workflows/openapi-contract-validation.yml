@@ -1,0 +1,37 @@
+name: OpenAPI contract validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docs/07-data-and-contracts/openapi/**'
+      - '.github/workflows/openapi-contract-validation.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/07-data-and-contracts/openapi/**'
+      - '.github/workflows/openapi-contract-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  lint-contracts:
+    name: Lint served and deferred contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate OpenAPI contracts
+        run: >-
+          npx --yes @redocly/cli@2.77.0 lint
+          docs/07-data-and-contracts/openapi/openapi.yaml
+          docs/07-data-and-contracts/openapi/openapi.deferred.yaml
