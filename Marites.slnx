@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Marites.Api/Marites.Api.csproj" />
+    <Project Path="src/Marites.Application/Marites.Application.csproj" />
+    <Project Path="src/Marites.Contracts/Marites.Contracts.csproj" />
+    <Project Path="src/Marites.Domain/Marites.Domain.csproj" />
+    <Project Path="src/Marites.Host/Marites.Host.csproj" />
+    <Project Path="src/Marites.Infrastructure/Marites.Infrastructure.csproj" />
+    <Project Path="src/Marites.Worker/Marites.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Marites.ArchitectureTests/Marites.ArchitectureTests.csproj" />
+    <Project Path="tests/Marites.ArchitectureViolationFixture/Marites.ArchitectureViolationFixture.csproj" />
+  </Folder>
+</Solution>
