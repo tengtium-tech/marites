@@ -40,7 +40,7 @@ For a first read: [requirements](02-business/requirements.md) §2, then the [thr
 | Verification | Approved plan only: 29 cases, 8 gates, 0 executed — [verification plan](10-testing/verification-plan.md) |
 | Traceability | Approved — all 29 FRs, 8 NFRs and 25 API operations link to owning specifications and planned cases |
 | Security | Approved design. 26 threats; six planned cases cover ten, six stated residuals; no penetration test |
-| Application code and tests | Not started; the prototype is not the product implementation |
+| Application code and tests | Not started; no implementation exists |
 
 ## Authority and interpretation
 
@@ -75,7 +75,7 @@ When two documents disagree, this table decides which one wins.
 | Operation-to-requirement mapping | [traceability/operation-coverage-matrix.md](13-traceability/operation-coverage-matrix.md) |
 | Verification | Planned; no test code or execution evidence exists. |
 
-**A document is not evidence of implementation.** The prototype illustrates the UI; no production service has been built, run, or verified against a broker. Statements about product behaviour describe intent.
+**A document is not evidence of implementation.** Static screenshots illustrate the proposed UI; no production service has been built, run, or verified against a broker. Statements about product behaviour describe intent.
 
 ## Shared specification and implementation profiles
 
@@ -83,64 +83,6 @@ The product contract is shared: requirements, user-visible workflows, domain beh
 
 **Paths in prose are relative to this `docs/` directory.** The contract lives inside the documentation because it is the product boundary, not a build artefact.
 
-## Document register
-
-Forty-eight substantive documents, fourteen section indexes, two nested indexes, and this page: 65 Markdown files. Section indexes are listed in the reading-order table above; the nested indexes are included below.
-
-| Document | Version | Status | Scope / evidence |
-| --- | --- | --- |
-| [project/portfolio-overview.md](01-project/portfolio-overview.md) | 0.2 | Approved | what this set demonstrates and how shared requirements govern multiple stack profiles |
-| [project/documentation-structure.md](01-project/documentation-structure.md) | 0.1 | Approved | the fourteen sections |
-| [project/documentation-standard.md](01-project/documentation-standard.md) | 0.2 | Approved | document review and approval statuses are defined |
-| [project/decisions-and-open-questions.md](01-project/decisions-and-open-questions.md) | 0.1 | Approved | 19 questions, all answered |
-| [project/assumptions-and-risks.md](01-project/assumptions-and-risks.md) | 0.2 | Approved | 10 assumptions, 14 risks |
-| [business/requirements.md](02-business/requirements.md) | 0.2 | Approved | 29 FR and 8 NFR with acceptance criteria and complete traceability |
-| [workflows/capture-lifecycle.md](03-workflows/capture-lifecycle.md) | 0.1 | Approved | Specification baseline; implementation and verification state are tracked separately |
-| [workflows/recovery-lifecycle.md](03-workflows/recovery-lifecycle.md) | 0.1 | Approved | Specification baseline; implementation and verification state are tracked separately |
-| [workflows/onboarding-lifecycle.md](03-workflows/onboarding-lifecycle.md) | 0.1 | Approved | Specification baseline; implementation and verification state are tracked separately |
-| [workflows/failure-paths.md](03-workflows/failure-paths.md) | 0.1 | Approved | Specification baseline; implementation and verification state are tracked separately |
-| [workflows/retention-lifecycle.md](03-workflows/retention-lifecycle.md) | 0.1 | Approved | Specification baseline; implementation and verification state are tracked separately |
-| [domains/domain-catalog.md](04-domains/domain-catalog.md) | 0.1 | Approved | five documentation areas |
-| [architecture/c4-model.md](05-architecture/c4-model.md) | 0.1 | Approved | context, containers, components |
-| [architecture/architecture-overview.md](05-architecture/architecture-overview.md) | 0.1 | Approved | Specification baseline; implementation and verification state are tracked separately |
-| [architecture/frontend-architecture.md](05-architecture/frontend-architecture.md) | 0.2 | Approved | React dependency layers and API boundary |
-| [architecture/backend-ddd.md](05-architecture/backend-ddd.md) | 0.2 | Approved | bounded contexts and four backend layers |
-| [architecture/api-architecture-and-nfrs.md](05-architecture/api-architecture-and-nfrs.md) | 0.2 | Approved | API pipeline, reliability and operations |
-| [architecture/failure-modes.md](05-architecture/failure-modes.md) | 0.1 | Approved | nine components |
-| [architecture/provider-adapters.md](05-architecture/provider-adapters.md) | 0.1 | Approved | three adapters |
-| [architecture/mcp-integration.md](05-architecture/mcp-integration.md) | 0.1 | Approved | agent surface and approval model |
-| [architecture/decisions.md](05-architecture/decisions.md) | 0.2 | Approved | 23 accepted, 2 superseded |
-| [architecture/diagrams/README.md](05-architecture/diagrams/README.md) | 0.1 | Approved | Editable architecture diagram sources and rendered previews |
-| [data-and-contracts/data-model.md](07-data-and-contracts/data-model.md) | 0.1 | Approved | Specification baseline; implementation and verification state are tracked separately |
-| [data-and-contracts/data-dictionary.md](07-data-and-contracts/data-dictionary.md) | 0.1 | Approved | twelve tables, column level |
-| [data-and-contracts/migration-plan.md](07-data-and-contracts/migration-plan.md) | 0.1 | Approved | nothing applied |
-| [data-and-contracts/contract-conventions.md](07-data-and-contracts/contract-conventions.md) | 0.2 | Approved | binding on the served and deferred contracts |
-| [data-and-contracts/api-catalog.md](07-data-and-contracts/api-catalog.md) | 0.2 | Approved | 25 operations — 10 served, 15 deferred |
-| [data-and-contracts/error-catalog.md](07-data-and-contracts/error-catalog.md) | 0.1 | Approved | 27 codes |
-| [data-and-contracts/openapi/openapi.yaml](07-data-and-contracts/openapi/openapi.yaml) | 0.2.0 | Approved | Served contract — 10 operations |
-| [data-and-contracts/openapi/openapi.deferred.yaml](07-data-and-contracts/openapi/openapi.deferred.yaml) | 0.2.0-deferred | Approved | Holding area — 15 operations |
-| [data-and-contracts/openapi/README.md](07-data-and-contracts/openapi/README.md) | 0.2 | Approved | static lint passed, runtime conformance Planned |
-| [experience/dashboard-and-operations.md](08-experience/dashboard-and-operations.md) | 0.2 | Approved | Specification baseline; implementation and verification state are tracked separately |
-| [experience/wireframes-and-navigation.md](08-experience/wireframes-and-navigation.md) | 0.7 | Approved | layout in text |
-| [experience/accessibility.md](08-experience/accessibility.md) | 0.1 | Approved | NFR-008 in full |
-| [experience/visual-design.md](08-experience/visual-design.md) | 0.1 | Approved | tokens and contrast, measured |
-| [security/threat-model.md](09-security/threat-model.md) | 0.2 | Approved | 26 threats, six planned verification cases |
-| [testing/verification-plan.md](10-testing/verification-plan.md) | 0.1 | Approved | 29 cases, 0 executed |
-| [testing/traffic-harness.md](10-testing/traffic-harness.md) | 0.1 | Approved | producer, rejecting consumer, nine scenarios, none built |
-| [operations/configuration-reference.md](11-operations/configuration-reference.md) | 0.1 | Approved | 24 variables, none read by a binary yet |
-| [delivery/delivery-plan.md](12-delivery/delivery-plan.md) | 0.1 | Approved | 8 milestones, 30 packages, nothing scheduled |
-| [delivery/ci-and-release.md](12-delivery/ci-and-release.md) | 0.1 | Approved | ten gates, no pipeline exists |
-| [delivery/github-project.md](12-delivery/github-project.md) | 0.2 | Approved | one-repository multi-profile layout and per-backend GitHub Projects |
-| [experience/screenshot-index.md](08-experience/screenshot-index.md) | 0.1 | Approved | 39 images from one build; capture script committed |
-| [operations/deployment-and-onboarding.md](11-operations/deployment-and-onboarding.md) | 0.1 | Approved | Specification baseline; implementation and verification state are tracked separately |
-| [operations/provider-prerequisites.md](11-operations/provider-prerequisites.md) | 0.1 | Approved | Service Bus and Pub/Sub |
-| [operations/storage-prerequisites.md](11-operations/storage-prerequisites.md) | 0.1 | Approved | PostgreSQL and SQL Server grants |
-| [operations/upgrade-and-rollback.md](11-operations/upgrade-and-rollback.md) | 0.1 | Approved | no release exists |
-| [operations/backup-and-recovery.md](11-operations/backup-and-recovery.md) | 0.1 | Approved | no restore tested |
-| [operations/runbook.md](11-operations/runbook.md) | 0.1 | Approved | 18 symptoms |
-| [delivery/readiness-dashboard.md](12-delivery/readiness-dashboard.md) | 0.4 | Approved | Single status summary |
-| [traceability/operation-coverage-matrix.md](13-traceability/operation-coverage-matrix.md) | 0.3 | Approved | all operation mappings present; verification Planned |
-| [reference/vocabulary.md](14-reference/vocabulary.md) | 0.1 | Approved | single source for enumerated values |
 ## Former identifiers
 
 Revision 0.1 used flat `DOC-XXX-001` filenames. Those identifiers survive in prose as stable citation keys — `DOC-ARCH-001 §6` still resolves — but the files now follow section paths. This table is the mapping.

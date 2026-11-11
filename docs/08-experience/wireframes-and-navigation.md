@@ -11,7 +11,7 @@ status: Approved — Product owner, 2026-11-11
 
 **Source:** [dashboard and operations](dashboard-and-operations.md) §1.1, §3, §4; [API catalog](../07-data-and-contracts/api-catalog.md). Owning document for layout and navigation. Metric meaning is owned by DOC-UX-001 §1; this document does not restate it.
 
-**The figures here are the prototype, not drawings of it.** Every screen below was captured from the running build, and [`prototype/screens/shoot.sh`](../../prototype/screens/shoot.sh) names the route that reaches each one — so a screen that cannot be reached cannot be illustrated, and an image cannot quietly disagree with the text beside it. Colour, type and spacing are owned by [visual design](visual-design.md).
+**The figures below are static screenshots of the UI exploration.** They illustrate intended layouts; the rules under each figure define behavior and constraints. Colour, type and spacing are owned by [visual design](visual-design.md).
 
 What an image cannot carry is the **rules**: why a control sits where it does, what it refuses, and what it says when it cannot do the thing. Those are the tables under each figure, and they are the part worth reviewing in a pull request. A mockup beside a photograph is the same information twice, and the mockup is the one that goes stale — so there are none left in this document.
 
@@ -29,7 +29,7 @@ Two surfaces that share no layout ([DOC-UX-001 §1.1](dashboard-and-operations.m
 
 | Viewer | Support · Admin |
 |---|---|
-| ![05-reporting](../../prototype/screens/05-reporting.png) | ![01-queues](../../prototype/screens/01-queues.png) |
+| ![05-reporting](images/05-reporting.png) | ![01-queues](images/01-queues.png) |
 | *Four tiles, a trend, a per-queue table. No message bodies, no operation controls, no queue a Viewer can act on.* | *Depth, rates, dead letters and capture state, with the two banners that appear when something needs attention.* |
 
 | Rule | Why |
@@ -78,19 +78,19 @@ One row per queue, five numbers, and a banner whenever one of them needs attenti
 | **Live-only changes the column, not just the banner** | With no message store, capture is not running — so every queue reads `off`, both banners are absent, and the footnote explains `off` instead of `stale`/`capped`. Showing `live` beside a live-only banner would claim a state the install cannot be in |
 | Row | Opens the queue detail. Rows are keyboard-reachable and the whole row is the target |
 
-![01-queues](../../prototype/screens/01-queues.png)
+![01-queues](images/01-queues.png)
 
 *The queue list. Depth, rate and dead letters per queue, `captureState` as a word beside the number rather than a colour, and the two banners that appear when something needs attention — never a permanent status badge.*
 
-![01b-queues-filter-dlq](../../prototype/screens/01b-queues-filter-dlq.png)
+![01b-queues-filter-dlq](images/01b-queues-filter-dlq.png)
 
 *`View` on the first banner: the table filtered to the two queues that cannot report failures, the count in the chip, and the link turned into `Show all`.*
 
-![01c-queues-filter-capture](../../prototype/screens/01c-queues-filter-capture.png)
+![01c-queues-filter-capture](images/01c-queues-filter-capture.png)
 
 *`View` on the second: the stopped queue and the capped one, side by side — which is where the difference between them is visible, since one has frozen figures and the other is still counting.*
 
-![14c-live-only-queues](../../prototype/screens/14c-live-only-queues.png)
+![14c-live-only-queues](images/14c-live-only-queues.png)
 
 *The same list in live-only. The banner appears where the gap is felt and says what still works — recovery and the audit. The capture column reads `off` for every queue and both warning banners are absent, because capture is not running at all.*
 
@@ -105,7 +105,7 @@ The metric strip answers *how bad*, the reason breakdown answers *why*, and the 
 | Purge | Admin only, typed queue name, environment tag on `prod` |
 | Capture policy | Read-only summary with the non-default marker where a value was changed |
 
-![02-queue-detail](../../prototype/screens/02-queue-detail.png)
+![02-queue-detail](images/02-queue-detail.png)
 
 *The queue detail. The metric strip, the action bar sitting on the same line as the checkboxes that enable it, the capture policy, and the reason breakdown.*
 
@@ -129,15 +129,15 @@ The dialog carries the dry run, the warning, the rate, the typed environment tag
 
 After execution the dialog becomes a progress view (`/operations/:id`): processed, failed, state, and a halt control.
 
-![03-replay-dialog](../../prototype/screens/03-replay-dialog.png)
+![03-replay-dialog](images/03-replay-dialog.png)
 
 *Replay. The selection's count and reasons, the body as published and editable, the validity check that keeps the button locked, and the typed environment confirmation.*
 
-![07-peek](../../prototype/screens/07-peek.png)
+![07-peek](images/07-peek.png)
 
 *Peek. Live messages with the `redelivered` flag, and the get-and-requeue caveat stated where the operator acts rather than in a footnote.*
 
-![15-purge](../../prototype/screens/15-purge.png)
+![15-purge](images/15-purge.png)
 
 *Purge. Two typed fields — queue name and environment — and a button that stays disabled until both match.*
 
@@ -157,23 +157,23 @@ Five steps. Four block the next; **step 2 does not**. The step strip is a contro
 
 Capture is forward-only (C-002), so the backfill offer is the only way to see what is already queued. It is a checkbox, not a default, because it reads the adopter's queue at a rate the operator chooses.
 
-![04-setup-profile](../../prototype/screens/04-setup-profile.png)
+![04-setup-profile](images/04-setup-profile.png)
 
 *Step 1, profile. The provider, the credential kind, and a card stating what enabling capture will create in the broker.*
 
-![04a-setup-storage](../../prototype/screens/04a-setup-storage.png)
+![04a-setup-storage](images/04a-setup-storage.png)
 
 *Step 2, message store. Optional, and it says what skipping costs: history, not recovery.*
 
-![04b-setup-preflight](../../prototype/screens/04b-setup-preflight.png)
+![04b-setup-preflight](images/04b-setup-preflight.png)
 
 *Step 3, preflight. One row per check, and a failing check names the grant that is missing.*
 
-![04c-setup-queues](../../prototype/screens/04c-setup-queues.png)
+![04c-setup-queues](images/04c-setup-queues.png)
 
 *Step 4, queues. Pre-selected by dead-letter routing, because those are the queues that can explain a failure.*
 
-![04d-setup-capture](../../prototype/screens/04d-setup-capture.png)
+![04d-setup-capture](images/04d-setup-capture.png)
 
 *Step 5, capture. What will be watched, the ceiling, and the backfill offer as a checkbox rather than a default.*
 
@@ -191,7 +191,7 @@ The highest-risk screen in the product: it injects a message into a live busines
 
 The warning closes the loop: *valid JSON is not a valid message*. A well-formed body with wrong semantics passes every check this tool can make, and the consumer rejects it into the dead-letter queue you started from.
 
-![09-publish](../../prototype/screens/09-publish.png)
+![09-publish](images/09-publish.png)
 
 *Publish. The target restated with its environment, the payload hash, and the typed environment tag that unlocks the button.*
 
@@ -211,11 +211,11 @@ The queue detail carries a paginated dead-letter list — time, reason, routing 
 
 The list is not a preview of a *sample*: every message the confirmation will act on is in it, for the same reason the evidence keeps one row per message (DEC-018). What changes between the confirmation and the audit is only the tense — *will be discarded* becomes *was discarded*.
 
-![08-discard](../../prototype/screens/08-discard.png)
+![08-discard](images/08-discard.png)
 
 *Discard. Every affected body listed before the command, each one openable, and the note that the copy is written before the message is acknowledged.*
 
-![08b-discard-payload](../../prototype/screens/08b-discard-payload.png)
+![08b-discard-payload](images/08b-discard-payload.png)
 
 *The same body in preview, opened from the confirmation: no hash and no retention date, because neither exists until the operation runs.*
 
@@ -245,11 +245,11 @@ What appears here depends on one thing: whether the credential the assistant hol
 | Dismissal is recorded | A pattern of dismissed proposals is how you learn the agent's judgement is off |
 | The two forms never appear together | One credential, one of the two — a screen showing both would be asking the operator to work out which one applies |
 
-![10-agent-executed](../../prototype/screens/10-agent-executed.png)
+![10-agent-executed](images/10-agent-executed.png)
 
 *The granted case: an assistant's replay, already done, attributed to the person whose credential carried it — with no approval step, and the reasoning kept with it.*
 
-**The proposal form has no screenshot**, deliberately. The prototype's demo credential carries `CanExecute`, so the drawer and the queue screen act rather than propose; the propose path is shown where it leaves a permanent trace, as the `proposal` row in the audit (§3.11). Capturing a screen the prototype cannot reach would be an illustration of a design, not evidence of one.
+**The proposal form has no screenshot**, deliberately. The propose path is shown where it leaves a permanent trace: the `proposal` row in the audit (§3.11).
 
 ### 3.9 The assistant drawer
 
@@ -265,23 +265,23 @@ A panel over whatever screen is open, because an operator should not leave the q
 
 **When no model is connected the drawer is still reachable**, and says so: *no model connected*, with **Connect a model** for an Admin and *ask an administrator* for everyone else. The header button is never hidden — hiding it would mean Support never learns the feature exists and the Admin is never prompted.
 
-![13-chat-drawer](../../prototype/screens/13-chat-drawer.png)
+![13-chat-drawer](images/13-chat-drawer.png)
 
 *The drawer open over the queue list, with three suggested questions rather than an empty box.*
 
-![13b-chat-answer](../../prototype/screens/13b-chat-answer.png)
+![13b-chat-answer](images/13b-chat-answer.png)
 
 *An answer: the finding, an evidence table, and the completed action card naming who it was done as.*
 
-![12-ai-settings](../../prototype/screens/12-ai-settings.png)
+![12-ai-settings](images/12-ai-settings.png)
 
 *Provider settings. The provider, the model, the payload switch, and a list of every tool with its read or act badge.*
 
-![13c-chat-not-configured](../../prototype/screens/13c-chat-not-configured.png)
+![13c-chat-not-configured](images/13c-chat-not-configured.png)
 
 *No model connected. The button is still there, the drawer explains, and it names who can fix it.*
 
-![13d-chat-not-configured-admin](../../prototype/screens/13d-chat-not-configured-admin.png)
+![13d-chat-not-configured-admin](images/13d-chat-not-configured-admin.png)
 
 *The same state for an Admin, with the fix in it.*
 
@@ -301,15 +301,15 @@ Storage is asked for at first run (§3.5, step 2) and can be **skipped**, which 
 
 **What live-only costs, and what it does not.** Replay, discard, purge and publish **stay available**. Each owes an audit row (`FR-016`), and the audit lives in Marites' own store, so it is written whether or not the adopter ever connects a message store (DEC-016). What stops is *looking back*: counts over time, the message list, search, and the report screen. An install with no message store can still recover; it cannot remember.
 
-![14-storage](../../prototype/screens/14-storage.png)
+![14-storage](images/14-storage.png)
 
 *Connected. Engine, host, schema, both roles, and what the store holds — and what it deliberately does not.*
 
-![15b-storage-add](../../prototype/screens/15b-storage-add.png)
+![15b-storage-add](images/15b-storage-add.png)
 
 *Live-only. What turns on when a message store is connected, and what was already on.*
 
-![14b-live-only](../../prototype/screens/14b-live-only.png)
+![14b-live-only](images/14b-live-only.png)
 
 *Live-only on the queue detail: no history, and recovery still working.*
 
@@ -334,19 +334,19 @@ Each audit row expands to show what the operation actually carried. The evidence
 | Expiry names the date and the rule | "No longer retained" alone invites the reader to think the record is broken. The panel says when it was swept, which retention applied, and that the hash is what survives — so the answer to *where is the payload* is a fact, not a shrug |
 | **Evidence outlives the message on purpose, and says so** | Ninety days by default, never shorter than the queue's rows (DEC-017). This is the one place in the product where a payload outlives its message, and the panel states it in words rather than leaving the operator to work out why a discard from August still has a body when the queue only keeps three days |
 
-![11-audit](../../prototype/screens/11-audit.png)
+![11-audit](images/11-audit.png)
 
 *The audit log. Human actions and assistant actions side by side, with `via Claude` on the executed one and a `proposal` row for a credential that may only propose.*
 
-![11b-audit-payload](../../prototype/screens/11b-audit-payload.png)
+![11b-audit-payload](images/11b-audit-payload.png)
 
 *One replayed message, expanded: the body whole, before and after, with the changed line marked.*
 
-![11c-audit-bulk](../../prototype/screens/11c-audit-bulk.png)
+![11c-audit-bulk](images/11c-audit-bulk.png)
 
 *A purge of ten, expanded: ten rows, one per message, because a sample cannot answer the question a dispute asks: was this one in there.*
 
-![11h-audit-expired](../../prototype/screens/11h-audit-expired.png)
+![11h-audit-expired](images/11h-audit-expired.png)
 
 *Evidence past retention. An operation from 07 August, its 90-day evidence term elapsed on 05 November: the row says when it was swept, why that term applied, and that the hash is what remains.*
 
@@ -365,23 +365,23 @@ The expanded row is a summary, not the record. Any evidence row opens a dialog h
 
 The dialog is read-only. Nothing in it can be edited and re-sent — replay edits in the replay dialog, where the dry run and the typed confirmation live (DEC-011).
 
-![11d-payload-diff](../../prototype/screens/11d-payload-diff.png)
+![11d-payload-diff](images/11d-payload-diff.png)
 
 *The dialog for an edited replay. Line numbers, both versions, and the change marked twice — a tinted row and a `−`/`+` — so it survives greyscale and print.*
 
-![11e-payload-discard](../../prototype/screens/11e-payload-discard.png)
+![11e-payload-discard](images/11e-payload-discard.png)
 
 *The same dialog for a discard: one pane, because there is nothing to compare.*
 
-![11f-payload-purge](../../prototype/screens/11f-payload-purge.png)
+![11f-payload-purge](images/11f-payload-purge.png)
 
 *Opened from one row of a purge, so it shows that message and not the batch.*
 
-![15c-payload-publish](../../prototype/screens/15c-payload-publish.png)
+![15c-payload-publish](images/15c-payload-publish.png)
 
 *What a publish sent.*
 
-![11g-payload-dark](../../prototype/screens/11g-payload-dark.png)
+![11g-payload-dark](images/11g-payload-dark.png)
 
 *The same diff in dark. The tint and the markers both survive the palette.*
 
@@ -400,17 +400,17 @@ Four tiles, one trend and a per-queue table. The executive surface, and the only
 
 The only thing this document adds is **layout**: tiles in a single row, trend beneath, per-queue table last. Everything about what the numbers mean is owned by DOC-UX-001 and is not repeated here.
 
-![05-reporting](../../prototype/screens/05-reporting.png)
+![05-reporting](images/05-reporting.png)
 
 *Reporting. Four tiles, a trend, and the per-queue table last — with no message bodies and no operation controls anywhere on it.*
 
-![14d-live-only-report](../../prototype/screens/14d-live-only-report.png)
+![14d-live-only-report](images/14d-live-only-report.png)
 
 *Reporting in live-only. The tiles read `—` rather than `0`, and the trend is replaced by an explanation: a zero would be a measurement, and nothing was measured.*
 
 ## 5. Authentication states
 
-Identity is Entra ID (`ADR-008`), so **Marites renders no sign-in form** in the normal case: the SPA redirects, and the identity provider owns the page. That leaves five states this product does own, and they were undesigned until the prototype forced the question.
+Identity is Entra ID (`ADR-008`), so **Marites renders no sign-in form** in the normal case: the SPA redirects, and the identity provider owns the page. That leaves five states this product does own, and they were undesigned until the design exploration forced the question.
 
 | State | What the user sees | Rule |
 |---|---|---|
@@ -422,15 +422,15 @@ Identity is Entra ID (`ADR-008`), so **Marites renders no sign-in form** in the 
 
 The last row is the one that matters. A session that expires while an operator is confirming a destructive action must resume, not restart — losing the dry-run result would push them to re-run it quickly, which is exactly the wrong behaviour under pressure.
 
-![00-login](../../prototype/screens/00-login.png)
+![00-login](images/00-login.png)
 
-*The prototype's sign-in. Marites itself renders no form — the identity provider owns this page (ADR-008) — so this screen exists only to demonstrate the three roles.*
+*The sign-in screen in the UI exploration. Marites itself renders no form — the identity provider owns this page (ADR-008) — so this screen exists only to demonstrate the three roles.*
 
-![00-login-dark](../../prototype/screens/00-login-dark.png)
+![00-login-dark](images/00-login-dark.png)
 
 *The same, dark.*
 
-![06-dark](../../prototype/screens/06-dark.png)
+![06-dark](images/06-dark.png)
 
 *The queue detail in dark: the same tokens, not a second palette.*
 
@@ -466,8 +466,8 @@ Colour, type and spacing are owned by [visual design](visual-design.md).
 
 Revision 0.1 recorded the navigation model, nine routes and the operation dialog. Written November 2026.
 
-*Amended November 2026:* the route map gained `/login`, `/publish` and `/audit` — three screens the contract served and this document had omitted, found while building the prototype. Added §3.6 (publish composer), §3.7 (dead-letter selection and header actions), §3.8 (agent proposals) and §5 (authentication states, including the expired-token rule). Visual design moved out to [DOC-UX-004](visual-design.md). A further amendment added §3.9 (the assistant drawer), the `/ai` and drawer routes, and the unconfigured state.
+*Amended November 2026:* the route map gained `/login`, `/publish` and `/audit` — three screens the contract served and this document had omitted, found while exploring the UI. Added §3.6 (publish composer), §3.7 (dead-letter selection and header actions), §3.8 (agent proposals) and §5 (authentication states, including the expired-token rule). Visual design moved out to [DOC-UX-004](visual-design.md). A further amendment added §3.9 (the assistant drawer), the `/ai` and drawer routes, and the unconfigured state.
 
-*Amended November 2026:* the block mockups were removed and replaced by the prototype's own screenshots, one set per section — a mockup beside a photograph is the same information twice, and the mockup is the copy that drifts. §3.8 was rewritten for both credential states after DEC-010 was revised; §3.3 stopped claiming a separate message-list screen; §6 lost two rows that contradicted DEC-016 and DEC-010; §7 became scope decisions rather than a list of what was unwritten.
+*Amended November 2026:* the block mockups were removed and replaced by the UI exploration screenshots, one set per section — a mockup beside a photograph is the same information twice, and the mockup is the copy that drifts. §3.8 was rewritten for both credential states after DEC-010 was revised; §3.3 stopped claiming a separate message-list screen; §6 lost two rows that contradicted DEC-016 and DEC-010; §7 became scope decisions rather than a list of what was unwritten.
 
 *Amended November 2026:* the queue message-list route now names the deferred `QUERY /messages` operation from the API contract.

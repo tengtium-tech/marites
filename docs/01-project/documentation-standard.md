@@ -127,6 +127,6 @@ A document is not evidence of implementation. No test has run, and no behaviour 
 
 ## Review
 
-The set is reviewed mechanically, because a solo project has no second reviewer. `tools/docs_check.py` is that review: it resolves every relative link and anchor, resolves every cited identifier against the document that defines it, checks every stated total against the file that owns the number, and asserts that each requirement has exactly one acceptance row. It exits non-zero on a finding, so it can gate a merge; it is not yet wired to a pipeline, which is why it is run by hand and why defects survive between passes.
+The documentation rules are intended to be reviewed mechanically, because a solo project has no second reviewer. Link targets, anchors, cited identifiers, stated totals and requirement-to-acceptance coverage should be checked before a change is accepted.
 
-**It checks that the documents agree with themselves, and nothing more.** It cannot tell whether a statement is true of the system, because there is no system. Numbers in prose that no file owns cannot be checked by it and should not be written.
+**Those checks establish internal consistency only.** They cannot tell whether a statement is true of the system, because there is no system. Numbers in prose that no file owns cannot be checked and should not be written.

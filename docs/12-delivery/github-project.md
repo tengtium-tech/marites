@@ -28,7 +28,6 @@ marites/
 ├── contract-tests/               shared black-box API conformance suite
 ├── testing/                      shared broker stacks and traffic harness
 ├── deploy/                       profile-specific deployment assets
-├── tools/                        repository and documentation checks
 ├── .github/                      workflows, issue and PR templates
 └── README.md
 ```

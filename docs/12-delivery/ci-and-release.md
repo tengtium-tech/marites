@@ -31,13 +31,13 @@ What runs on a pull request, what runs on a tag, and what a release *is* for thi
 | Contract validation | `openapi.yaml` or `openapi.deferred.yaml` does not validate, an operation is untagged, or a `$ref` does not resolve | Merge |
 | Contract breaking-change check | A required field is added, a type narrows, or an operation is removed without a new version | Merge — the frontend is generated from this file |
 | Architecture test | A project reference violates ADR-025's inward dependency rules | Merge |
-| Docs checks | `tools/docs_check.py` exits non-zero: a relative link or anchor does not resolve, a cited identifier is not defined in its owner, a stated total disagrees with the file that owns it, a requirement lacks exactly one acceptance row, or a retired project name is used | Merge |
+| Docs checks | Relative links, anchors, cited identifiers, stated totals, requirement-to-acceptance coverage, and retired project names are validated | Merge |
 | Conformance suite | An implementation of the contract returns a shape the spec does not allow | Release |
 | Integration | A case against a real broker fails — the [traffic harness](../10-testing/traffic-harness.md) seeds it | Release |
 | Performance | `perf-sustained` falls below NFR-001, or the curve regresses against the last run | Release |
 | Upgrade | A database at the previous version cannot be migrated forward | Release |
 
-**The docs checks are a gate, not a courtesy.** The review has caught broken links, dead anchors and undefined identifiers three times; a rule that is only checked by hand is a rule that decays between reviews. The check itself now exists — `python tools/docs_check.py`, non-zero on a finding — but it runs by hand, because **no pipeline exists yet**. CI/CD is a later increment; until it lands, every stage in this table is a specification of what the pipeline will do, and this one is also a command a person can run today.
+**The docs checks are a gate, not a courtesy.** The review has caught broken links, dead anchors and undefined identifiers three times; a rule that is only checked by hand is a rule that decays between reviews. **No pipeline exists yet.** CI/CD is a later increment; until it lands, every stage in this table is a specification of what the pipeline will do.
 
 ## 3. What must be green to merge
 
