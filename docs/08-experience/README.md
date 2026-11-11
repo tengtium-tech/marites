@@ -10,7 +10,7 @@ What the numbers mean on screen, where a user moves between screens, and who may
 | --- | --- |
 | [Dashboard and operations](dashboard-and-operations.md) | Four tiles and the rules that stop misreading, granularity and time range, the two surfaces, the role and capability matrix, the operation safety model, capture policy screens, empty states |
 | [Wireframes and navigation](wireframes-and-navigation.md) | The two-surface navigation model, nine routes, five screen layouts and the operation dialog |
-| [Screenshot index](screenshot-index.md) | Every screen and dialog the prototype has, 39 images captured from one build, with the wireframe section each illustrates |
+| [Screenshot index](screenshot-index.md) | Static screenshots from the UI exploration, with the wireframe section each illustrates |
 | [Accessibility requirements](accessibility.md) | NFR-008 in full: keyboard, semantics, contrast, charts, time limits, target size, and what an automated audit cannot prove |
 | [Visual design tokens](visual-design.md) | Colour, type, spacing, radius and elevation, with contrast ratios computed from the tokens; the component inventory and its states |
 | [Role and capability matrix](dashboard-and-operations.md) (§2) | Three roles against thirteen capability rows; Viewer sees the reporting dashboard only (DEC-002) |

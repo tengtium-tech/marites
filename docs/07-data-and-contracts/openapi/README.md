@@ -1,7 +1,5 @@
 # OpenAPI contracts
 
-Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
-
 Two files, one contract. `openapi.yaml` is what the service serves; `openapi.deferred.yaml` holds operations that are designed and not yet served.
 
 | File | Operations | Authority |

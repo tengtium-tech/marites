@@ -1,7 +1,5 @@
 # Documentation areas
 
-Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
-
 Document Marites bounded contexts with their responsibilities, exclusions, record ownership and handoffs.
 
 ## Current Marites records

@@ -1,12 +1,10 @@
 # Portfolio overview
 
-Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
-
 What this repository is, what it is meant to demonstrate, and what it deliberately does not prove. Written for a reader who has twenty minutes and wants to know whether the thinking is sound.
 
 ## 1. What this is
 
-**A documentation-led repository for a product that does not exist yet.** It includes a React prototype to illustrate the proposed experience, but no production application, database, test or deployment. The specifications describe intent.
+**A documentation-led repository for a product that does not exist yet.** It includes static screenshots from a UI exploration to illustrate the proposed experience, but no production application, database, test or deployment. The specifications describe intent.
 
 Marites observes message traffic on a broker the adopter already runs — RabbitMQ, Azure Service Bus or Google Pub/Sub — counts it exactly, shows why messages failed, and lets a support engineer retry, discard or publish from one screen. It is a client of the broker, never its owner ([ADR-001](../05-architecture/decisions.md)).
 
@@ -37,7 +35,7 @@ That is why the requirement traceability reads "TC-014" rather than "verified", 
 
 ### 2.4 Counts that can be checked
 
-Every claim of the form "N operations" or "N decisions" is checkable against the file that owns it, and `tools/docs_check.py` checks them: links, anchors, identifiers and stated totals, in one command. The honest part is what it does not do — it is not wired to a pipeline yet, so it runs when someone runs it, which is how the defects this review found survived two earlier passes.
+Every claim of the form "N operations" or "N decisions" is checkable against the file that owns it. Mechanical checks for links, anchors, identifiers and stated totals are not yet wired to a pipeline, which is how defects can survive between reviews.
 
 This sounds like hygiene. It is the mechanism that keeps a data model and a contract from drifting apart — the failure that surfaces as a broken update path in the first sprint, not as a compile error.
 
@@ -58,7 +56,7 @@ If you only read one page, read the [failure modes](../05-architecture/failure-m
 |---|---|
 | Application code | The artefact is the specification. Code would be a second, less reviewable claim about the same design |
 | Tests and results | Nothing has run, so nothing is claimed. Every case is Planned |
-| Working software | A React prototype exists ([screenshots](../08-experience/screenshot-index.md), thirty-nine of them) but it is a demonstration of the design, not the product. No backend, no broker connection, no tests |
+| Working software | Static UI exploration screenshots are documented ([screenshots](../08-experience/screenshot-index.md), thirty-nine images), but they are design references, not a working product. No application, backend, broker connection, or tests exist |
 | Brand and marketing | The palette and type scale are defined ([visual design](../08-experience/visual-design.md)) because a UI needed them. There is no logo system, no website, no launch material |
 | Business model, pricing, go-to-market | Out of scope for a technical specification, and inventing them would add noise to the decisions |
 

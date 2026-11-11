@@ -9,22 +9,15 @@ date: 2026-11
 
 # Screenshot index
 
-Every screen and every dialog the prototype has, captured from one build, with the wireframe section each one illustrates. This exists because the prototype had **thirty-three images accumulated over several sessions** — several of them stale after the agent-access and two-store changes, one showing a dialog that no longer existed, and two screens that had never been captured at all.
+Thirty-nine static screenshots from the UI exploration, with the wireframe section each one illustrates. They are retained as design references, not as a runnable application.
 
 **The figures are embedded where they are read** — in the [wireframes](wireframes-and-navigation.md), one set under each section. This document is the map: it says what each file shows, which section it belongs to, and what was deliberately left uncaptured.
 
-**The images are evidence of the prototype, not of the product.** Where a screenshot and the wireframes disagree, the wireframes win — and that disagreement is a defect in the prototype, not in the specification.
+**The images are design references, not evidence of the product.** Where a screenshot and the wireframes disagree, the wireframes win; the specification remains authoritative.
 
-## 1. How they are produced
+## 1. Source and limits
 
-```bash
-cd prototype
-npm run build
-npx serve dist -l 4331          # or any static server
-bash screens/shoot.sh http://127.0.0.1:4331/index.html
-```
-
-`screens/shoot.sh` is the record of the set: it names every capture and the deep link that reaches it. A screen that cannot be reached by a deep link cannot be captured reproducibly, which is why the prototype carries `?live=1`, `?noai=1` and the hash routes in the first place.
+These screenshots were retained from the UI exploration after its source application and capture script were removed from the repository. They illustrate one explored implementation and are not evidence of a production build or a reproducible current application.
 
 | Property | Value |
 |---|---|
@@ -118,11 +111,11 @@ bash screens/shoot.sh http://127.0.0.1:4331/index.html
 
 | Not captured | Why |
 |---|---|
-| A **proposal** on the queue screen | The prototype's demo credential carries `CanExecute`, so the assistant acts rather than proposes. The propose path is shown where it lives — the `proposal` row in `11-audit.png` — because that is the only place it leaves a trace |
+| A **proposal** on the queue screen | There is no separate screenshot for this state. The propose path is described where it leaves a permanent trace: the `proposal` row in `11-audit.png` |
 | The **replace storage** confirmation | Same screen as `15b`, one step further on; the copy is asserted in §3.10 and a screenshot would not add to it |
 | **Error and empty states** beyond live-only | Not designed yet. Capturing them would present a design decision that has not been made |
 | **Mobile** | The product is a desktop console; the narrow layout exists only so nothing breaks, not as a target |
 
 ## 4. Document control
 
-Revision 0.1, November 2026. Thirty-nine images, captured from build `dist` in November 2026 after the agent-access and two-store revisions, replacing a set of thirty-three that had drifted. The capture script is part of the record: a screenshot with no reproducible route to it is an illustration, not evidence.
+Revision 0.1 records the 39 static screenshots retained as design references. The original UI exploration and its capture script are not part of the repository.

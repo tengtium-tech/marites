@@ -9,7 +9,7 @@ status: Approved — Product owner, 2026-11-11
 
 # DOC-UX-004 — Visual Design Tokens
 
-**Source:** [accessibility](accessibility.md) NFR-008; [wireframes](wireframes-and-navigation.md). Owning document for colour, type, spacing, radius and elevation. The prototype at `prototype/` renders these tokens; where the two disagree, this document wins.
+**Source:** [accessibility](accessibility.md) NFR-008; [wireframes](wireframes-and-navigation.md). Owning document for colour, type, spacing, radius and elevation. Implementations should follow these tokens; where an implementation differs, this document wins.
 
 **Status of these values.** They are a **proposal**, chosen to clear WCAG 2.2 AA and measured by computing relative luminance from the HSL values below. They have not been reviewed by a designer, and they have not been checked in a browser against a real display.
 
@@ -17,7 +17,7 @@ status: Approved — Product owner, 2026-11-11
 
 Four surfaces consume these values — the React client, the future Go and Python clients, the exported reports, and the screenshots in this repository. A hex value repeated in four places drifts in three of them. A token is one name, one value, one place.
 
-The values are declared as HSL triplets in `prototype/src/index.css` and consumed through Tailwind as `hsl(var(--token) / <alpha>)`, which is what makes `bg-success/10` possible: the same colour at 10% for a tinted chip, at full strength for its text.
+The values are HSL triplets. Implementations can apply alpha variants while preserving the same semantic token, such as a tinted background and full-strength text for `--success`.
 
 ## 2. Colour — light
 
@@ -118,4 +118,4 @@ Elevation is used sparingly: a border does the separating work, and the shadow o
 
 ## 9. Document control
 
-Revision 0.1 records the token set the prototype was built on, written November 2026 after the UI work established values that had no owning document. Contrast ratios are computed from the HSL triplets, not measured in a browser. Every value is replaceable; the names are the contract.
+Revision 0.1 records the token set established during the UI exploration, written November 2026 after the design work established values that had no owning document. Contrast ratios are computed from the HSL triplets, not measured in a browser. Every value is replaceable; the names are the contract.

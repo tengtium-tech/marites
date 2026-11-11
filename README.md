@@ -2,8 +2,6 @@
 
 Marites observes message traffic on a broker an adopter already runs — RabbitMQ, Azure Service Bus or Google Pub/Sub — counts it exactly, shows why messages failed, and lets a support engineer retry, discard or publish from one screen. It is a **client** of that broker: it never provisions, hosts, upgrades or repairs one.
 
-**Status: approved specification baseline. No production service, database, test run, or broker connection exists.**
-
 ## Where to start
 
 | If you have | Read |

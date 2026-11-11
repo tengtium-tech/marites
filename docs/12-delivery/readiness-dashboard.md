@@ -6,7 +6,7 @@ Version 0.4 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 This is the one place that summarises overall status. Update it in the same change that alters a status.
 
-Nothing here reports an executed test, a built service or a verified deployment. Production application code does not exist; the UI prototype is design-only.
+Nothing here reports an executed test, a built service or a verified deployment. Production application code does not exist; the UI screenshots are design references only.
 
 | Status | Meaning |
 | --- | --- |
@@ -40,7 +40,7 @@ M0 exits when the contract is reviewed, `/capabilities` and preflight are served
 | Testing | Approved | Planned; seven levels, 29 cases, eight gates; no test code or execution evidence | [Verification plan](../10-testing/verification-plan.md) |
 | Traceability | Approved | Planned cases are not executed | [Requirement crosswalk](../02-business/requirements.md) covers 29 FR and eight NFR; the [operation matrix](../13-traceability/operation-coverage-matrix.md) maps all 25 operations |
 | Vocabulary | Approved | Controlled source | [Controlled values](../14-reference/vocabulary.md), including `captureState` (§15) |
-| Application code and tests | Not started | Nothing implemented or executed | No production source, tests or build exists; the prototype is design-only |
+| Application code and tests | Not started | Nothing implemented or executed | No production source, tests or build exists |
 
 The Product Owner approved the documentation baseline on 2026-11-11. Approval accepts the described scope, assumptions, deferred items, and risks; it does not claim that implementation, migration, or application verification has occurred.
 

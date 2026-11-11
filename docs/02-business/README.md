@@ -1,7 +1,5 @@
 # Business requirements
 
-Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
-
 What Marites must do, for whom, and what it will not do, independent of runtime, database, deployment or transport details.
 
 ## Current Marites records
