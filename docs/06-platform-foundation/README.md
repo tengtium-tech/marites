@@ -1,7 +1,5 @@
 # Cross-cutting platform behavior
 
-Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
-
 Make reliable capture, identity, audit, configuration and process topology explicit without assigning more than the accepted decisions already do.
 
 ## Current Marites records

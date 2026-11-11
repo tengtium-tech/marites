@@ -1,7 +1,5 @@
 # Portfolio overview
 
-Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
-
 What this repository is, what it is meant to demonstrate, and what it deliberately does not prove. Written for a reader who has twenty minutes and wants to know whether the thinking is sound.
 
 ## 1. What this is

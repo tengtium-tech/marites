@@ -1,7 +1,5 @@
 # Documentation area catalog
 
-Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
-
 ## Purpose and boundary
 
 The five responsibilities below are the first bounded-context map under ADR-025. They are model boundaries inside one modular monolith, not five services or deployment units. The deployable shape remains one image with three entrypoints ([architecture overview §6, §9](../05-architecture/architecture-overview.md)). Aggregate roots and layer rules are specified in [backend DDD architecture](../05-architecture/backend-ddd.md).

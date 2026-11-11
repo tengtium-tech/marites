@@ -1,7 +1,5 @@
 # Documentation standard
 
-Version 0.2 | November 2026 | Status: Approved — Product owner, 2026-11-11
-
 How this documentation set is organised and maintained. It is a working rule, not a manifesto: everything below exists because its absence caused a specific problem.
 
 ## Structure
