@@ -1,6 +1,6 @@
 # Marites documentation
 
-Version 0.19 | November 2026 | Status: Approved — Product owner, 2026-11-11
+Version 1.0 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 Marites observes message traffic crossing an adopter-supplied messaging platform — RabbitMQ, Azure Service Bus or Google Pub/Sub — and lets authorised operators count it, inspect it, and recover from failures. It is a **client** of a broker the adopter already runs: it never provisions, hosts, upgrades or repairs one.
 
@@ -33,7 +33,7 @@ For a first read: [requirements](02-business/requirements.md) §2, then the [thr
 
 | Artifact | Status |
 | --- | --- |
-| Documentation baseline | Approved by the project owner on 2026-11-11 across 48 substantive documents, 14 section indexes and two nested indexes — 65 Markdown files counting this page |
+| Documentation baseline | **Baseline 1.0**, approved by the project owner on 2026-11-11 across 48 substantive documents, 14 section indexes and two nested indexes — 65 Markdown files counting this page |
 | Requirements and decisions | Approved. 29 FR, 8 NFR, each with one acceptance criterion; 19 DEC answered, 25 ADRs (23 accepted, ADR-004 and ADR-005 superseded) |
 | Architecture and data model | Approved design. Twelve tables in two stores, four backend layers, four ports, nine components with failure modes |
 | API contract | Approved: 10 served and 15 deferred OpenAPI 3.2.1 operations; both pass static lint, running-service and generated-client conformance remain Planned |

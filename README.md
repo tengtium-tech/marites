@@ -58,7 +58,7 @@ They are not evidence. Every verification case is marked `Planned`, the review i
 
 ## Contributing
 
-Not yet open. The specification is at documentation baseline 0.19; changes to an accepted decision require a superseding record rather than an edit — see [the documentation standard](docs/01-project/documentation-standard.md).
+Not yet open. The specification is at **documentation baseline 1.0**; changes to an accepted decision require a superseding record rather than an edit — see [the documentation standard](docs/01-project/documentation-standard.md).
 
 ## Licence
 

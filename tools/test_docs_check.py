@@ -58,6 +58,13 @@ FAULTS = [
         "(02-business/no-such-file.md)",
         "link target does not exist",
     ),
+    (
+        "invented status word",
+        "docs/02-business/requirements.md",
+        "status: Approved",
+        "status: Final",
+        "is not one of the controlled words",
+    ),
 ]
 
 

@@ -394,6 +394,38 @@ RETIRED = {
 }
 
 
+# The controlled status words, from documentation-standard.md. "current" is the word the
+# section indexes use; everything else is a document status. Inventing a status — "Final",
+# "Done", "Complete" — is the same defect as inventing an enum value.
+STATUS_WORDS = {"draft", "reviewed", "approved", "adopted", "controlled", "superseded", "current"}
+
+STATUS_LINE = re.compile(r"^(?:status:|\|\s*Status:\s*|Version\b.*\|\s*Status:\s*)(.+)$")
+
+
+def check_statuses(files: list[str]) -> int:
+    checked = 0
+    for path in files:
+        in_fence = False
+        for number, line in enumerate(read(path).splitlines(), start=1):
+            if line.lstrip().startswith("```"):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            match = STATUS_LINE.match(line.strip())
+            if not match:
+                continue
+            checked += 1
+            word = re.split(r"\s+—|\s+\||,", match.group(1))[0].strip().lower()
+            if word not in STATUS_WORDS:
+                error(
+                    f"{rel(path)}:{number}",
+                    f'status "{match.group(1).strip()}" is not one of the controlled words '
+                    f"({', '.join(sorted(STATUS_WORDS))})",
+                )
+    return checked
+
+
 def check_retired(files: list[str]) -> int:
     checked = 0
     for path in files:
@@ -430,6 +462,7 @@ def main() -> int:
     claims = check_claims(defined)
     acceptance = check_acceptance_rows(defined)
     retired = check_retired(files)
+    statuses = check_statuses(files)
 
     for finding in errors:
         print(f"ERROR  {finding}")
@@ -438,7 +471,7 @@ def main() -> int:
 
     print(
         f"\n{len(files)} files · {links} links · {identifiers} identifier citations · "
-        f"{claims} totals · {acceptance} requirements · {retired} retired-name uses"
+        f"{claims} totals · {acceptance} requirements · {statuses} statuses · {retired} retired-name uses"
     )
     print(f"{len(errors)} errors, {len(warnings)} warnings")
 
