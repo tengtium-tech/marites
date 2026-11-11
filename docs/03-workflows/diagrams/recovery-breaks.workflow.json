@@ -1,0 +1,171 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Recovery Breaks — Detect to Prove",
+    "locale": "en",
+    "output": "docs/03-workflows/diagrams/recovery-breaks.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "loop",
+      "label": "Recovery loop"
+    },
+    {
+      "id": "breaks",
+      "label": "Breaks + response",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "detect",
+    "understand",
+    "act",
+    "prove",
+    "recorded"
+  ],
+  "nodes": [
+    {
+      "id": "detect",
+      "lane": "loop",
+      "col": 0,
+      "type": "backend",
+      "label": "Detect",
+      "sublabel": "depth + dead-letter counts"
+    },
+    {
+      "id": "understand",
+      "lane": "loop",
+      "col": 1,
+      "type": "backend",
+      "label": "Understand",
+      "sublabel": "reason + message detail"
+    },
+    {
+      "id": "act",
+      "lane": "loop",
+      "col": 2,
+      "type": "backend",
+      "label": "Act",
+      "sublabel": "replay · discard · publish"
+    },
+    {
+      "id": "prove",
+      "lane": "loop",
+      "col": 3,
+      "type": "database",
+      "label": "Prove",
+      "sublabel": "append-only audit"
+    },
+    {
+      "id": "recorded",
+      "lane": "loop",
+      "col": 4,
+      "type": "backend",
+      "label": "Audit recorded",
+      "sublabel": "action is attributable"
+    },
+    {
+      "id": "stale",
+      "lane": "breaks",
+      "col": 1,
+      "type": "backend",
+      "label": "Capture stale",
+      "sublabel": "counts frozen while depth rises",
+      "yOffset": -48
+    },
+    {
+      "id": "fixcapture",
+      "lane": "breaks",
+      "col": 2,
+      "type": "backend",
+      "label": "Fix capture first",
+      "sublabel": "a stale count is not a safe target",
+      "yOffset": -48
+    },
+    {
+      "id": "auditMissing",
+      "lane": "breaks",
+      "col": 4,
+      "type": "database",
+      "label": "Audit row missing",
+      "sublabel": "operation not executed, or defect",
+      "yOffset": -48
+    }
+  ],
+  "edges": [
+    {
+      "from": "detect",
+      "to": "understand",
+      "label": "inspect",
+      "role": "main"
+    },
+    {
+      "from": "understand",
+      "to": "act",
+      "label": "choose guarded action",
+      "role": "main"
+    },
+    {
+      "from": "act",
+      "to": "prove",
+      "label": "record outcome",
+      "role": "main"
+    },
+    {
+      "from": "prove",
+      "to": "recorded",
+      "label": "evidence committed",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "detect",
+      "to": "stale",
+      "label": "capture stale",
+      "role": "error"
+    },
+    {
+      "from": "stale",
+      "to": "fixcapture",
+      "label": "fix first",
+      "role": "error"
+    },
+    {
+      "from": "prove",
+      "to": "auditMissing",
+      "label": "row missing",
+      "role": "error"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "detect"
+    ],
+    "allowedTerminals": [
+      "recorded",
+      "fixcapture",
+      "auditMissing"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Payload policy",
+      "items": [
+        "A missing body can be a policy outcome, not an error.",
+        "The policy determines whether an action remains available."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Action stops",
+      "items": [
+        "If dry run predicts the same dead-letter reason, fix the consumer first.",
+        "If target depth grows faster than replay drains, auto-halt; a person must resume.",
+        "A partial replay is 202 Unresolved: poll and reconcile, do not retry."
+      ]
+    }
+  ]
+}

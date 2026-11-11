@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Retention Sweeper — One Pass",
+    "locale": "en",
+    "output": "docs/03-workflows/diagrams/retention-sweeper.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "sweeper",
+      "type": "backend",
+      "label": "Retention sweeper",
+      "sublabel": "scheduled pass"
+    },
+    {
+      "id": "messageStore",
+      "type": "database",
+      "label": "Message store",
+      "sublabel": "optional · traffic + rollups"
+    },
+    {
+      "id": "objectStore",
+      "type": "cloud",
+      "label": "Object store",
+      "sublabel": "optional · spilled payloads"
+    },
+    {
+      "id": "bookkeeping",
+      "type": "database",
+      "label": "Bookkeeping store",
+      "sublabel": "SQLite · audit evidence"
+    }
+  ],
+  "messages": [
+    {
+      "from": "sweeper",
+      "to": "messageStore",
+      "y": 180,
+      "label": "ensure partitions for next N days",
+      "variant": "default"
+    },
+    {
+      "from": "sweeper",
+      "to": "messageStore",
+      "y": 235,
+      "label": "aggregate minute → hour · age > T1",
+      "variant": "default"
+    },
+    {
+      "from": "sweeper",
+      "to": "messageStore",
+      "y": 305,
+      "label": "delete minute rows whose hour exists",
+      "variant": "default",
+      "note": "Coarser write + finer delete commit together; a retry recomputes totals."
+    },
+    {
+      "from": "sweeper",
+      "to": "messageStore",
+      "y": 380,
+      "label": "aggregate hour → day · age > T2",
+      "variant": "default"
+    },
+    {
+      "from": "sweeper",
+      "to": "messageStore",
+      "y": 440,
+      "label": "delete hour rows whose day exists",
+      "variant": "default"
+    },
+    {
+      "from": "sweeper",
+      "to": "messageStore",
+      "y": 500,
+      "label": "drop partitions past row retention",
+      "variant": "default"
+    },
+    {
+      "from": "sweeper",
+      "to": "objectStore",
+      "y": 555,
+      "label": "delete blobs for dropped rows",
+      "variant": "default"
+    },
+    {
+      "from": "sweeper",
+      "to": "messageStore",
+      "y": 620,
+      "label": "sweep dedupe ledger past redelivery window",
+      "variant": "default",
+      "note": "Never sweep before the longest possible redelivery delay."
+    },
+    {
+      "from": "sweeper",
+      "to": "bookkeeping",
+      "y": 700,
+      "label": "delete operation_payload past retained_until",
+      "variant": "default"
+    },
+    {
+      "from": "sweeper",
+      "to": "bookkeeping",
+      "y": 765,
+      "label": "record pass result · counts + evidence",
+      "variant": "default"
+    }
+  ],
+  "segments": [
+    {
+      "from": 160,
+      "to": 515,
+      "label": "Compact and expire traffic"
+    },
+    {
+      "from": 535,
+      "to": 815,
+      "label": "Sweep blobs, ledger, evidence"
+    }
+  ]
+}

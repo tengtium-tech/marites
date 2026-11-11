@@ -1,0 +1,71 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Storage Ceiling Lifecycle",
+    "locale": "en",
+    "output": "docs/03-workflows/diagrams/storage-ceiling.html",
+    "quality_profile": "showcase"
+  },
+  "mainPath": [
+    "live",
+    "capped"
+  ],
+  "states": [
+    {
+      "id": "live",
+      "type": "start",
+      "label": "Live",
+      "sublabel": "rows + rollups written",
+      "step": "01"
+    },
+    {
+      "id": "capped",
+      "type": "waiting",
+      "label": "Capped",
+      "sublabel": "rows pause · rollups continue",
+      "step": "02"
+    },
+    {
+      "id": "degraded",
+      "type": "failure",
+      "label": "Degraded",
+      "sublabel": "database volume full"
+    },
+    {
+      "id": "actionRequired",
+      "type": "external",
+      "label": "Infrastructure action",
+      "sublabel": "operator required"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "live-capped",
+      "from": "live",
+      "to": "capped",
+      "label": "free space reaches ceiling"
+    },
+    {
+      "id": "capped-live",
+      "from": "capped",
+      "to": "live",
+      "label": "sweeper frees space",
+      "variant": "emphasis"
+    },
+    {
+      "id": "live-degraded",
+      "from": "live",
+      "to": "degraded",
+      "label": "volume fills outside ceiling",
+      "variant": "security"
+    },
+    {
+      "id": "degraded-action",
+      "from": "degraded",
+      "to": "actionRequired",
+      "label": "infrastructure action required",
+      "variant": "security"
+    }
+  ]
+}

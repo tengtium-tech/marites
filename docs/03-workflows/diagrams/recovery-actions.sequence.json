@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Recovery — Preview, Execute, Reconcile",
+    "locale": "en",
+    "output": "docs/03-workflows/diagrams/recovery-actions.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "support",
+      "type": "external",
+      "label": "Support",
+      "sublabel": "operator"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Marites API",
+      "sublabel": "guarded operations"
+    },
+    {
+      "id": "messages",
+      "type": "database",
+      "label": "Message store",
+      "sublabel": "optional · captured rows"
+    },
+    {
+      "id": "bookkeeping",
+      "type": "database",
+      "label": "Bookkeeping store",
+      "sublabel": "SQLite · always present"
+    },
+    {
+      "id": "broker",
+      "type": "messagebus",
+      "label": "Adopter broker",
+      "sublabel": "provider operations"
+    }
+  ],
+  "messages": [
+    {
+      "from": "support",
+      "to": "api",
+      "y": 180,
+      "label": "POST replay · dryRun=true",
+      "variant": "emphasis"
+    },
+    {
+      "from": "api",
+      "to": "messages",
+      "y": 225,
+      "label": "count matches + death reasons",
+      "variant": "default"
+    },
+    {
+      "from": "messages",
+      "to": "api",
+      "y": 265,
+      "label": "counts + reasons",
+      "variant": "return"
+    },
+    {
+      "from": "api",
+      "to": "support",
+      "y": 305,
+      "label": "wouldReplay · warnings · reasons",
+      "variant": "return"
+    },
+    {
+      "from": "support",
+      "to": "api",
+      "y": 375,
+      "label": "POST replay · dryRun=false",
+      "variant": "emphasis",
+      "note": "Operator confirms; API authorises, validates, checks idempotency and rate limits."
+    },
+    {
+      "from": "api",
+      "to": "broker",
+      "y": 445,
+      "label": "receive + lock selected messages",
+      "variant": "default"
+    },
+    {
+      "from": "api",
+      "to": "bookkeeping",
+      "y": 505,
+      "label": "commit operation_intent + bodies",
+      "variant": "default",
+      "note": "The hold commits before the broker command."
+    },
+    {
+      "from": "api",
+      "to": "broker",
+      "y": 565,
+      "label": "publish to origin · maxPerMinute",
+      "variant": "emphasis"
+    },
+    {
+      "from": "broker",
+      "to": "api",
+      "y": 615,
+      "label": "provider confirmation",
+      "variant": "return"
+    },
+    {
+      "from": "api",
+      "to": "bookkeeping",
+      "y": 665,
+      "label": "commit audit + evidence · delete intent",
+      "variant": "default"
+    },
+    {
+      "from": "api",
+      "to": "support",
+      "y": 715,
+      "label": "202 Accepted + operation id",
+      "variant": "return"
+    },
+    {
+      "from": "support",
+      "to": "api",
+      "y": 770,
+      "label": "GET /operations/{id}",
+      "variant": "default"
+    },
+    {
+      "from": "api",
+      "to": "support",
+      "y": 820,
+      "label": "processed · failed · state",
+      "variant": "return",
+      "note": "Poll until terminal. Auto-halt if target depth grows faster than replay drains; a person must resume."
+    }
+  ],
+  "segments": [
+    {
+      "from": 160,
+      "to": 335,
+      "label": "Dry-run preview"
+    },
+    {
+      "from": 350,
+      "to": 690,
+      "label": "Hold · command · record"
+    },
+    {
+      "from": 705,
+      "to": 875,
+      "label": "Follow the job"
+    }
+  ]
+}

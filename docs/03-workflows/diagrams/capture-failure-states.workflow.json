@@ -1,0 +1,140 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Capture Failures — State and Remedy",
+    "locale": "en",
+    "output": "docs/03-workflows/diagrams/capture-failure-states.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "signal",
+      "label": "Capture health"
+    },
+    {
+      "id": "outcome",
+      "label": "Observed state + remedy",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "enabled",
+    "checks",
+    "live"
+  ],
+  "nodes": [
+    {
+      "id": "enabled",
+      "lane": "signal",
+      "col": 0,
+      "type": "backend",
+      "label": "Capture enabled",
+      "sublabel": "queue selected"
+    },
+    {
+      "id": "checks",
+      "lane": "signal",
+      "col": 1,
+      "type": "backend",
+      "label": "Check the tap",
+      "sublabel": "permission → worker → copy gap → storage"
+    },
+    {
+      "id": "live",
+      "lane": "signal",
+      "col": 2,
+      "type": "backend",
+      "label": "Live",
+      "sublabel": "captureState: live"
+    },
+    {
+      "id": "unavailable",
+      "lane": "outcome",
+      "col": 2,
+      "type": "security",
+      "label": "Unavailable",
+      "sublabel": "ERR-BRK-001 · grant or pre-create",
+      "yOffset": -126
+    },
+    {
+      "id": "stale",
+      "lane": "outcome",
+      "col": 2,
+      "type": "backend",
+      "label": "Stale",
+      "sublabel": "Fix worker, database or network",
+      "yOffset": -42
+    },
+    {
+      "id": "gap",
+      "lane": "outcome",
+      "col": 2,
+      "type": "backend",
+      "label": "Capture gap",
+      "sublabel": "Raise max length or narrow binding",
+      "yOffset": 42
+    },
+    {
+      "id": "capped",
+      "lane": "outcome",
+      "col": 2,
+      "type": "database",
+      "label": "Capped",
+      "sublabel": "Adjust ceiling, retention or policy",
+      "yOffset": 126
+    }
+  ],
+  "edges": [
+    {
+      "from": "enabled",
+      "to": "checks",
+      "label": "evaluate",
+      "role": "main"
+    },
+    {
+      "from": "checks",
+      "to": "live",
+      "label": "all checks pass",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "checks",
+      "to": "unavailable",
+      "label": "topology denied",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "from": "checks",
+      "to": "stale",
+      "label": "worker stopped",
+      "role": "error"
+    },
+    {
+      "from": "checks",
+      "to": "gap",
+      "label": "copies dropped",
+      "role": "error"
+    },
+    {
+      "from": "checks",
+      "to": "capped",
+      "label": "ceiling reached",
+      "role": "error"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "enabled"
+    ],
+    "allowedTerminals": [
+      "live",
+      "unavailable",
+      "stale",
+      "gap",
+      "capped"
+    ]
+  }
+}

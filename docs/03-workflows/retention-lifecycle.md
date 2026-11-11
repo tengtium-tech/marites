@@ -16,16 +16,9 @@ Owned by [data model §3.1.1](../07-data-and-contracts/data-model.md). Everythin
 
 Three tiers, each aggregated from the one above it and then deleted. Nothing is derived from `message_capture` — that is the whole design.
 
-```mermaid
-stateDiagram-v2
-    [*] --> Minute: capture writes a minute bucket
-    Minute --> Hour: age > T1<br/>sum published, dead_lettered, bytes<br/>max peak_rate
-    Hour --> Day: age > T2<br/>same merge
-    Day --> Retained: no further compaction
-    Retained --> [*]: age > rollup retention
-    Minute --> [*]: age > T1 (after Hour exists)
-    Hour --> [*]: age > T2 (after Day exists)
-```
+![Rollup tier lifecycle](diagrams/rollup-tiers.png)
+
+**Diagram source:** [rollup-tiers.lifecycle.json](diagrams/rollup-tiers.lifecycle.json).
 
 Three properties, each a correctness requirement:
 
@@ -37,24 +30,11 @@ Three properties, each a correctness requirement:
 
 The order is the contract. Each step is idempotent, so a crash mid-pass resumes rather than corrupts.
 
-```mermaid
-sequenceDiagram
-    participant S as Sweeper
-    participant M as Marites store (SQLite)
-    participant D as Message store (PostgreSQL)
-    participant O as Object store
+![Retention sweeper sequence](diagrams/retention-sweeper.png)
 
-    S->>D: ensure partitions exist for the next N days
-    S->>D: aggregate minute → hour where age > T1
-    S->>D: delete minute rows whose hour exists
-    S->>D: aggregate hour → day where age > T2
-    S->>D: delete hour rows whose day exists
-    S->>D: drop partitions older than the tightest row retention
-    S->>O: delete spilled payload objects for dropped rows
-    S->>D: delete capture_dedupe rows older than the redelivery window
-    S->>M: delete operation_payload rows past retained_until
-    S->>M: record pass result (counts compacted, partitions dropped, evidence swept)
-```
+**Diagram source:** [retention-sweeper.sequence.json](diagrams/retention-sweeper.sequence.json).
+
+The message store is optional and adopter-owned; operation evidence is swept from Marites’ always-present SQLite store. Spilled payload objects are deleted from the optional object store.
 
 **Two stores, one pass.** Everything against `D` and `O` is traffic and belongs to the adopter; the last two lines are Marites' own bookkeeping. They are in the same pass because they are one schedule to reason about, not because they share a transaction — and the evidence sweep is the *only* thing that deletes `operation_payload`, which is why it is listed rather than assumed.
 
@@ -73,14 +53,9 @@ sequenceDiagram
 
 The ceiling is the only part of this lifecycle that changes behaviour rather than data.
 
-```mermaid
-stateDiagram-v2
-    [*] --> Live: free space above the ceiling
-    Live --> Capped: free space below the ceiling
-    Capped --> Live: sweeper frees space
-    Live --> Degraded: database volume full (not the ceiling)
-    Degraded --> [*]: infrastructure action required
-```
+![Storage ceiling lifecycle](diagrams/storage-ceiling.png)
+
+**Diagram source:** [storage-ceiling.lifecycle.json](diagrams/storage-ceiling.lifecycle.json).
 
 | State | Rows | Rollups | Reads | What the operator sees |
 |---|---|---|---|---|

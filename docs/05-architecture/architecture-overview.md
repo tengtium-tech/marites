@@ -13,11 +13,11 @@ status: Draft — all decisions resolved; no implementation
 
 ## 1. Architecture baseline
 
-One self-hosted service, one React frontend, an optional PostgreSQL message store, a SQLite bookkeeping file, and a contract-first HTTP boundary that other backend implementations may satisfy. No microservices, no second broker, no message bus between Marites and its own store.
+One self-hosted application, one React frontend, an always-present SQLite bookkeeping store, and an optional adopter-supplied message store (PostgreSQL first, SQL Server second). The React SPA and API meet at a contract-first HTTP boundary. Provider adapters connect Marites to one or more adopter-run RabbitMQ, Azure Service Bus, or Google Pub/Sub platforms. No microservices, no second broker, no message bus between Marites and its stores.
 
 ![Architecture baseline](diagrams/01-architecture-baseline.png)
 
-*One service, one optional message store, one bookkeeping store, and a broker the adopter already runs. The API layer and its three workers are one image with three entrypoints (ADR-009); the dashed path is the capture write, which never passes through the API.*
+*The RabbitMQ/PostgreSQL reference view, with the worker decomposition this section is about. The API and capture worker share one image with the `marites api`, `marites worker`, and `marites all` entrypoints (ADR-009). Capture writes go directly to the message store, not through the API. The provider-agnostic view, and the ownership of the two stores, is [C4 §2](c4-model.md).*
 
 ## 2. The constraint that shapes everything
 

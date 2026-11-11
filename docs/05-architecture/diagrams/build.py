@@ -11,9 +11,10 @@ render, isolate the diagram in a minimal page that keeps the cascade, and
 capture it at 2x. The JSON spec stays in the repository, so the picture is
 regenerable rather than an artefact nobody can edit.
 
-    python build.py 01-architecture-baseline.architecture.json
+    python docs/05-architecture/diagrams/build.py docs/05-architecture/diagrams/01-architecture-baseline.architecture.json
 
-Requires: the Archify checkout (ARCHIFY, default /tmp/archify) and Chrome.
+Run from the repository root; source paths can point to any documentation folder.
+Requires: the Archify checkout (set ARCHIFY to its directory) and Chrome.
 """
 import json
 import os
@@ -50,11 +51,30 @@ def render(spec: pathlib.Path) -> pathlib.Path:
     return html
 
 
+def cards_of(src: str) -> str:
+    """Return the info-card block Archify renders beside the canvas, or ''.
+
+    The cards are content, not chrome: they carry rules the arrows only point
+    at ("a partial replay is 202 Unresolved: poll and reconcile"). Dropping
+    them because they sit outside the <svg> loses half the figure.
+    """
+    start = src.find('<div class="cards">')
+    if start < 0:
+        return ""
+    depth = 0
+    for m in re.finditer(r"<(/?)div\b", src[start:]):
+        depth += -1 if m.group(1) else 1
+        if depth == 0:
+            return src[start:start + m.end() + len("</div>")]
+    return ""
+
+
 def isolate(html: pathlib.Path) -> tuple[pathlib.Path, int, int]:
-    """Extract the diagram into a page with no chrome, keeping the styles."""
+    """Extract the diagram and its cards into a page with no chrome."""
     src = html.read_text(encoding="utf-8", errors="replace")
     styles = re.findall(r"<style[^>]*>(.*?)</style>", src, re.S)
     svg = re.search(r"(<svg\b.*?</svg>)", src, re.S).group(1)
+    cards = cards_of(src)
 
     view = re.search(r'viewBox="0 0 (\d+) (\d+)"', svg)
     w, h = (int(view.group(1)), int(view.group(2))) if view else (1020, 640)
@@ -62,18 +82,21 @@ def isolate(html: pathlib.Path) -> tuple[pathlib.Path, int, int]:
     page = (
         '<!doctype html><html data-theme="light"><head><meta charset="utf-8">'
         + "".join(f"<style>{s}</style>" for s in styles)
-        + f"<style>body{{margin:0;background:#fff}}svg{{display:block;width:{w}px;height:auto}}</style>"
-        + f"</head><body>{svg}</body></html>"
+        + f"<style>body{{margin:0;background:#fff;width:{w}px;box-sizing:border-box}}"
+        + f"svg{{display:block;width:{w}px;height:auto}}"
+        + ".cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;"
+        + "padding:20px 0 0;margin:0}</style>"
+        + f"</head><body>{svg}{cards}</body></html>"
     )
     out = html.with_suffix(".isolated.html")
     out.write_text(page, encoding="utf-8")
-    return out, w, h
+    return out, w, h + (360 if cards else 0)
 
 
 def shoot(page: pathlib.Path, png: pathlib.Path, w: int, h: int) -> None:
     subprocess.run(
         [CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars",
-         f"--force-device-scale-factor={SCALE}", f"--window-size={w},{h + 140}",
+         f"--force-device-scale-factor={SCALE}", f"--window-size={w + 40},{h + 220}",
          "--virtual-time-budget=8000", f"--screenshot={png}", page.as_uri()],
         check=True, capture_output=True,
     )
@@ -100,11 +123,15 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 2
     for name in argv:
-        spec = HERE / name
+        spec = pathlib.Path(name)
+        if not spec.is_absolute() and not spec.is_file():
+            spec = HERE / spec
+        if not spec.is_file():
+            raise FileNotFoundError(f"Diagram source not found: {name}")
+        spec = spec.resolve()
         html = render(spec)
         page, w, h = isolate(html)
-        png = spec.with_suffix(".png").with_suffix(".png")
-        png = spec.parent / (spec.name.split(".")[0] + ".png")
+        png = spec.with_suffix("").with_suffix(".png")
         shoot(page, png, w, h)
         trim(png)
         print(f"{png.name}  {png.stat().st_size // 1024} KB  ({w}x{h} at {SCALE}x)")

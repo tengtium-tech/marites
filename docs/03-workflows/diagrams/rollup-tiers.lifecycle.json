@@ -1,0 +1,103 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Rollup Tier Lifecycle",
+    "locale": "en",
+    "output": "docs/03-workflows/diagrams/rollup-tiers.html",
+    "quality_profile": "showcase"
+  },
+  "mainPath": [
+    "minute",
+    "hour",
+    "day",
+    "retained"
+  ],
+  "states": [
+    {
+      "id": "minute",
+      "type": "start",
+      "label": "Minute",
+      "sublabel": "capture writes bucket",
+      "step": "01"
+    },
+    {
+      "id": "hour",
+      "type": "active",
+      "label": "Hour",
+      "sublabel": "coarser counts exist",
+      "step": "02"
+    },
+    {
+      "id": "day",
+      "type": "active",
+      "label": "Day",
+      "sublabel": "coarsest rollup",
+      "step": "03"
+    },
+    {
+      "id": "retained",
+      "type": "waiting",
+      "label": "Retained",
+      "sublabel": "until rollup retention expires",
+      "step": "04"
+    },
+    {
+      "id": "expired",
+      "type": "neutral",
+      "label": "Expired",
+      "sublabel": "row removed"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "minute-hour",
+      "from": "minute",
+      "to": "hour",
+      "label": "age > T1",
+      "variant": "emphasis"
+    },
+    {
+      "id": "hour-day",
+      "from": "hour",
+      "to": "day",
+      "label": "age > T2",
+      "variant": "emphasis"
+    },
+    {
+      "id": "day-retained",
+      "from": "day",
+      "to": "retained",
+      "label": "retain"
+    },
+    {
+      "id": "retained-expired",
+      "from": "retained",
+      "to": "expired",
+      "label": "retention expires"
+    },
+    {
+      "id": "minute-expired",
+      "from": "minute",
+      "to": "expired",
+      "label": "Hour exists"
+    },
+    {
+      "id": "hour-expired",
+      "from": "hour",
+      "to": "expired",
+      "label": "Day exists"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Merge before expiry",
+      "items": [
+        "Minute → Hour: sum published, dead-lettered and bytes; keep max peak_rate.",
+        "Hour → Day applies the same merge.",
+        "Commit the coarser row before deleting finer rows; never sample during compaction."
+      ]
+    }
+  ]
+}

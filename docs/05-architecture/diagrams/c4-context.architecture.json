@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Marites — C4 System Context",
+    "output": "docs/05-architecture/diagrams/c4-context.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "support", "type": "external", "label": "Support engineer", "sublabel": "Primary operator", "pos": [40, 130], "size": [150, 72] },
+    { "id": "viewer", "type": "external", "label": "Viewer", "sublabel": "Executive reports", "pos": [40, 270], "size": [150, 72] },
+    { "id": "admin", "type": "external", "label": "Admin", "sublabel": "Broker and role setup", "pos": [40, 410], "size": [150, 72] },
+    { "id": "marites", "type": "backend", "label": "Marites", "sublabel": "Self-hosted message observability and recovery", "pos": [420, 260], "size": [220, 90] },
+    { "id": "entra", "type": "security", "label": "Entra ID", "sublabel": "Identity provider", "pos": [860, 70], "size": [180, 72] },
+    { "id": "broker", "type": "external", "label": "Adopter's broker", "sublabel": "RabbitMQ / Service Bus / Pub/Sub", "pos": [860, 235], "size": [220, 90] },
+    { "id": "messagestore", "type": "database", "label": "Message store", "sublabel": "Optional · adopter-owned", "pos": [860, 430], "size": [220, 90] }
+  ],
+  "connections": [
+    { "id": "support-uses-marites", "from": "support", "to": "marites", "label": "Inspect queues · recover", "variant": "emphasis" },
+    { "id": "viewer-uses-marites", "from": "viewer", "to": "marites", "label": "Read volume reports" },
+    { "id": "admin-uses-marites", "from": "admin", "to": "marites", "label": "Configure brokers · roles" },
+    { "id": "marites-works-with-broker", "from": "marites", "to": "broker", "label": "Provider operations · inspect · publish" },
+    { "id": "broker-delivers-to-marites", "from": "broker", "to": "marites", "label": "Deliver captured copies" },
+    { "id": "entra-issues-tokens", "from": "entra", "to": "marites", "label": "OIDC tokens · API validates JWT", "variant": "security" },
+    { "id": "marites-uses-message-store", "from": "marites", "to": "messagestore", "label": "Optional traffic queries and writes" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Context scope", "items": ["Internal UI, API, worker and bookkeeping details are intentionally hidden at this level.", "The message store is optional and supplied by the adopter."] },
+    { "dot": "amber", "title": "Design status", "items": ["This is a target architecture from the specification, not a map of running software.", "Source documents: requirements.md, architecture-overview.md, provider-adapters.md, and data-model.md."] }
+  ]
+}

@@ -17,29 +17,13 @@ A feature that serves none of these four is not MVP. That test is stricter than 
 
 ## 2. Act, in detail
 
-This is the only step that changes anything, so it carries every guard.
+This is the only step that changes anything, so it carries every guard. The diagram follows the same hold → command → record order defined in §3.1.
 
-```mermaid
-sequenceDiagram
-    participant S as Support
-    participant A as Marites API
-    participant D as PostgreSQL
-    participant B as Broker
+![Recovery actions sequence](diagrams/recovery-actions.png)
 
-    S->>A: POST /operations/replay (dryRun: true)
-    A->>D: count affected + death reasons
-    A-->>S: wouldReplay, deathReasons, warnings
-    Note over S: the operator sees whether replay<br/>will simply dead-letter again
-    S->>A: POST /operations/replay (dryRun: false, Idempotency-Key)
-    A->>A: authorise → validate → confirm → rate limit
-    A->>B: publish at maxPerMinute
-    A->>D: audit row
-    A-->>S: 202 job
-    loop while running
-        S->>A: GET /operations/{id}
-        A-->>S: processed, failed, state
-    end
-```
+**Diagram source:** [recovery-actions.sequence.json](diagrams/recovery-actions.sequence.json).
+
+The dry run reads captured rows from the optional message store. Operation intents, audit records, and payload evidence belong to the always-present SQLite bookkeeping store. The view shows one poll/response pair; Support repeats it until the job reaches a terminal state.
 
 **Why the dry run is not optional.** A dead letter replayed to its origin dead-letters again if the consumer still rejects it. Without the preview, an operator retries 200 messages into the same broken consumer and concludes the tool failed. With it, they see the reason first and fix the cause.
 

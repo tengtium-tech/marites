@@ -1,0 +1,145 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Dead-Letter Blind Spot — Routed or Lost",
+    "locale": "en",
+    "output": "docs/03-workflows/diagrams/dead-letter-observability.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "flow",
+      "label": "Broker route"
+    },
+    {
+      "id": "blindspot",
+      "label": "No-DLX outcome",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "published",
+    "queue",
+    "rejected",
+    "dlx",
+    "dlq",
+    "captured"
+  ],
+  "nodes": [
+    {
+      "id": "published",
+      "lane": "flow",
+      "col": 0,
+      "type": "external",
+      "label": "Message published"
+    },
+    {
+      "id": "queue",
+      "lane": "flow",
+      "col": 1,
+      "type": "messagebus",
+      "label": "Business queue"
+    },
+    {
+      "id": "rejected",
+      "lane": "flow",
+      "col": 2,
+      "type": "backend",
+      "label": "Consumer rejects"
+    },
+    {
+      "id": "dlx",
+      "lane": "flow",
+      "col": 3,
+      "type": "messagebus",
+      "label": "Dead-letter exchange"
+    },
+    {
+      "id": "dlq",
+      "lane": "flow",
+      "col": 4,
+      "type": "messagebus",
+      "label": "DLQ"
+    },
+    {
+      "id": "captured",
+      "lane": "flow",
+      "col": 5,
+      "type": "backend",
+      "label": "Marites captures",
+      "sublabel": "reason recorded · DLX configured"
+    },
+    {
+      "id": "discarded",
+      "lane": "blindspot",
+      "col": 3,
+      "type": "messagebus",
+      "label": "Broker discards",
+      "sublabel": "deadLetterConfigured=false"
+    },
+    {
+      "id": "unavailable",
+      "lane": "blindspot",
+      "col": 4,
+      "type": "backend",
+      "label": "No row, reason or count",
+      "sublabel": "monitoring unavailable"
+    }
+  ],
+  "edges": [
+    {
+      "from": "published",
+      "to": "queue",
+      "label": "route",
+      "role": "main"
+    },
+    {
+      "from": "queue",
+      "to": "rejected",
+      "label": "delivery",
+      "role": "main"
+    },
+    {
+      "from": "rejected",
+      "to": "dlx",
+      "label": "DLX configured",
+      "role": "main"
+    },
+    {
+      "from": "dlx",
+      "to": "dlq",
+      "label": "dead-letter copy",
+      "role": "main"
+    },
+    {
+      "from": "dlq",
+      "to": "captured",
+      "label": "capture metadata",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "rejected",
+      "to": "discarded",
+      "label": "no DLX",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "from": "discarded",
+      "to": "unavailable",
+      "label": "only signal: published > delivered",
+      "role": "error"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "published"
+    ],
+    "allowedTerminals": [
+      "captured",
+      "unavailable"
+    ]
+  }
+}

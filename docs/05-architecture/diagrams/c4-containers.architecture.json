@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Marites — C4 Container View",
+    "output": "docs/05-architecture/diagrams/c4-containers.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "operators",
+      "type": "external",
+      "label": "Marites users",
+      "sublabel": "Support · Viewer · Admin",
+      "pos": [
+        40,
+        250
+      ],
+      "size": [
+        150,
+        72
+      ]
+    },
+    {
+      "id": "webui",
+      "type": "frontend",
+      "label": "Web UI",
+      "sublabel": "React · generated API client",
+      "pos": [
+        230,
+        250
+      ],
+      "size": [
+        160,
+        72
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API",
+      "sublabel": "HTTP · reads · operations",
+      "pos": [
+        530,
+        250
+      ],
+      "size": [
+        180,
+        78
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Capture worker",
+      "sublabel": "Consumes copies · persists traffic",
+      "pos": [
+        800,
+        380
+      ],
+      "size": [
+        180,
+        78
+      ]
+    },
+    {
+      "id": "broker",
+      "type": "external",
+      "label": "Adopter's broker",
+      "sublabel": "RabbitMQ / Service Bus / Pub/Sub",
+      "pos": [
+        1040,
+        250
+      ],
+      "size": [
+        195,
+        82
+      ]
+    },
+    {
+      "id": "messagestore",
+      "type": "database",
+      "label": "Message store",
+      "sublabel": "Optional · PostgreSQL / SQL Server",
+      "pos": [
+        760,
+        660
+      ],
+      "size": [
+        205,
+        82
+      ]
+    },
+    {
+      "id": "bookkeeping",
+      "type": "database",
+      "label": "Bookkeeping store",
+      "sublabel": "SQLite · always present",
+      "pos": [
+        250,
+        500
+      ],
+      "size": [
+        190,
+        82
+      ]
+    },
+    {
+      "id": "entra",
+      "type": "security",
+      "label": "Entra ID",
+      "sublabel": "OIDC · App Roles",
+      "pos": [
+        250,
+        70
+      ],
+      "size": [
+        165,
+        72
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Marites self-hosted application",
+      "wraps": [
+        "webui",
+        "api",
+        "worker",
+        "bookkeeping"
+      ],
+      "pad": 48
+    }
+  ],
+  "connections": [
+    {
+      "id": "users-to-ui",
+      "from": "operators",
+      "to": "webui",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ui-to-api",
+      "from": "webui",
+      "to": "api",
+      "label": "HTTPS · JSON · SSE",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "id": "ui-to-entra",
+      "from": "webui",
+      "to": "entra",
+      "label": "OIDC + PKCE",
+      "variant": "security"
+    },
+    {
+      "id": "entra-to-api",
+      "from": "entra",
+      "to": "api",
+      "label": "Bearer JWT validation",
+      "variant": "security"
+    },
+    {
+      "id": "api-to-broker",
+      "from": "api",
+      "to": "broker",
+      "label": "Provider admin · peek · publish · metadata"
+    },
+    {
+      "id": "worker-declares-tap",
+      "from": "worker",
+      "to": "broker",
+      "label": "Declare tap"
+    },
+    {
+      "id": "broker-delivers-copies",
+      "from": "broker",
+      "to": "worker",
+      "label": "Captured copies"
+    },
+    {
+      "id": "api-reads-messages",
+      "from": "api",
+      "to": "messagestore",
+      "label": "Read captures and rollups"
+    },
+    {
+      "id": "worker-writes-messages",
+      "from": "worker",
+      "to": "messagestore",
+      "label": "Write captures + rollups",
+      "variant": "emphasis"
+    },
+    {
+      "id": "api-uses-bookkeeping",
+      "from": "api",
+      "to": "bookkeeping",
+      "label": "Profiles · config · audit · evidence"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Design status",
+      "items": [
+        "Specification only; no application code or database is implemented.",
+        "The API and worker share a deployable image with separate entrypoints; the combined entrypoint runs both."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Two stores · different ownership",
+      "items": [
+        "SQLite is Marites-owned and always present for configuration, roles, audit and evidence.",
+        "The adopter-owned message store is optional; it holds captured traffic, rollups and the dedupe ledger.",
+        "The API and capture worker do not call each other directly."
+      ]
+    }
+  ]
+}

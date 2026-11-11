@@ -12,9 +12,33 @@ The paths this system actually has: a message's, an operator's, an adopter's, an
 | [Recovery lifecycle](recovery-lifecycle.md) | Detect, understand, act, prove: the loop Support runs, the guard chain, where the loop breaks, and what cannot be undone |
 | [Onboarding lifecycle](onboarding-lifecycle.md) | Register, preflight, select, capture, live, and the three ways it stops |
 | [Failure paths](failure-paths.md) | Four diagrams: the three ways capture stops, the dead-letter blind spot, where the recovery loop breaks, and the three onboarding exits |
-| [Retention and compaction lifecycle](retention-lifecycle.md) | Tier lifecycle, one sweeper pass in order, the ceiling state machine, and the five ways it can still go wrong |
+| [Retention and compaction lifecycle](retention-lifecycle.md) | Tier lifecycle, one sweeper pass in order, the ceiling state machine, and the six ways it can still go wrong |
 
-Diagrams are inline Mermaid inside each document, not separate source files. One copy that renders on GitHub and in an editor beats a source beside a rendered image that silently disagree.
+All workflow diagrams use Archify sources. PNG previews render inline in Markdown; the JSON files are the editable sources. These are design specifications; the project has no implemented runtime.
+
+## Diagram sources
+
+| Diagram | Type | JSON source | Inline preview |
+| --- | --- | --- | --- |
+| Live capture | Sequence | [source](diagrams/capture-live.sequence.json) | [PNG](diagrams/capture-live.png) |
+| Dead-letter capture | Sequence | [source](diagrams/dead-letter-capture.sequence.json) | [PNG](diagrams/dead-letter-capture.png) |
+| Recovery actions | Sequence | [source](diagrams/recovery-actions.sequence.json) | [PNG](diagrams/recovery-actions.png) |
+| Onboarding setup | Sequence | [source](diagrams/onboarding-setup.sequence.json) | [PNG](diagrams/onboarding-setup.png) |
+| Capture failure states | Workflow | [source](diagrams/capture-failure-states.workflow.json) | [PNG](diagrams/capture-failure-states.png) |
+| Dead-letter blind spot | Workflow | [source](diagrams/dead-letter-observability.workflow.json) | [PNG](diagrams/dead-letter-observability.png) |
+| Recovery breaks | Workflow | [source](diagrams/recovery-breaks.workflow.json) | [PNG](diagrams/recovery-breaks.png) |
+| Onboarding exits | Workflow | [source](diagrams/onboarding-exits.workflow.json) | [PNG](diagrams/onboarding-exits.png) |
+| Rollup tiers | Lifecycle | [source](diagrams/rollup-tiers.lifecycle.json) | [PNG](diagrams/rollup-tiers.png) |
+| Retention sweeper pass | Sequence | [source](diagrams/retention-sweeper.sequence.json) | [PNG](diagrams/retention-sweeper.png) |
+| Storage ceiling | Lifecycle | [source](diagrams/storage-ceiling.lifecycle.json) | [PNG](diagrams/storage-ceiling.png) |
+
+Rebuild the inline previews from the repository root with the shared diagram builder:
+
+```bash
+python docs/05-architecture/diagrams/build.py docs/03-workflows/diagrams/*.json
+```
+
+See [architecture diagrams](../05-architecture/diagrams/README.md) for the Archify and Chrome prerequisites, and for the interactive HTML view, which is a local build product and not committed.
 
 ## Reading order within this section
 

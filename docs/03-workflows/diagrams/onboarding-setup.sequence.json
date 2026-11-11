@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Onboarding — Preflight to Live",
+    "locale": "en",
+    "output": "docs/03-workflows/diagrams/onboarding-setup.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "admin",
+      "type": "external",
+      "label": "Admin"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Marites API",
+      "sublabel": "profile + preflight"
+    },
+    {
+      "id": "bookkeeping",
+      "type": "database",
+      "label": "Bookkeeping store",
+      "sublabel": "SQLite · profiles + rules"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Capture worker",
+      "sublabel": "topology manager"
+    },
+    {
+      "id": "provider",
+      "type": "messagebus",
+      "label": "Adopter provider",
+      "sublabel": "broker or messaging platform"
+    }
+  ],
+  "messages": [
+    {
+      "from": "admin",
+      "to": "api",
+      "y": 180,
+      "label": "POST /brokers · profile + credentials",
+      "variant": "emphasis"
+    },
+    {
+      "from": "api",
+      "to": "bookkeeping",
+      "y": 230,
+      "label": "save broker profile",
+      "variant": "default"
+    },
+    {
+      "from": "admin",
+      "to": "api",
+      "y": 280,
+      "label": "POST /brokers/{id}/preflight",
+      "variant": "emphasis"
+    },
+    {
+      "from": "api",
+      "to": "provider",
+      "y": 345,
+      "label": "check management access + vhost",
+      "variant": "default"
+    },
+    {
+      "from": "api",
+      "to": "provider",
+      "y": 400,
+      "label": "declare + delete probe queue",
+      "variant": "default"
+    },
+    {
+      "from": "api",
+      "to": "provider",
+      "y": 455,
+      "label": "check DLX setup + clock skew",
+      "variant": "default"
+    },
+    {
+      "from": "provider",
+      "to": "api",
+      "y": 515,
+      "label": "return per-check results",
+      "variant": "return"
+    },
+    {
+      "from": "api",
+      "to": "admin",
+      "y": 565,
+      "label": "checks + remedies",
+      "variant": "return"
+    },
+    {
+      "from": "admin",
+      "to": "api",
+      "y": 625,
+      "label": "select queues to watch",
+      "variant": "default"
+    },
+    {
+      "from": "api",
+      "to": "bookkeeping",
+      "y": 680,
+      "label": "save selected capture rules",
+      "variant": "default"
+    },
+    {
+      "from": "worker",
+      "to": "provider",
+      "y": 745,
+      "label": "declare + bind bounded shadow tap",
+      "variant": "emphasis",
+      "note": "The C4 view assigns topology ownership to the capture worker. The config-change handoff is unspecified in this design."
+    },
+    {
+      "from": "provider",
+      "to": "worker",
+      "y": 830,
+      "label": "deliver future copies",
+      "variant": "return",
+      "note": "Capture is forward-only; existing messages need an explicit backfill."
+    },
+    {
+      "from": "admin",
+      "to": "api",
+      "y": 885,
+      "label": "GET /queues",
+      "variant": "default"
+    },
+    {
+      "from": "api",
+      "to": "provider",
+      "y": 935,
+      "label": "read depth + rates",
+      "variant": "default"
+    },
+    {
+      "from": "provider",
+      "to": "api",
+      "y": 980,
+      "label": "depth + rates + provider state",
+      "variant": "return"
+    },
+    {
+      "from": "api",
+      "to": "admin",
+      "y": 1025,
+      "label": "depth · rates · captureState",
+      "variant": "return"
+    }
+  ]
+}

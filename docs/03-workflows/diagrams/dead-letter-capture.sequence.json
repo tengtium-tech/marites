@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Dead-Letter Capture",
+    "locale": "en",
+    "output": "docs/03-workflows/diagrams/dead-letter-capture.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "source",
+      "type": "messagebus",
+      "label": "Source queue"
+    },
+    {
+      "id": "exchange",
+      "type": "messagebus",
+      "label": "Dead-letter exchange",
+      "sublabel": "provider routing"
+    },
+    {
+      "id": "tap",
+      "type": "messagebus",
+      "label": "DLX shadow queue",
+      "sublabel": "Marites capture tap"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Capture worker"
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "Message store",
+      "sublabel": "optional PostgreSQL / SQL Server"
+    }
+  ],
+  "messages": [
+    {
+      "from": "source",
+      "to": "exchange",
+      "y": 180,
+      "label": "route failed delivery",
+      "variant": "default",
+      "note": "Triggered by reject, TTL expiry, or max-length."
+    },
+    {
+      "from": "exchange",
+      "to": "tap",
+      "y": 252,
+      "label": "route dead-letter copy",
+      "variant": "default"
+    },
+    {
+      "from": "tap",
+      "to": "worker",
+      "y": 310,
+      "label": "deliver copy with metadata",
+      "variant": "default",
+      "note": "Provider-specific reason arrives with the copy; RabbitMQ uses x-death."
+    },
+    {
+      "from": "worker",
+      "to": "store",
+      "y": 386,
+      "label": "BEGIN batch transaction",
+      "variant": "default",
+      "note": "Flush at 500 rows or after one second."
+    },
+    {
+      "from": "worker",
+      "to": "store",
+      "y": 450,
+      "label": "insert row with dead-letter reason",
+      "variant": "default"
+    },
+    {
+      "from": "worker",
+      "to": "store",
+      "y": 500,
+      "label": "upsert dead-letter rollup by reason",
+      "variant": "default"
+    },
+    {
+      "from": "worker",
+      "to": "store",
+      "y": 550,
+      "label": "COMMIT",
+      "variant": "default"
+    },
+    {
+      "from": "worker",
+      "to": "tap",
+      "y": 615,
+      "label": "ack after commit",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "source",
+      "from": 178,
+      "to": 198,
+      "type": "messagebus"
+    },
+    {
+      "participant": "exchange",
+      "from": 178,
+      "to": 272,
+      "type": "messagebus"
+    },
+    {
+      "participant": "tap",
+      "from": 250,
+      "to": 625,
+      "type": "messagebus"
+    },
+    {
+      "participant": "worker",
+      "from": 308,
+      "to": 635,
+      "type": "backend"
+    },
+    {
+      "participant": "store",
+      "from": 384,
+      "to": 575,
+      "type": "database"
+    }
+  ]
+}

@@ -3,6 +3,3 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
-
-# Archify CLI scratch
-.archify/

@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Marites — C4 Capture Worker Components",
+    "output": "docs/05-architecture/diagrams/c4-capture-components.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "topology",
+      "type": "backend",
+      "label": "Topology manager",
+      "sublabel": "IBrokerAdmin · bounded tap",
+      "pos": [
+        520,
+        70
+      ],
+      "size": [
+        180,
+        78
+      ]
+    },
+    {
+      "id": "broker",
+      "type": "external",
+      "label": "Adopter's broker",
+      "sublabel": "Provider-specific tap and delivery",
+      "pos": [
+        100,
+        70
+      ],
+      "size": [
+        195,
+        82
+      ]
+    },
+    {
+      "id": "consumer",
+      "type": "backend",
+      "label": "Consumer loop",
+      "sublabel": "IMessageTap · manual ack",
+      "pos": [
+        100,
+        330
+      ],
+      "size": [
+        180,
+        78
+      ]
+    },
+    {
+      "id": "normalizer",
+      "type": "backend",
+      "label": "Normalizer",
+      "sublabel": "Death + redelivery metadata",
+      "pos": [
+        430,
+        330
+      ],
+      "size": [
+        180,
+        78
+      ]
+    },
+    {
+      "id": "batcher",
+      "type": "backend",
+      "label": "Batcher",
+      "sublabel": "Channel<CapturedMessage>",
+      "pos": [
+        760,
+        330
+      ],
+      "size": [
+        180,
+        78
+      ]
+    },
+    {
+      "id": "writer",
+      "type": "backend",
+      "label": "Batch writer",
+      "sublabel": "Storage port · one transaction",
+      "pos": [
+        1110,
+        330
+      ],
+      "size": [
+        195,
+        78
+      ]
+    },
+    {
+      "id": "messagestore",
+      "type": "database",
+      "label": "Message store",
+      "sublabel": "Optional · captures · rollups · ledger",
+      "pos": [
+        1110,
+        550
+      ],
+      "size": [
+        210,
+        82
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "topology-declares",
+      "from": "topology",
+      "to": "broker",
+      "label": "Create bounded tap"
+    },
+    {
+      "id": "broker-delivers",
+      "from": "broker",
+      "to": "consumer",
+      "label": "Deliver captured copy"
+    },
+    {
+      "id": "consumer-normalizer",
+      "from": "consumer",
+      "to": "normalizer",
+      "label": "Message envelope",
+      "variant": "emphasis"
+    },
+    {
+      "id": "normalizer-batcher",
+      "from": "normalizer",
+      "to": "batcher",
+      "label": "Normalized envelope"
+    },
+    {
+      "id": "batcher-writer",
+      "from": "batcher",
+      "to": "writer",
+      "label": "500 rows or 1 second"
+    },
+    {
+      "id": "writer-store",
+      "from": "writer",
+      "to": "messagestore",
+      "label": "Captures + rollups + dedupe",
+      "variant": "emphasis"
+    },
+    {
+      "id": "consumer-ack",
+      "from": "consumer",
+      "to": "broker",
+      "label": "Ack only after commit"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Design status",
+      "items": [
+        "Provider-neutral target design; adapters are specified but not implemented.",
+        "The RabbitMQ reference uses a Channel buffer, batches at 500 rows or 1 second, and acknowledges only after commit."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Transaction boundary",
+      "items": [
+        "Captured rows, rollup updates and dedupe-ledger writes commit together in the optional message store.",
+        "If the message store is absent, historical capture and counts are unavailable; live recovery remains available."
+      ]
+    }
+  ]
+}

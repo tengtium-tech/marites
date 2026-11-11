@@ -1,0 +1,146 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Onboarding Exits — Stop or Degrade",
+    "locale": "en",
+    "output": "docs/03-workflows/diagrams/onboarding-exits.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "setup",
+      "label": "Onboarding"
+    },
+    {
+      "id": "exits",
+      "label": "Preflight outcomes",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "profile",
+    "preflight",
+    "select",
+    "bound",
+    "live"
+  ],
+  "nodes": [
+    {
+      "id": "profile",
+      "lane": "setup",
+      "col": 0,
+      "type": "external",
+      "label": "Add broker profile"
+    },
+    {
+      "id": "preflight",
+      "lane": "setup",
+      "col": 1,
+      "type": "backend",
+      "label": "Run preflight",
+      "sublabel": "reachability · permissions · queue health"
+    },
+    {
+      "id": "select",
+      "lane": "setup",
+      "col": 3,
+      "type": "backend",
+      "label": "Select queues"
+    },
+    {
+      "id": "bound",
+      "lane": "setup",
+      "col": 4,
+      "type": "messagebus",
+      "label": "Shadow tap bound"
+    },
+    {
+      "id": "live",
+      "lane": "setup",
+      "col": 5,
+      "type": "backend",
+      "label": "Live console + capture"
+    },
+    {
+      "id": "unreachable",
+      "lane": "exits",
+      "col": 2,
+      "type": "security",
+      "label": "Management blocked",
+      "sublabel": "Enable API/plugin or choose provider",
+      "yOffset": -90
+    },
+    {
+      "id": "writeRefused",
+      "lane": "exits",
+      "col": 2,
+      "type": "security",
+      "label": "Topology writes refused",
+      "sublabel": "Grant rights or pre-create tap",
+      "yOffset": 0
+    }
+  ],
+  "edges": [
+    {
+      "from": "profile",
+      "to": "preflight",
+      "label": "register",
+      "role": "main"
+    },
+    {
+      "from": "preflight",
+      "to": "select",
+      "label": "passes; missing DLX warns",
+      "role": "main"
+    },
+    {
+      "from": "select",
+      "to": "bound",
+      "label": "configure capture",
+      "role": "main"
+    },
+    {
+      "from": "bound",
+      "to": "live",
+      "label": "future traffic observed",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "from": "preflight",
+      "to": "unreachable",
+      "label": "management unreachable",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "from": "preflight",
+      "to": "writeRefused",
+      "label": "topology write refused",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "semanticChecks": {
+    "allowedRoots": [
+      "profile"
+    ],
+    "allowedTerminals": [
+      "unreachable",
+      "writeRefused",
+      "live"
+    ]
+  },
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Degraded Success",
+      "items": [
+        "A missing DLX does not block onboarding or capture.",
+        "Dead-letter monitoring is unavailable until the adopter configures dead-letter routing.",
+        "Topology denial still leaves the live console available."
+      ]
+    }
+  ]
+}

@@ -6,27 +6,11 @@ From "we have a broker" to "the dashboard is useful", including the three places
 
 ## 1. The path
 
-```mermaid
-sequenceDiagram
-    participant A as Admin
-    participant M as Marites API
-    participant B as Broker
+![Onboarding sequence](diagrams/onboarding-setup.png)
 
-    A->>M: POST /brokers (endpoint, credentials)
-    A->>M: POST /brokers/{id}/preflight
-    M->>B: management API reachable?
-    M->>B: vhost visible?
-    M->>B: declare + delete a probe queue
-    M->>B: each queue reports a dead-letter exchange?
-    M->>B: clock skew under 5 minutes?
-    M-->>A: checks, each with a remedy
-    Note over A: fix anything red, then re-run
-    A->>M: select queues to watch
-    M->>B: declare shadow queue, bind it
-    M->>M: capture begins — forward only
-    A->>M: GET /queues
-    M-->>A: depth, rates, captureState
-```
+**Diagram source:** [onboarding-setup.sequence.json](diagrams/onboarding-setup.sequence.json).
+
+The C4 model assigns tap declaration to the capture worker. The current design does not specify how API-saved queue rules trigger worker reconciliation; this sequence does not imply a direct API-to-worker call.
 
 ## 2. Why preflight is not a formality
 

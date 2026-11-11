@@ -6,23 +6,11 @@ How a published message becomes a counted row, and the four points where this st
 
 ## 1. The path
 
-```mermaid
-sequenceDiagram
-    participant P as Producer
-    participant B as Broker
-    participant C as Capture worker
-    participant D as PostgreSQL
+![Live capture sequence](diagrams/capture-live.png)
 
-    P->>B: publish(exchange, routing_key)
-    Note over B: fan-out to the business queue<br/>and the marites shadow queue
-    B-->>C: deliver (copy)
-    C->>C: normalise — x-death, hash
-    C->>D: BEGIN
-    C->>D: COPY rows into message_capture
-    C->>D: upsert counters into message_rollup
-    C->>D: COMMIT
-    C-->>B: ack
-```
+**Diagram source:** [capture-live.sequence.json](diagrams/capture-live.sequence.json).
+
+The sequence describes the design contract. The message store is optional and adopter-owned; capture writes only when it is configured.
 
 Three properties of this path matter more than the sequence itself.
 
@@ -34,23 +22,13 @@ Three properties of this path matter more than the sequence itself.
 
 ## 2. The dead-letter branch
 
-The same path, entered from the dead-letter exchange rather than the source exchange.
+This branch joins the same capture, batch, transaction, and acknowledgement path after the provider routes a failed message to its dead-letter exchange.
 
-```mermaid
-sequenceDiagram
-    participant B as Broker
-    participant C as Capture worker
-    participant D as PostgreSQL
+![Dead-letter capture sequence](diagrams/dead-letter-capture.png)
 
-    Note over B: consumer rejects, or TTL expires,<br/>or maxlen is exceeded
-    B->>B: route to the dead-letter exchange
-    B-->>C: deliver (copy, with x-death)
-    C->>D: COPY row (is_dead_letter, reason, native_reason)
-    C->>D: upsert rollup (dead_lettered, by reason)
-    C-->>B: ack
-```
+**Diagram source:** [dead-letter-capture.sequence.json](diagrams/dead-letter-capture.sequence.json).
 
-The `x-death` header arrives with the message, so the reason is recorded at capture time rather than reconstructed later. That is what turns "a pile of messages" into "1,204 rejected, 3 expired, 88 dropped for maxlen".
+Provider dead-letter metadata arrives with the copy (RabbitMQ exposes it as `x-death`), so the reason is recorded at capture time rather than reconstructed later. That is what turns "a pile of messages" into "1,204 rejected, 3 expired, 88 dropped for maxlen".
 
 **A dead letter is the same message seen twice** — once entering its original exchange, once arriving at the DLX. Both are captured. The two counts are separate series and must never be summed; see [data-and-contracts/data-model.md](../07-data-and-contracts/data-model.md) §3.2.
 

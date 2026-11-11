@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Live Capture — Batch, Commit, Ack",
+    "locale": "en",
+    "output": "docs/03-workflows/diagrams/capture-live.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "producer",
+      "type": "external",
+      "label": "Producer"
+    },
+    {
+      "id": "broker",
+      "type": "messagebus",
+      "label": "Adopter's broker",
+      "sublabel": "exchange and capture tap"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Capture worker",
+      "sublabel": "consume · normalise · batch"
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "Message store",
+      "sublabel": "optional PostgreSQL / SQL Server"
+    }
+  ],
+  "messages": [
+    {
+      "from": "producer",
+      "to": "broker",
+      "y": 184,
+      "label": "publish message",
+      "variant": "emphasis",
+      "note": "Fan out to the business queue and Marites tap."
+    },
+    {
+      "from": "broker",
+      "to": "worker",
+      "y": 260,
+      "label": "deliver shadow copy",
+      "variant": "default",
+      "note": "Normalise provider metadata and derive the dedupe key."
+    },
+    {
+      "from": "worker",
+      "to": "store",
+      "y": 338,
+      "label": "BEGIN batch transaction",
+      "variant": "default",
+      "note": "Flush at 500 rows or after one second."
+    },
+    {
+      "from": "worker",
+      "to": "store",
+      "y": 400,
+      "label": "insert captures + dedupe ledger",
+      "variant": "default"
+    },
+    {
+      "from": "worker",
+      "to": "store",
+      "y": 450,
+      "label": "upsert message rollups",
+      "variant": "default"
+    },
+    {
+      "from": "worker",
+      "to": "store",
+      "y": 500,
+      "label": "COMMIT",
+      "variant": "default"
+    },
+    {
+      "from": "worker",
+      "to": "broker",
+      "y": 570,
+      "label": "ack after commit",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "broker",
+      "from": 180,
+      "to": 278,
+      "type": "messagebus"
+    },
+    {
+      "participant": "worker",
+      "from": 256,
+      "to": 590,
+      "type": "backend"
+    },
+    {
+      "participant": "store",
+      "from": 336,
+      "to": 528,
+      "type": "database"
+    }
+  ]
+}
