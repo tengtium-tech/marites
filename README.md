@@ -42,7 +42,7 @@ The requirements, workflows, domain rules, experience, API contract, and accepta
 | Frontend | React | Angular, Svelte |
 | Backend | C#/.NET | Python, Go |
 
-The goal is to exercise all nine frontend/backend pairings against the same product behavior and HTTP contract. Shared requirements or API changes belong in `docs/`; implementation-specific code and guidance belong with their stack profile. The repository plan is documented in [the portfolio overview](docs/01-project/portfolio-overview.md).
+The goal is to exercise all nine frontend/backend pairings against the same product behavior and HTTP contract. `main` is authoritative for the shared docs and contract; the persistent `react` and `csharp` branches hold their respective implementations, and `react-csharp` contains the pairing guide. These branches are full Git snapshots, so shared files appear on implementation branches too. Make shared-document changes on `main` and merge them into the implementation branches. See [the portfolio overview](docs/01-project/portfolio-overview.md) for the repository model.
 
 ## How this becomes a sprint plan
 
@@ -57,7 +57,7 @@ The documents already contain the structure a project board needs, so the board 
 
 Two rules keep the board from drifting away from the specification: **a story that needs data the contract does not serve is a contract change first**, and **a milestone does not close until its gate passes** — not until its tickets are closed.
 
-There will be a GitHub Project for each backend profile. The first is React + .NET; Python and Go follow. Each project uses the shared requirements, API contract, and verification gates while tracking its own implementation work.
+Track the reusable React frontend in the [Marites — React Frontend Project](https://github.com/users/tengtium-tech/projects/6) and the .NET implementation in the [Marites — C# Backend Project](https://github.com/users/tengtium-tech/projects/7). Each future frontend or backend implementation gets its own Project; a Project is reused across pairings that share that implementation. Shared work can appear in both relevant Projects while remaining one repository issue. Projects use Kanban with milestones and two-week Monday-start sprints.
 
 ## A note on what these documents are not
 

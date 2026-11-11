@@ -1,163 +1,116 @@
 ---
 document_id: DOC-DEL-004
-title: GitHub Project
+title: GitHub Project and branch workflow
 product: Marites
-status: Approved — Product owner, 2026-11-11
-version: 0.2
-date: 2026-11
 ---
 
-# GitHub project
+# GitHub Project and branch workflow
 
-How this document set becomes a repository: the layout, the labels, the issue templates, the board, and the conventions that keep the two in step. It is a setup guide — read once, edited rarely.
+This guide explains how the shared specification, implementation branches, GitHub Projects, milestones, and work issues fit together.
 
-## 1. Repository layout
+## 1. Repository and branch model
 
-```
-marites/
-├── docs/                         shared product specification and profile guidance
-├── implementations/
-│   ├── frontends/
-│   │   ├── react/
-│   │   ├── angular/
-│   │   └── svelte/
-│   └── backends/
-│       ├── dotnet/
-│       ├── python/
-│       └── go/
-├── contract-tests/               shared black-box API conformance suite
-├── testing/                      shared broker stacks and traffic harness
-├── deploy/                       profile-specific deployment assets
-├── .github/                      workflows, issue and PR templates
-└── README.md
-```
+The repository has one shared specification baseline and separate implementation branches:
 
-The implementation directories are created as each profile starts; they are target paths, not claims that those applications already exist. **`docs/` stays at the root and remains authoritative for shared product behavior and the API contract.** Stack-specific architecture, build, storage-adapter and deployment guidance belongs with its profile and must not silently alter the shared contract.
+| Branch | Purpose | Work tracking |
+|---|---|---|
+| `main` | Authoritative shared requirements, workflows, domain rules, API contract, acceptance criteria, and technology-neutral decisions | Shared issues where needed |
+| `react` | React/TypeScript frontend implementation | [Marites — React Frontend Project](https://github.com/users/tengtium-tech/projects/6) |
+| `csharp` | C#/.NET backend implementation of the shared API contract | [Marites — C# Backend Project](https://github.com/users/tengtium-tech/projects/7) |
+| `react-csharp` | Pairing guide, links, and instructions for running the React and C# branches together | Links to both Projects |
 
-Use one GitHub Project per backend profile: start with React + .NET, then create the Python and Go projects when those profiles begin. Each project tracks its backend work and the frontend pairings tested against it. All profiles use the same shared requirements, contract, and verification gates.
+Git branches are full repository snapshots, not overlays. The implementation branches therefore inherit shared files from `main`; those are not separately authored copies. `main` remains the source of truth for shared specifications. After shared documentation changes are merged to `main`, merge `main` into the implementation branches so they receive the update without creating a competing version.
 
-## 2. Labels
+Keep stack-specific implementation code and guidance on its stack branch. The current documentation baseline still includes some first-profile React and C# architecture guidance on `main`; during discovery, classify those documents and move or adapt profile-only guidance to the matching stack branch while retaining shared behavior and contract rules on `main`. Do not maintain two competing authoritative copies. Keep pairing instructions on `react-csharp`; that branch does not own frontend or backend application code. Other frontend and backend profiles can follow the same model when they are created.
 
-Three axes, and nothing else. A label that is not one of these is a tag someone will stop using.
+## 2. GitHub Projects and work items
 
-| Axis | Labels |
-|---|---|
-| **Type** | `type: feature` · `type: defect` · `type: decision` · `type: doc` · `type: chore` |
-| **Area** | `area: capture` · `area: operations` · `area: audit` · `area: storage` · `area: ui` · `area: agent` · `area: providers` · `area: docs` |
-| **State** | `needs-decision` · `blocked` · `quarantined` |
+Use one Project for the reusable React frontend and one Project for each backend implementation. The current Projects are:
 
-**Milestones carry the sequence, not labels.** `M0` … `M7` are GitHub milestones, so the board can group by them without a second taxonomy. `M7` exists because [the delivery plan](delivery-plan.md) added it.
+- [Marites — React Frontend](https://github.com/users/tengtium-tech/projects/6)
+- [Marites — C# Backend](https://github.com/users/tengtium-tech/projects/7)
 
-## 3. Issue templates
+Each Project uses Kanban statuses **Backlog**, **Ready**, **In Progress**, **In Review**, and **Done**. The Kanban view uses milestones M0–M7 to group delivery scope; the Sprint Backlog view groups work by the two-week Monday-start iteration. Sprint 1 begins November 16, 2026.
 
-Four templates, one per kind of work. Each exists because a category of issue was being written badly without one.
+A repository issue is the work item. Projects display and organize those issues; they are not separate copies of a task list. A cross-stack issue may be added to both Projects so each workstream can see the same source issue. Milestones represent delivery outcomes; sprints represent the timebox for work the team has committed to.
 
-**Work package** — the default. Title: `WP-M1-3 Hold and promote`.
+The [delivery plan](delivery-plan.md) defines work packages and their outcomes. The Projects track their discovery, priority, status, milestone, and sprint assignment.
+
+## 3. Issue templates and discovery
+
+Use a work-package issue for a scoped outcome, a decision issue for an unresolved question, a defect issue for reproducible incorrect behavior, and a documentation issue for a specification change.
+
+Before moving a work package from **Backlog** to **Ready**, discovery should make these points clear:
+
+- Outcome, in-scope behavior, and exclusions.
+- Owning workstream and target branch: React/`react`, C#/.NET/`csharp`, or shared/`main`.
+- Dependencies and the order in which they must be satisfied.
+- Acceptance criteria, applicable requirements and decisions, and how the result will be verified.
+- Known risks and unresolved questions. Record an unresolved question as a decision issue and link it to the work package.
+
+A useful work-package description follows this shape:
 
 ```markdown
 ## What this finishes
-<one paragraph, from the delivery plan>
+<The observable outcome and scope.>
 
-## Definition of done
-- [ ] Behaviour specified (FR / ADR) and documents agree
-- [ ] Cases executed: TC-…
-- [ ] Failure path and error code
-- [ ] No other document describes the old behaviour
+## Discovery and dependencies
+<Owner, target branch, prerequisites, and decisions still needed.>
+
+## Acceptance criteria
+- [ ] <Observable result>
+- [ ] <Failure behavior and error handling>
+- [ ] <Verification case or review evidence>
 
 ## References
-Requirement: FR-0xx · Decision: ADR-0xx · Package: WP-Mx-y
+Requirement: FR-… · Decision: ADR/DEC-… · Package: WP-Mx-y
 ```
 
-**Defect** — reproduction first, opinion second.
+Do not assign work to a sprint until it is ready and the team has chosen to commit to it. Discovery may split a large work package into linked sub-issues when the pieces can be reviewed and delivered independently; keep the parent issue as the outcome and link each child task to it.
 
-```markdown
-## What happens / what should happen
-## Reproduction
-1. …
-## Evidence
-- Error code: ERR-…
-- Audit row: …
-- Version: …
-```
+The working cycle is **Discover → Ready → Sprint commitment → Implement → Review and verify → Merge → Sync**. Keep work in Backlog while scope, dependencies, acceptance, or decisions remain unclear. Move it to Ready only when those points are understood; move Ready work into a sprint only when the team commits to it. This keeps discovery separate from delivery promises.
 
-**Decision needed** — the issue that closes a gap in the documents.
+For a decision issue, state the question plainly, list viable options and their consequences, explain what work it blocks, and name who will resolve it. When the decision affects shared product behavior or the API contract, record the accepted result on `main` and link the issue from both Projects as appropriate.
 
-```markdown
-## The question, in plain terms
-## Options, with the cost of each
-## What it blocks
-Owner: client | technical
-```
+## 4. Milestones and completion
 
-**Doc change** — because a documentation change has a propagation rule the other templates do not carry.
+Milestones M0–M7 carry delivery order. The [delivery plan](delivery-plan.md) contains each package, dependencies, and definition of done; the milestone exit gates remain in [deployment and onboarding §6](../11-operations/deployment-and-onboarding.md).
 
-```markdown
-## What is wrong, and where
-## Which documents must move with it
-- [ ] …
-```
+A work package is complete only when its specified behavior is implemented, applicable verification has been run, failure paths and error codes are covered, related documents agree, and no unrun evidence is claimed. Closing an issue alone does not satisfy a milestone gate.
 
-## 4. Project fields and views
+## 5. Branch and pull-request conventions
 
-| Field | Type | Why |
-|---|---|---|
-| `Status` | Backlog · Ready · In progress · Review · Done | The only field that needs maintaining by hand |
-| `Milestone` | native | Grouping, and the release train |
-| `Area` | single select, mirrors the label | Filtering without label soup |
-| `Package` | text (`WP-Mx-y`) | Ties the issue to the delivery plan without a lookup |
-| `Size` | S · M · L | Deliberately not hours. A size that means hours becomes a promise |
+The four branches above are the long-lived shared and integration branches. Create short-lived task branches from the implementation branch that owns the work, then open a pull request back to that same branch.
 
-| View | Shows |
+| Work | Start from | Example task branch | Pull request target |
+|---|---|---|---|
+| React task | `react` | `wp/m0-7-setup-wizard` | `react` |
+| C# foundation or feature task | `csharp` | `wp/m0-2-dotnet-skeleton` | `csharp` |
+| Shared specification change | `main` | `docs/contract-error-shape` | `main` |
+| Pairing-guide change | `react-csharp` | `docs/react-csharp-local-run` | `react-csharp` |
+
+Use the work-package id in implementation branch names where a package exists. A C# foundation task is still a task branch from `csharp`; a feature is another short-lived task branch from `csharp`. Do not create permanent `foundation` or `features` branches. Merge shared `main` changes into `react` and `csharp` after they land on `main` so each implementation stays aligned with the authoritative contract and requirements.
+
+Do not commit task implementation directly to `react` or `csharp`; use a task branch and review it through a pull request. Link the pull request to its issue, keep it focused on one package, and include the acceptance evidence and verification performed. Stack-specific formatting, build, and verification commands belong in that stack branch's README so contributors can follow the same practice.
+
+Keep pull requests focused on one work package or coherent documentation change. Link the issue, state which requirements or decisions it implements, describe the verification performed (or why none is appropriate), and disclose known gaps. Cross-stack issues may need separate implementation pull requests into `react` and `csharp`, both linked to the same issue.
+
+## 6. Labels
+
+Use labels for work type and area; use milestones for delivery sequence and the Sprint field for iteration.
+
+| Axis | Examples |
 |---|---|
-| **Board** | Grouped by `Status`, filtered to the current milestone — the one people work from |
-| **Roadmap** | Grouped by milestone, no dates — the order, not a schedule |
-| **Needs decision** | `needs-decision` open issues; the queue that blocks everything downstream |
-| **Quarantine** | `quarantined` — flaky tests and known-broken gates, so they are not forgotten |
+| Type | `type: feature`, `type: defect`, `type: decision`, `type: doc`, `type: chore` |
+| Area | `area: capture`, `area: operations`, `area: audit`, `area: storage`, `area: ui`, `area: agent`, `area: providers`, `area: docs` |
+| State | `needs-decision`, `blocked`, `quarantined` |
 
-## 5. Automation
+Keep labels concise. Do not make a label for a milestone, sprint, branch, or status that already has a Project field.
 
-Deliberately small. Every automation is one that cannot be wrong in a way nobody notices.
+## 7. What stays manual
 
-| When | Then |
-|---|---|
-| An issue is opened | Added to the project, `Status = Backlog` |
-| A pull request references an issue (`Closes #12`) | The issue moves to `In progress` |
-| The pull request merges | The issue closes and moves to `Done` |
-| A `needs-decision` issue closes | Nothing automatic — the decision register is updated by hand, in the same commit that records the answer |
+Issues and documents are reviewed by people. A closed decision issue does not update the decision register automatically; update the relevant decision record and shared specification in the same change that records the accepted result. Project status, sprint assignment, and milestone readiness must reflect actual work and evidence rather than assumptions.
 
-**The last row is the important one.** Closing a decision issue does not update `docs/01-project/decisions-and-open-questions.md`, and pretending it could is how a register and a board drift apart. The document is the record; the issue is the conversation.
+## 8. Keeping this guide current
 
-## 6. Branch and pull request conventions
-
-| Branch | From | Named |
-|---|---|---|
-| `wp/<package-id>` | `main` | `wp/m1-3-hold-and-promote` |
-| `fix/<short>` | `main` | `fix/peek-requeue-loop` |
-| `docs/<short>` | `main` | `docs/two-stores` |
-
-**Squash merge, one package per pull request.** A pull request that closes two packages cannot be reviewed against either definition of done.
-
-Technology variants are directories on `main`, not permanent branches. Branches are short-lived work in progress and merge into `main`; this keeps shared documentation and completed profiles visible together.
-
-The PR template asks for four things and refuses to be longer:
-
-```markdown
-## What changed, and why
-## Which specification it implements
-FR-… / ADR-… / DEC-…
-## Which cases were executed
-TC-… (or: none — and why that is acceptable)
-## Anything a reader should doubt
-```
-
-**That last heading is the one that earns its place.** It is where an author writes *"the concurrency path is untested"* or *"this works for RabbitMQ only"* — the sentence that would otherwise be discovered three months later in an incident.
-
-## 7. What is not automated
-
-- **No issue is opened by a document change.** The documents are reviewed in pull requests like code; a decision that creates work opens its own package.
-- **No status is derived from the dashboard.** The dashboard is written by hand from the gates, and a board that computed it would be a second source of truth.
-- **No coverage badge.** Coverage of a changed file is a gate; a percentage on the README is a number nobody acts on.
-
-## 8. Document control
-
-Revision 0.2, November 2026. The public repository is [tengtium-tech/marites](https://github.com/tengtium-tech/marites). It holds one shared product specification and independently implemented frontend and backend profiles. The React + .NET project board is to be created from the delivery plan; later backend profiles get their own boards. The label and field lists are intentionally short — the failure mode of a project board is taxonomy, not scarcity.
+Update this guide when the branch model, Project setup, or contribution workflow changes. Keep shared behavior and contract decisions authoritative on `main`; synchronize those changes into the implementation branches after merge.

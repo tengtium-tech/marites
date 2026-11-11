@@ -1,7 +1,5 @@
 # Delivery management
 
-Version 0.4 | November 2026 | Status: Approved — Product owner, 2026-11-11
-
 Keep the documentation baseline, milestone ownership and review evidence traceable.
 
 ## Current Marites records
@@ -12,7 +10,7 @@ Keep the documentation baseline, milestone ownership and review evidence traceab
 | [Verification plan](../10-testing/verification-plan.md) (§3) | The eight milestone gates that decide whether a milestone exits |
 | [Delivery plan](delivery-plan.md) | Work packages `WP-M0-1` onward, the definition of done, what blocks what, and what is deliberately not scheduled. Milestone names stay owned by operations; M7 is added here because two documents already assumed it |
 | [CI and release](ci-and-release.md) | What runs on a pull request versus a tag, the ten gates, versioning and migrations, artifacts, and the release checklist |
-| [GitHub project](github-project.md) | One-repository layout for shared docs and stack profiles, one project board per backend profile, labels, issue templates, automation, and branch conventions |
+| [GitHub Project and branch workflow](github-project.md) | Shared documentation ownership, persistent stack branches, separate frontend/backend Projects, discovery, Kanban, milestones, sprints, and pull-request conventions |
 | [Milestones M0 to M7](../11-operations/deployment-and-onboarding.md) (§6) | Owned by operations; this section links and never restates them |
 | [Assumptions and risks](../01-project/assumptions-and-risks.md) | ASM and RSK records that gate the milestones |
 
