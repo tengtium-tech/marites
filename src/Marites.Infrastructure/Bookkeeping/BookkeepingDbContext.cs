@@ -1,6 +1,8 @@
 using System.Globalization;
 using Marites.Domain.Access;
 using Marites.Domain.Audit;
+using Marites.Domain.Capture;
+using Marites.Domain.Operations;
 using Marites.Domain.Brokers;
 using Marites.Domain.Idempotency;
 using Marites.Domain.Tenancy;
@@ -37,6 +39,16 @@ public sealed class BookkeepingDbContext : DbContext
     public DbSet<OperationAudit> OperationAudits => Set<OperationAudit>();
 
     public DbSet<IdempotencyKey> IdempotencyKeys => Set<IdempotencyKey>();
+
+    public DbSet<QueueRef> QueueRefs => Set<QueueRef>();
+
+    public DbSet<CaptureRule> CaptureRules => Set<CaptureRule>();
+
+    public DbSet<ReplayJob> ReplayJobs => Set<ReplayJob>();
+
+    public DbSet<OperationPayload> OperationPayloads => Set<OperationPayload>();
+
+    public DbSet<OperationIntent> OperationIntents => Set<OperationIntent>();
 
     /// <summary>36-character lowercase hyphenated, so a value read in a SQLite browser is legible.</summary>
     public static readonly ValueConverter<Guid, string> GuidToText = new(
@@ -152,6 +164,94 @@ public sealed class BookkeepingDbContext : DbContext
             // second row for the same key would let two different outcomes both claim to be it.
             record.HasIndex(r => new { r.TenantId, r.Key, r.Operation }).IsUnique();
             record.HasIndex(r => r.CreatedAt);
+        });
+        modelBuilder.Entity<QueueRef>(queue =>
+        {
+            queue.ToTable("queue_ref");
+            queue.HasKey(q => q.Id);
+            queue.Property(q => q.Id).HasColumnName("id").HasConversion(GuidToText);
+            queue.Property(q => q.BrokerProfileId).HasColumnName("broker_profile_id").HasConversion(GuidToText);
+            queue.Property(q => q.Name).HasColumnName("name").IsRequired();
+            queue.Property(q => q.SourceKind).HasColumnName("source_kind").IsRequired();
+            queue.Property(q => q.Vhost).HasColumnName("vhost");
+            queue.Property(q => q.IsDlq).HasColumnName("is_dlq").HasConversion(BooleanToInteger);
+            queue.Property(q => q.DeadLetterSource).HasColumnName("dead_letter_source");
+            queue.Property(q => q.BoundAt).HasColumnName("bound_at").HasConversion(TimestampToText);
+            queue.Property(q => q.CaptureEnabled).HasColumnName("capture_enabled").HasConversion(BooleanToInteger);
+            queue.HasIndex(q => new { q.BrokerProfileId, q.Vhost, q.Name }).IsUnique();
+        });
+
+        modelBuilder.Entity<CaptureRule>(rule =>
+        {
+            rule.ToTable("capture_rule");
+            rule.HasKey(r => r.Id);
+            rule.Property(r => r.Id).HasColumnName("id").HasConversion(GuidToText);
+            rule.Property(r => r.QueueRefId).HasColumnName("queue_ref_id").HasConversion(GuidToText);
+            rule.Property(r => r.BindPattern).HasColumnName("bind_pattern");
+            rule.Property(r => r.Enabled).HasColumnName("enabled").HasConversion(BooleanToInteger);
+            rule.Property(r => r.CaptureMode).HasColumnName("capture_mode").IsRequired();
+            rule.Property(r => r.PayloadPolicy).HasColumnName("payload_policy").IsRequired();
+            rule.Property(r => r.SampleRate).HasColumnName("sample_rate").IsRequired();
+            rule.Property(r => r.RowRetentionHours).HasColumnName("row_retention_hours").IsRequired();
+            rule.Property(r => r.MaxRows).HasColumnName("max_rows");
+            rule.Property(r => r.MaxBytes).HasColumnName("max_bytes");
+            rule.Property(r => r.Revision).HasColumnName("revision").IsRequired();
+
+            // One rule per queue: two would each claim to describe the same rows.
+            rule.HasIndex(r => r.QueueRefId).IsUnique();
+        });
+
+        modelBuilder.Entity<ReplayJob>(job =>
+        {
+            job.ToTable("replay_job");
+            job.HasKey(j => j.Id);
+            job.Property(j => j.Id).HasColumnName("id").HasConversion(GuidToText);
+            job.Property(j => j.TenantId).HasColumnName("tenant_id").HasConversion(GuidToText);
+            job.Property(j => j.QueueRefId).HasColumnName("queue_ref_id").HasConversion(GuidToText);
+            job.Property(j => j.State).HasColumnName("state").IsRequired();
+            job.Property(j => j.Total).HasColumnName("total").IsRequired();
+            job.Property(j => j.Processed).HasColumnName("processed").IsRequired();
+            job.Property(j => j.Failed).HasColumnName("failed").IsRequired();
+            job.Property(j => j.HaltReason).HasColumnName("halt_reason");
+            job.Property(j => j.CreatedBy).HasColumnName("created_by").HasConversion(GuidToText);
+            job.Property(j => j.CreatedAt).HasColumnName("created_at").HasConversion(TimestampToText);
+            job.Property(j => j.UpdatedAt).HasColumnName("updated_at").HasConversion(TimestampToText);
+        });
+
+        modelBuilder.Entity<OperationPayload>(payload =>
+        {
+            payload.ToTable("operation_payload");
+            payload.HasKey(e => e.Id);
+            payload.Property(e => e.Id).HasColumnName("id").HasConversion(GuidToText);
+            payload.Property(e => e.AuditId).HasColumnName("audit_id").HasConversion(GuidToText);
+            payload.Property(e => e.MessageId).HasColumnName("message_id");
+            payload.Property(e => e.ContentHash).HasColumnName("content_hash");
+            payload.Property(e => e.PayloadBefore).HasColumnName("payload_before");
+            payload.Property(e => e.PayloadAfter).HasColumnName("payload_after");
+            payload.Property(e => e.PayloadSize).HasColumnName("payload_size").IsRequired();
+            payload.Property(e => e.RetainedUntil).HasColumnName("retained_until").HasConversion(TimestampToText);
+            payload.Property(e => e.CreatedAt).HasColumnName("created_at").HasConversion(TimestampToText);
+            payload.HasIndex(e => e.RetainedUntil);
+        });
+
+        modelBuilder.Entity<OperationIntent>(intent =>
+        {
+            intent.ToTable("operation_intent");
+            intent.HasKey(i => i.Id);
+            intent.Property(i => i.Id).HasColumnName("id").HasConversion(GuidToText);
+            intent.Property(i => i.TenantId).HasColumnName("tenant_id").HasConversion(GuidToText);
+            intent.Property(i => i.ActorId).HasColumnName("actor_id").HasConversion(GuidToText);
+            intent.Property(i => i.ActorKind).HasColumnName("actor_kind").IsRequired();
+            intent.Property(i => i.OnBehalfOf).HasColumnName("on_behalf_of").HasConversion(GuidToText);
+            intent.Property(i => i.ProposalId).HasColumnName("proposal_id").HasConversion(GuidToText);
+            intent.Property(i => i.Action).HasColumnName("action").IsRequired();
+            intent.Property(i => i.Target).HasColumnName("target").IsRequired();
+            intent.Property(i => i.ParamsJson).HasColumnName("params_json").IsRequired();
+            intent.Property(i => i.BodiesJson).HasColumnName("bodies_json").IsRequired();
+            intent.Property(i => i.State).HasColumnName("state").IsRequired();
+            intent.Property(i => i.CreatedAt).HasColumnName("created_at").HasConversion(TimestampToText);
+            intent.Property(i => i.ExpiresAt).HasColumnName("expires_at").HasConversion(TimestampToText);
+            intent.HasIndex(i => i.State);
         });
     }
 }
