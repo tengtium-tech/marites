@@ -1,0 +1,60 @@
+# The M0 deployment: a working UI against a test broker, with no adopter-supplied database.
+#
+# This file lives on `react-csharp` because it describes both stacks, and neither stack branch
+# can hold it: `csharp` has no web app, `react` has no API. The pairing branch is the one place
+# where running the two together is the subject (github-project.md §1).
+#
+# Build contexts point at the two stack worktrees — the local layout. Publishing both images
+# from CI and referencing them by tag is the adopter-facing path, and is not built yet.
+
+name: marites
+
+services:
+  api:
+    build:
+      context: ../marites-csharp
+      dockerfile: deploy/Dockerfile.api
+    environment:
+      # Required from first start: the service refuses to boot without it (configuration §1).
+      MARITES_KEK: ${MARITES_KEK:?set MARITES_KEK to 32 random bytes, base64-encoded}
+      MARITES_BOOKKEEPING_PATH: /app/data/marites.db
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+    volumes:
+      - marites-data:/app/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      # The API answers 404 at /, so the probe asks an operation that exists.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/v1/capabilities >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  web:
+    build:
+      context: ../marites-react/apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # The test broker. In a real deployment the adopter supplies one; here it exists so the
+  # stack can be brought up on a clean host and exercised end to end.
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: marites
+      RABBITMQ_DEFAULT_PASS: marites
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  marites-data:
