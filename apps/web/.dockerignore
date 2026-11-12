@@ -1,0 +1,4 @@
+
+# Build output and container context
+dist/
+node_modules/
