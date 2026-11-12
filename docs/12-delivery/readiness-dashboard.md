@@ -40,7 +40,7 @@ M0 exits when the contract is reviewed, `/capabilities` and preflight are served
 | Testing | Approved | Planned; seven levels, 30 cases, eight gates; no test code or execution evidence | [Verification plan](../10-testing/verification-plan.md) |
 | Traceability | Approved | Planned cases are not executed | [Requirement crosswalk](../02-business/requirements.md) covers 29 FR and eight NFR; the [operation matrix](../13-traceability/operation-coverage-matrix.md) maps all 25 operations |
 | Vocabulary | Approved | Controlled source | [Controlled values](../14-reference/vocabulary.md), including `captureState` (§15) |
-| Application code and tests | Not started | Nothing implemented or executed | No production source, tests or build exists |
+| Application code and tests | Not recorded here | Per stack branch | `main` carries the specification and no implementation. Each stack branch states what exists in its own `STATUS.md`. This page never asserts implementation status, because the same page ships to every branch and the answer differs by branch |
 
 The Product Owner approved the documentation baseline on 2026-11-11. Approval accepts the described scope, assumptions, deferred items, and risks; it does not claim that implementation, migration, or application verification has occurred.
 
