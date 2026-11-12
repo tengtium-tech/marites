@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Marites.Infrastructure.Bookkeeping.Migrations
 {
     [DbContext(typeof(BookkeepingDbContext))]
-    [Migration("20261112085312_0010_idempotency_key")]
-    partial class _0010_idempotency_key
+    [Migration("20261112115553_0001_bookkeeping_schema")]
+    partial class _0001_bookkeeping_schema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -225,6 +225,114 @@ namespace Marites.Infrastructure.Bookkeeping.Migrations
                     b.ToTable("broker_profile", (string)null);
                 });
 
+            modelBuilder.Entity("Marites.Domain.Capture.CaptureRule", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BindPattern")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("bind_pattern");
+
+                    b.Property<string>("CaptureMode")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("capture_mode");
+
+                    b.Property<long>("Enabled")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("enabled");
+
+                    b.Property<long?>("MaxBytes")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("max_bytes");
+
+                    b.Property<long?>("MaxRows")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("max_rows");
+
+                    b.Property<string>("PayloadPolicy")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payload_policy");
+
+                    b.Property<string>("QueueRefId")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("queue_ref_id");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("revision");
+
+                    b.Property<int>("RowRetentionHours")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("row_retention_hours");
+
+                    b.Property<int>("SampleRate")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("sample_rate");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QueueRefId")
+                        .IsUnique();
+
+                    b.ToTable("capture_rule", (string)null);
+                });
+
+            modelBuilder.Entity("Marites.Domain.Capture.QueueRef", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BoundAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("bound_at");
+
+                    b.Property<string>("BrokerProfileId")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("broker_profile_id");
+
+                    b.Property<long>("CaptureEnabled")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("capture_enabled");
+
+                    b.Property<string>("DeadLetterSource")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("dead_letter_source");
+
+                    b.Property<long>("IsDlq")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_dlq");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("SourceKind")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_kind");
+
+                    b.Property<string>("Vhost")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("vhost");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BrokerProfileId", "Vhost", "Name")
+                        .IsUnique();
+
+                    b.ToTable("queue_ref", (string)null);
+                });
+
             modelBuilder.Entity("Marites.Domain.Idempotency.IdempotencyKey", b =>
                 {
                     b.Property<string>("Id")
@@ -274,6 +382,183 @@ namespace Marites.Infrastructure.Bookkeeping.Migrations
                         .IsUnique();
 
                     b.ToTable("idempotency_key", (string)null);
+                });
+
+            modelBuilder.Entity("Marites.Domain.Operations.OperationIntent", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("action");
+
+                    b.Property<string>("ActorId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("actor_id");
+
+                    b.Property<string>("ActorKind")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("actor_kind");
+
+                    b.Property<string>("BodiesJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("bodies_json");
+
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("ExpiresAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("OnBehalfOf")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("on_behalf_of");
+
+                    b.Property<string>("ParamsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("params_json");
+
+                    b.Property<string>("ProposalId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("proposal_id");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("state");
+
+                    b.Property<string>("Target")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("target");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("State");
+
+                    b.ToTable("operation_intent", (string)null);
+                });
+
+            modelBuilder.Entity("Marites.Domain.Operations.OperationPayload", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AuditId")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("audit_id");
+
+                    b.Property<string>("ContentHash")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("content_hash");
+
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("MessageId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("message_id");
+
+                    b.Property<byte[]>("PayloadAfter")
+                        .HasColumnType("BLOB")
+                        .HasColumnName("payload_after");
+
+                    b.Property<byte[]>("PayloadBefore")
+                        .HasColumnType("BLOB")
+                        .HasColumnName("payload_before");
+
+                    b.Property<long>("PayloadSize")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("payload_size");
+
+                    b.Property<string>("RetainedUntil")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("retained_until");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RetainedUntil");
+
+                    b.ToTable("operation_payload", (string)null);
+                });
+
+            modelBuilder.Entity("Marites.Domain.Operations.ReplayJob", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_by");
+
+                    b.Property<int>("Failed")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("failed");
+
+                    b.Property<string>("HaltReason")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("halt_reason");
+
+                    b.Property<int>("Processed")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("processed");
+
+                    b.Property<string>("QueueRefId")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("queue_ref_id");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("state");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<int>("Total")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("total");
+
+                    b.Property<string>("UpdatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("replay_job", (string)null);
                 });
 
             modelBuilder.Entity("Marites.Domain.Tenancy.Tenant", b =>
