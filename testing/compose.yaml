@@ -1,0 +1,27 @@
+# Broker stacks for local development and the integration level of the verification plan.
+# One service per provider, as the repository layout specifies.
+#
+# These are throwaway brokers. Nothing here is a deployment, and nothing in Marites provisions,
+# upgrades or repairs a broker — that boundary is ADR-001, and it applies to this file too:
+# the stack exists so preflight and the adapters have something real to talk to.
+
+name: marites-testing
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: marites-rabbitmq
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # management API, which preflight reads
+    environment:
+      RABBITMQ_DEFAULT_USER: marites
+      RABBITMQ_DEFAULT_PASS: marites
+    healthcheck:
+      # `ping` answers once the node is running; the management plugin can still be starting,
+      # which is why preflight checks the management API rather than trusting this alone.
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
