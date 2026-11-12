@@ -18,6 +18,13 @@ WORKDIR /app
 # not reseed and a fresh volume is created by `migrate` before `api` starts.
 RUN mkdir -p /app/data && chown -R $APP_UID /app/data
 
+# curl, for the container healthcheck only. The aspnet base image ships neither curl nor wget,
+# so a healthcheck written against either marks a working container unhealthy — which is what
+# happened before this line existed. Installing a probe is cheaper than not being able to ask.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app .
 
 USER $APP_UID
