@@ -1,8 +1,10 @@
 using Marites.Api.Brokers;
 using Marites.Api.Capabilities;
 using Marites.Application.Brokers;
+using Marites.Application.Preflight;
 using Marites.Application.Security;
 using Marites.Infrastructure.Bookkeeping;
+using Marites.Infrastructure.RabbitMq;
 using Marites.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -51,6 +53,8 @@ public static class ApiHost
         builder.Services.AddScoped<IBrokerProfileRepository, BrokerProfileRepository>();
         builder.Services.AddScoped<IIdempotencyStore, IdempotencyStore>();
         builder.Services.AddScoped<BrokerProfileService>();
+        builder.Services.AddScoped<IBrokerProbe, RabbitMqProbe>();
+        builder.Services.AddScoped<PreflightService>();
 
         configureAdditionalServices?.Invoke(builder.Services);
 

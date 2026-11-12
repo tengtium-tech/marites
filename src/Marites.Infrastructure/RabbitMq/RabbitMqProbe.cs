@@ -61,9 +61,13 @@ public sealed class RabbitMqProbe : IBrokerProbe
                 $"The credential cannot see vhost '{vhost}'.",
                 $"Grant the user access to vhost '{vhost}', or correct the vhost on the profile."));
 
-        var permissions = await GetAsync(client, $"api/permissions/{Uri.EscapeDataString(vhost)}", cancellationToken);
+        // The whole permission list, filtered here. `api/permissions/%2F` is the documented path
+        // for the default vhost, but .NET unescapes %2F in a Uri path, so the request becomes
+        // api/permissions// and 404s — a false failure that reads as a missing grant.
+        var permissions = await GetAsync(client, "api/permissions", cancellationToken);
         var mayConfigure = permissions is not null && permissions.RootElement.EnumerateArray()
             .Any(p => p.TryGetProperty("user", out var u) && u.GetString() == user
+                      && p.TryGetProperty("vhost", out var v) && v.GetString() == vhost
                       && p.TryGetProperty("configure", out var c)
                       && c.GetString() is { } pattern
                       && (pattern == ".*" || pattern.StartsWith(ShadowPrefix, StringComparison.Ordinal)));
