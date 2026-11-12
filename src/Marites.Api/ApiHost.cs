@@ -35,9 +35,10 @@ public static class ApiHost
         builder.Services.AddDbContext<BookkeepingDbContext>(options =>
             options.UseSqlite($"Data Source={Path.GetFullPath(bookkeepingPath)}"));
 
-        // The KEK is required from first start (configuration reference §1). Resolving it here
-        // means a service without one refuses to boot rather than failing at the first write.
-        builder.Services.AddSingleton(KekOptions.FromEnvironment(Environment.GetEnvironmentVariable));
+        // Registered lazily: building a host must not require a key, or every test that starts
+        // one would need production configuration. ValidateConfiguration makes the service
+        // refuse to start without it, which is where the requirement actually belongs.
+        builder.Services.AddSingleton(_ => KekOptions.FromEnvironment(Environment.GetEnvironmentVariable));
         builder.Services.AddSingleton<ICredentialProtector, KekCredentialProtector>();
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddScoped<IBrokerProfileRepository, BrokerProfileRepository>();
@@ -53,5 +54,16 @@ public static class ApiHost
         api.MapBrokerEndpoints();
 
         return app;
+    }
+
+    /// <summary>
+    /// Resolves the configuration the service cannot run without, so a missing KEK stops the
+    /// process before it binds a port rather than surfacing at the first credential write
+    /// (configuration reference §1). Called by the entrypoint, not by <see cref="Build"/>:
+    /// a host that is built to be inspected should not demand production secrets.
+    /// </summary>
+    public static void ValidateConfiguration(IServiceProvider services)
+    {
+        _ = services.GetRequiredService<KekOptions>();
     }
 }
