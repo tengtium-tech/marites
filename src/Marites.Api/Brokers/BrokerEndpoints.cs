@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Marites.Application.Brokers;
+using Marites.Application.Preflight;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -25,6 +26,7 @@ public static class BrokerEndpoints
         brokers.MapGet("/{brokerId:guid}", GetBrokerAsync).WithName("getBroker");
         brokers.MapPatch("/{brokerId:guid}", UpdateBrokerAsync).WithName("updateBroker");
         brokers.MapDelete("/{brokerId:guid}", DeleteBrokerAsync).WithName("deleteBroker");
+        brokers.MapPost("/{brokerId:guid}/preflight", RunPreflightAsync).WithName("runPreflight");
 
         return routes;
     }
@@ -178,6 +180,39 @@ public static class BrokerEndpoints
     /// retry receives, so serialising it differently makes the replay differ from the original
     /// answer — which the idempotency test caught.
     /// </summary>
+    private static async Task<IResult> RunPreflightAsync(
+        Guid brokerId,
+        PreflightService preflight,
+        IIdempotencyStore idempotency,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        if (!context.Request.Headers.TryGetValue(IdempotencyHeader, out var key) || string.IsNullOrWhiteSpace(key))
+        {
+            return MissingHeader(IdempotencyHeader);
+        }
+
+        var hash = Hash($"preflight|{brokerId}");
+
+        if (await ReplayAsync(idempotency, key!, "runPreflight", hash, cancellationToken) is { } replay)
+        {
+            return replay;
+        }
+
+        var result = await preflight.RunAsync(brokerId, cancellationToken);
+        if (result is null)
+        {
+            return NotFound(brokerId);
+        }
+
+        // A failing check is still a successful answer: 200 with state = failing, because a
+        // preflight that cannot answer is less useful than one that answers with a remedy.
+        await idempotency.RecordAsync(
+            key!, "runPreflight", hash, 200, JsonSerializer.Serialize(result, JsonOptions), cancellationToken);
+
+        return TypedResults.Ok(result);
+    }
+
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
