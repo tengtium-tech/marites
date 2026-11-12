@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Marites.Application.Brokers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -172,7 +173,15 @@ public static class BrokerEndpoints
         return TypedResults.NoContent();
     }
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    /// <summary>
+    /// Must match the pipeline's options, including null omission. The recorded body is what a
+    /// retry receives, so serialising it differently makes the replay differ from the original
+    /// answer — which the idempotency test caught.
+    /// </summary>
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
 
     /// <summary>
     /// Replays the first answer for this key, or returns null so the command runs. A repeat

@@ -12,5 +12,6 @@
     <Project Path="tests/Marites.ArchitectureTests/Marites.ArchitectureTests.csproj" />
     <Project Path="tests/Marites.ArchitectureViolationFixture/Marites.ArchitectureViolationFixture.csproj" />
     <Project Path="tests/Marites.InfrastructureTests/Marites.InfrastructureTests.csproj" />
+    <Project Path="tests/Marites.ApiTests/Marites.ApiTests.csproj" />
   </Folder>
 </Solution>
