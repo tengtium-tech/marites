@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Marites.Application.Brokers;
 using Marites.Application.Preflight;
+using Marites.Application.Providers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -27,6 +28,7 @@ public static class BrokerEndpoints
         brokers.MapPatch("/{brokerId:guid}", UpdateBrokerAsync).WithName("updateBroker");
         brokers.MapDelete("/{brokerId:guid}", DeleteBrokerAsync).WithName("deleteBroker");
         brokers.MapPost("/{brokerId:guid}/preflight", RunPreflightAsync).WithName("runPreflight");
+        brokers.MapGet("/{brokerId:guid}/capabilities", GetBrokerCapabilitiesAsync).WithName("getBrokerCapabilities");
 
         return routes;
     }
@@ -180,6 +182,34 @@ public static class BrokerEndpoints
     /// retry receives, so serialising it differently makes the replay differ from the original
     /// answer — which the idempotency test caught.
     /// </summary>
+    /// <summary>
+    /// OP-CAP-002. Answers from the registry, not from a hard-coded table: what this build can do
+    /// with the profile's provider, not what the provider is capable of.
+    /// </summary>
+    private static async Task<IResult> GetBrokerCapabilitiesAsync(
+        Guid brokerId,
+        BrokerProfileService brokers,
+        IProviderRegistry registry,
+        CancellationToken cancellationToken)
+    {
+        var broker = await brokers.GetAsync(brokerId, cancellationToken);
+        if (broker is null)
+        {
+            return NotFound(brokerId);
+        }
+
+        var capabilities = registry.Find(broker.ProviderKind);
+
+        // A profile naming a provider this build cannot talk to is not a server error: the
+        // record was created against a build that supported it, or by hand.
+        return capabilities is null
+            ? Results.Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: $"No adapter for provider '{broker.ProviderKind}' in this build",
+                extensions: new Dictionary<string, object?> { ["code"] = "ERR-BRK-001" })
+            : TypedResults.Ok(capabilities);
+    }
+
     private static async Task<IResult> RunPreflightAsync(
         Guid brokerId,
         PreflightService preflight,
