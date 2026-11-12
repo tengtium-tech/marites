@@ -12,7 +12,8 @@ Last reviewed: 2026-11-12 · Documentation baseline: 1.0
 |---|---|
 | Solution | `Marites.slnx`, seven projects under `src/`, two test projects under `tests/` |
 | Layers | `Domain`, `Application`, `Infrastructure`, `Api` — the four layers of ADR-025, with `Contracts` and `Worker` alongside |
-| API | **One served operation**: `GET /api/v1/capabilities` (OP-CAP-001). Both feature lists are empty on purpose — a feature is listed when its operations are served, not when they are planned |
+| API | **Six served operations**: `GET /api/v1/capabilities` (OP-CAP-001) and broker CRUD — `listBrokers`, `createBroker`, `getBroker`, `updateBroker`, `deleteBroker` (OP-BRK-001…005). `/capabilities` now reports `brokers`, because it is true; `providerKinds` stays empty until an adapter exists |
+| Broker API behaviour | Strong ETags (`"3"`), `If-Match` required on update (428 without it, 409 with a stale one, `ERR-CMN-006`), `Idempotency-Key` required on every command (400 without it, replay of the first answer on repeat, `ERR-CMN-005` if the same key carries a different request), and endpoint credentials redacted on read |
 | Ports | `ProviderPorts` declares the broker seams in `Application`. No adapter implements them |
 | Capture | `CaptureWorker` and `WorkerHost` exist as entrypoints. No consume loop |
 | Bookkeeping store | SQLite via EF Core, created by `marites migrate`. Five tables: `tenant`, `app_user`, `broker_profile`, `operation_audit`, `idempotency_key` — migrations `0001`, `0002`, `0003`, `0007`, `0010`, numbered to match `migration-plan.md` §2.1 |
@@ -40,11 +41,15 @@ OpenAPI contract validation and the docs sync, both inherited from `main`.
 ## What has not happened
 
 No broker has been contacted. No message has been captured. No adapter exists, so no
-provider is registered and `/capabilities` reports none. No credential has been written to
-the store — the protector is tested but nothing calls it yet, because broker CRUD is the
-next package. No requirement in `docs/02-business/requirements.md` is met.
+provider is registered and `/capabilities` reports no provider kinds. Credentials are
+encrypted and written, but never used: nothing authenticates against a broker yet.
+
+The broker operations have **no automated tests** — they were verified by running the
+service and exercising every path with HTTP calls, which proves the behaviour once but
+regresses silently. No requirement in `docs/02-business/requirements.md` is met.
 
 ## Next
 
-Broker CRUD (#45). It is the first caller of the credential protector, which is currently
-tested but unused, and the first package whose operations the frontend can gate on.
+Automated tests for the broker operations, then WP-M0-6 preflight — the first code that
+actually talks to a broker, and the point at which the encrypted credentials are used for
+something.

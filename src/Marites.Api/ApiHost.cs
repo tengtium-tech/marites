@@ -1,4 +1,10 @@
+using Marites.Api.Brokers;
 using Marites.Api.Capabilities;
+using Marites.Application.Brokers;
+using Marites.Application.Security;
+using Marites.Infrastructure.Bookkeeping;
+using Marites.Infrastructure.Security;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,12 +29,28 @@ public static class ApiHost
             options.ShutdownTimeout = TimeSpan.FromSeconds(30);
         });
 
+        var bookkeepingPath = Environment.GetEnvironmentVariable("MARITES_BOOKKEEPING_PATH")
+            ?? "./data/marites.db";
+
+        builder.Services.AddDbContext<BookkeepingDbContext>(options =>
+            options.UseSqlite($"Data Source={Path.GetFullPath(bookkeepingPath)}"));
+
+        // The KEK is required from first start (configuration reference §1). Resolving it here
+        // means a service without one refuses to boot rather than failing at the first write.
+        builder.Services.AddSingleton(KekOptions.FromEnvironment(Environment.GetEnvironmentVariable));
+        builder.Services.AddSingleton<ICredentialProtector, KekCredentialProtector>();
+        builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddScoped<IBrokerProfileRepository, BrokerProfileRepository>();
+        builder.Services.AddScoped<IIdempotencyStore, IdempotencyStore>();
+        builder.Services.AddScoped<BrokerProfileService>();
+
         configureAdditionalServices?.Invoke(builder.Services);
 
         var app = builder.Build();
 
         var api = app.MapGroup(ApiBasePath);
         api.MapCapabilitiesEndpoints();
+        api.MapBrokerEndpoints();
 
         return app;
     }
