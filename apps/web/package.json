@@ -11,16 +11,24 @@
     "generate:client": "orval --config ./orval.config.mjs",
     "generate:api": "npm run generate:types && npm run generate:client",
     "typecheck": "tsc --noEmit",
-    "verify:query-compat": "node ../../tests/contract-compat/verify-query-output.mjs && tsc --noEmit"
+    "verify:query-compat": "node ../../tests/contract-compat/verify-query-output.mjs && tsc --noEmit",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@tanstack/react-query": "5.107.1",
-    "react": "19.3.1"
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router-dom": "7.9.5"
   },
   "devDependencies": {
     "@types/react": "19.3.0",
     "openapi-typescript": "7.13.0",
     "orval": "8.47.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "5.1.0",
+    "vite": "7.2.0"
   }
 }

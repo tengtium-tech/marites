@@ -12,17 +12,19 @@ Last reviewed: 2026-11-12 · Documentation baseline: 1.0
 |---|---|
 | Client | `apps/web` generates types and a request client from `openapi.yaml` with orval |
 | Contract compatibility | `tests/contract-compat` type-checks the deferred `QUERY /messages` operation and verifies the generated output, because most generators do not support HTTP `QUERY` |
-| Screens | None. No application shell, no components, no routing |
+| Shell | Vite + React + router, one route (`/setup`), dev proxy from `/api` to the API host so the browser stays on one origin |
+| Screens | **One**: the setup wizard. Saves a broker profile, runs preflight, and disables *Enable capture* until preflight passes — saving stays allowed so a mistyped credential can be corrected |
 
 ## What runs
 
 `React client validation` on every push and pull request: `npm ci`, generate the API client,
-typecheck it, then verify the deferred `QUERY` output. Green as of this commit — which is the
+typecheck it, then verify the deferred `QUERY` output. `npm run build` produces a bundle
+locally; it is not yet part of the workflow. Green as of this commit — which is the
 one thing on either stack that is both automated and passing.
 
 ## What has not happened
 
-No screen renders. No backend has been called, because there is no endpoint to call yet. No
+The wizard has not been driven in a browser against a live API. `npm run build` passes and the shell renders, but no one has clicked Save and watched the preflight results come back — that is the next thing to do, and the acceptance criterion depends on it. No
 accessibility check has run, so NFR-008 is unmet rather than partially met.
 
 ## Next
