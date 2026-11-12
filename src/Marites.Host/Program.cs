@@ -69,3 +69,9 @@ static async Task<int> MigrateAsync()
 
     return 0;
 }
+
+/// <summary>
+/// Exposes the entry point to <c>WebApplicationFactory</c>. Top-level statements generate an
+/// internal class; this makes it visible without changing behaviour.
+/// </summary>
+public partial class Program;
