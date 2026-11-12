@@ -13,7 +13,7 @@ Last reviewed: 2026-11-12 · Documentation baseline: 1.0
 | Client | `apps/web` generates types and a request client from `openapi.yaml` with orval |
 | Contract compatibility | `tests/contract-compat` type-checks the deferred `QUERY /messages` operation and verifies the generated output, because most generators do not support HTTP `QUERY` |
 | Shell | Vite + React + router, one route (`/setup`), dev proxy from `/api` to the API host so the browser stays on one origin |
-| Screens | **One**: the setup wizard. Saves a broker profile, runs preflight, and disables *Enable capture* until preflight passes — saving stays allowed so a mistyped credential can be corrected |
+| Screens | **One**: the setup wizard, with a structural accessibility pass — native controls throughout, `aria-live` on the preflight results, focus moved to a failed save, `aria-busy` while saving, and hints associated by `aria-describedby` rather than left in placeholders. Saves a broker profile, runs preflight, and keeps capture unavailable until preflight passes — saving stays allowed so a mistyped credential can be corrected |
 
 ## What runs
 
