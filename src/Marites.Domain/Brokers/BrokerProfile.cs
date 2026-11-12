@@ -150,4 +150,15 @@ public sealed class BrokerProfile
 
         Revision++;
     }
+
+    /// <summary>
+    /// Records the last readiness result. Does not touch Revision: a preflight is an
+    /// observation, not an edit, and bumping it would invalidate an If-Match held for an
+    /// unrelated reason.
+    /// </summary>
+    public void RecordPreflight(string state, DateTimeOffset at)
+    {
+        PreflightState = state;
+        PreflightAt = at;
+    }
 }
