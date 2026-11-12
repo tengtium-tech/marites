@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type Check = { id: string; label: string; state: 'pass' | 'fail' | 'warn' | 'skipped'; detail?: string; remedy?: string };
 type Preflight = { state: 'passing' | 'failing' | 'degraded'; checks: Check[]; checkedAt?: string };
@@ -24,6 +24,15 @@ export function SetupWizard() {
     password: '',
   });
   const [state, setState] = useState<SaveState>({ kind: 'editing' });
+  const errorRef = useRef<HTMLParagraphElement>(null);
+
+  // An alert that is announced but off-screen still leaves the user hunting for it, so a
+  // failed save moves focus to the message rather than relying on announcement alone.
+  useEffect(() => {
+    if (state.kind === 'error') {
+      errorRef.current?.focus();
+    }
+  }, [state]);
 
   const update = (field: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((current) => ({ ...current, [field]: event.target.value }));
@@ -81,9 +90,16 @@ export function SetupWizard() {
         Marites observes a broker you already run. It never provisions or repairs one.
       </p>
 
-      <form onSubmit={save} style={{ display: 'grid', gap: 12, marginTop: 24 }}>
+      <form onSubmit={save} aria-busy={state.kind === 'saving'} style={{ display: 'grid', gap: 12, marginTop: 24 }}>
         <Field label="Name" value={form.name} onChange={update('name')} required />
-        <Field label="AMQP endpoint" value={form.endpoint} onChange={update('endpoint')} placeholder="amqp://host:5672/" required />
+        <Field
+          label="AMQP endpoint"
+          hint="For example amqp://host:5672/ — the address a consumer would use."
+          value={form.endpoint}
+          onChange={update('endpoint')}
+          placeholder="amqp://host:5672/"
+          required
+        />
         <Field label="Management API" value={form.adminUri} onChange={update('adminUri')} placeholder="http://host:15672" />
         <Field label="Vhost" value={form.namespaceOrVhost} onChange={update('namespaceOrVhost')} />
         <Field label="Username" value={form.username} onChange={update('username')} required />
@@ -95,11 +111,18 @@ export function SetupWizard() {
       </form>
 
       {state.kind === 'error' && (
-        <p role="alert" style={{ color: '#b00020', marginTop: 16 }}>{state.message}</p>
+        <p
+          ref={errorRef}
+          role="alert"
+          tabIndex={-1}
+          style={{ color: '#b00020', marginTop: 16 }}
+        >
+          {state.message}
+        </p>
       )}
 
       {state.kind === 'saved' && (
-        <section style={{ marginTop: 24 }}>
+        <section aria-labelledby="preflight-heading" style={{ marginTop: 24 }}>
           <p>
             Saved as revision {state.revision}. It is <strong>not verified</strong> until preflight passes.
           </p>
@@ -108,7 +131,10 @@ export function SetupWizard() {
 
           {state.preflight && (
             <>
-              <h2 style={{ fontSize: 18, marginTop: 20 }}>Preflight: {state.preflight.state}</h2>
+              <h2 id="preflight-heading" style={{ fontSize: 18, marginTop: 20 }}>
+                Preflight: {state.preflight.state}
+              </h2>
+              <div aria-live="polite">
               <ul style={{ listStyle: 'none', padding: 0 }}>
                 {state.preflight.checks.map((check) => (
                   <li key={check.id} style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>
@@ -118,6 +144,7 @@ export function SetupWizard() {
                   </li>
                 ))}
               </ul>
+              </div>
 
               {/*
                 No control here, deliberately. Capture is enabled by a capture policy, which the
@@ -145,7 +172,10 @@ function Field(props: {
   type?: string;
   placeholder?: string;
   required?: boolean;
+  hint?: string;
 }) {
+  const hintId = props.hint ? `${props.label.replace(/\s+/g, '-').toLowerCase()}-hint` : undefined;
+
   return (
     <label style={{ display: 'grid', gap: 4 }}>
       <span style={{ fontSize: 13, color: '#333' }}>{props.label}</span>
@@ -155,8 +185,14 @@ function Field(props: {
         onChange={props.onChange}
         placeholder={props.placeholder}
         required={props.required}
+        aria-describedby={hintId}
         style={{ padding: 8, fontSize: 14 }}
       />
+      {props.hint && (
+        <span id={hintId} style={{ fontSize: 12, color: '#555' }}>
+          {props.hint}
+        </span>
+      )}
     </label>
   );
 }
