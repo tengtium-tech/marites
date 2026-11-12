@@ -113,4 +113,4 @@ Issues and documents are reviewed by people. A closed decision issue does not up
 
 ## 8. Keeping this guide current
 
-Update this guide when the branch model, Project setup, or contribution workflow changes. Keep shared behavior and contract decisions authoritative on `main`; synchronize those changes into the implementation branches after merge.
+Update this guide when the branch model, Project setup, or contribution workflow changes. Keep shared behavior and contract decisions authoritative on `main`. Synchronising them into the implementation branches is not a convention to remember: `.github/workflows/docs-sync.yml` merges `main` into `csharp`, `react` and `react-csharp` on every push that touches `docs/`, and pushes only when the branch is behind. A conflict fails that job and names the branch, because a conflict means a shared document was edited on a stack branch — a classification decision for a person, not something a merge should guess at. If a stack branch is protected, the push is rejected and the job fails; fix the permission rather than disabling the job, since a silent skip is indistinguishable from no sync at all.
