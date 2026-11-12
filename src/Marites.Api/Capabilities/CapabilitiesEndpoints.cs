@@ -21,10 +21,10 @@ public static class CapabilitiesEndpoints
     public const string ApiVersion = "0.2";
 
     /// <summary>
-    /// Features served today. Empty at M0-5 because no other operation is served yet:
-    /// brokers, preflight and queues arrive with their endpoints in M0-3, M0-6 and M1.
+    /// Features served today. A feature is added in the same change that serves its
+    /// operations: brokers arrived with OP-BRK-001 to 005, preflight and queues are still to come.
     /// </summary>
-    private static readonly string[] SupportedFeatures = [];
+    private static readonly string[] SupportedFeatures = ["brokers"];
 
     /// <summary>
     /// Provider kinds with a registered adapter. Empty until the RabbitMQ adapter lands

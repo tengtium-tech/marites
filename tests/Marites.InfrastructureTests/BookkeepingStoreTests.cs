@@ -26,6 +26,7 @@ public sealed class BookkeepingStoreTests
         Assert.Contains("tenant", tables);
         Assert.Contains("app_user", tables);
         Assert.Contains("broker_profile", tables);
+        Assert.Contains("idempotency_key", tables);
         Assert.Contains("__EFMigrationsHistory", tables);
     }
 
@@ -84,6 +85,30 @@ public sealed class BookkeepingStoreTests
         var delete = Assert.Throws<Microsoft.Data.Sqlite.SqliteException>(
             () => context.Database.ExecuteSqlRaw("delete from operation_audit"));
         Assert.Contains("append-only", delete.Message);
+    }
+
+
+    [Fact]
+    public void One_idempotency_key_cannot_record_two_outcomes()
+    {
+        using var store = new TemporaryStore();
+        using var context = store.CreateContext();
+        context.Database.Migrate();
+
+        var tenant = Guid.NewGuid();
+        var now = new DateTimeOffset(2026, 11, 12, 9, 0, 0, TimeSpan.Zero);
+
+        context.IdempotencyKeys.Add(
+            Marites.Domain.Idempotency.IdempotencyKey.Record(tenant, "key-1", "createBroker", "hash-a", 201, "{}", now));
+        context.SaveChanges();
+
+        // A second row for the same key and command would let two outcomes both claim to be
+        // the recorded one, so the unique index refuses it.
+        context.IdempotencyKeys.Add(
+            Marites.Domain.Idempotency.IdempotencyKey.Record(tenant, "key-1", "createBroker", "hash-b", 200, "{}", now));
+
+        var error = Assert.ThrowsAny<Microsoft.EntityFrameworkCore.DbUpdateException>(() => context.SaveChanges());
+        Assert.Contains("UNIQUE constraint failed", error.InnerException!.Message);
     }
 
 }

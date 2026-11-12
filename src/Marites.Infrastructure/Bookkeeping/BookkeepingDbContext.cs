@@ -2,6 +2,7 @@ using System.Globalization;
 using Marites.Domain.Access;
 using Marites.Domain.Audit;
 using Marites.Domain.Brokers;
+using Marites.Domain.Idempotency;
 using Marites.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -34,6 +35,8 @@ public sealed class BookkeepingDbContext : DbContext
     public DbSet<BrokerProfile> BrokerProfiles => Set<BrokerProfile>();
 
     public DbSet<OperationAudit> OperationAudits => Set<OperationAudit>();
+
+    public DbSet<IdempotencyKey> IdempotencyKeys => Set<IdempotencyKey>();
 
     /// <summary>36-character lowercase hyphenated, so a value read in a SQLite browser is legible.</summary>
     public static readonly ValueConverter<Guid, string> GuidToText = new(
@@ -129,6 +132,26 @@ public sealed class BookkeepingDbContext : DbContext
             audit.Property(a => a.Ip).HasColumnName("ip");
 
             audit.HasIndex(a => new { a.TenantId, a.CreatedAt });
+        });
+
+        modelBuilder.Entity<IdempotencyKey>(record =>
+        {
+            record.ToTable("idempotency_key");
+            record.HasKey(r => r.Id);
+
+            record.Property(r => r.Id).HasColumnName("id").HasConversion(GuidToText);
+            record.Property(r => r.TenantId).HasColumnName("tenant_id").HasConversion(GuidToText);
+            record.Property(r => r.Key).HasColumnName("key").IsRequired();
+            record.Property(r => r.Operation).HasColumnName("operation").IsRequired();
+            record.Property(r => r.RequestHash).HasColumnName("request_hash").IsRequired();
+            record.Property(r => r.ResponseStatus).HasColumnName("response_status").IsRequired();
+            record.Property(r => r.ResponseJson).HasColumnName("response_json").IsRequired();
+            record.Property(r => r.CreatedAt).HasColumnName("created_at").HasConversion(TimestampToText);
+
+            // One key means one outcome per command. A repeat is answered from this row, and a
+            // second row for the same key would let two different outcomes both claim to be it.
+            record.HasIndex(r => new { r.TenantId, r.Key, r.Operation }).IsUnique();
+            record.HasIndex(r => r.CreatedAt);
         });
     }
 }

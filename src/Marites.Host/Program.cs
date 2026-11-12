@@ -14,14 +14,22 @@ if (!HostModeParser.TryParse(args, out var mode))
 switch (mode)
 {
     case HostMode.Api:
-        await ApiHost.Build().RunAsync();
+    {
+        var app = ApiHost.Build();
+        ApiHost.ValidateConfiguration(app.Services);
+        await app.RunAsync();
         break;
+    }
     case HostMode.Worker:
         await WorkerHost.Build().RunAsync();
         break;
     case HostMode.All:
-        await ApiHost.Build(configureAdditionalServices: services => services.AddMaritesWorker()).RunAsync();
+    {
+        var app = ApiHost.Build(configureAdditionalServices: services => services.AddMaritesWorker());
+        ApiHost.ValidateConfiguration(app.Services);
+        await app.RunAsync();
         break;
+    }
     case HostMode.Migrate:
         return await MigrateAsync();
     default:

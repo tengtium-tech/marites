@@ -12,13 +12,14 @@ Last reviewed: 2026-11-12 · Documentation baseline: 1.0
 |---|---|
 | Solution | `Marites.slnx`, seven projects under `src/`, two test projects under `tests/` |
 | Layers | `Domain`, `Application`, `Infrastructure`, `Api` — the four layers of ADR-025, with `Contracts` and `Worker` alongside |
-| API | **One served operation**: `GET /api/v1/capabilities` (OP-CAP-001). Both feature lists are empty on purpose — a feature is listed when its operations are served, not when they are planned |
+| API | **Six served operations**: `GET /api/v1/capabilities` (OP-CAP-001) and broker CRUD — `listBrokers`, `createBroker`, `getBroker`, `updateBroker`, `deleteBroker` (OP-BRK-001…005). `/capabilities` now reports `brokers`, because it is true; `providerKinds` stays empty until an adapter exists |
+| Broker API behaviour | Strong ETags (`"3"`), `If-Match` required on update (428 without it, 409 with a stale one, `ERR-CMN-006`), `Idempotency-Key` required on every command (400 without it, replay of the first answer on repeat, `ERR-CMN-005` if the same key carries a different request), and endpoint credentials redacted on read |
 | Ports | `ProviderPorts` declares the broker seams in `Application`. No adapter implements them |
 | Capture | `CaptureWorker` and `WorkerHost` exist as entrypoints. No consume loop |
-| Bookkeeping store | SQLite via EF Core, created by `marites migrate`. Four tables: `tenant`, `app_user`, `broker_profile`, `operation_audit` — migrations `0001`, `0002`, `0003`, `0007`, numbered to match `migration-plan.md` §2.1 |
+| Bookkeeping store | SQLite via EF Core, created by `marites migrate`. Five tables: `tenant`, `app_user`, `broker_profile`, `operation_audit`, `idempotency_key` — migrations `0001`, `0002`, `0003`, `0007`, `0010`, numbered to match `migration-plan.md` §2.1 |
 | Credential protection | `ICredentialProtector` with an AES-256-GCM adapter: a per-row data key wrapped by the KEK (ADR-018), `MARITES_KEK_PREVIOUS` honoured on unwrap for rotation. Base64 keys only; a KMS URI is refused with a message naming the deferral |
 | Audit | `operation_audit` is append-only by schema — `BEFORE UPDATE` and `BEFORE DELETE` triggers raise, so a repository cannot forget the rule (FR-016) |
-| Tests | **26** — 11 `Marites.ArchitectureTests` (layer dependencies, host-mode parsing, host startup, plus a fixture that deliberately violates the layering) and 15 `Marites.InfrastructureTests` (schema, round-trip, audit triggers, migrator idempotency, nine crypto cases) |
+| Tests | **27** — 11 `Marites.ArchitectureTests` (layer dependencies, host-mode parsing, host startup, plus a fixture that deliberately violates the layering) and 16 `Marites.InfrastructureTests` (schema, round-trip, audit triggers, migrator idempotency, idempotency-key uniqueness, nine crypto cases) |
 
 ## What runs
 
@@ -27,7 +28,7 @@ the separate step DEC-014 requires. Verified against a fresh file: four tables, 
 triggers, one tenant, and a second run that reports the tenant already exists.
 
 `.NET build and test` runs on every pull request and push to this branch: restore, build
-with `-warnaserror`, then the 26 tests. That is the gate which makes `LayerDependencyTests`
+with `-warnaserror`, then the 27 tests. That is the gate which makes `LayerDependencyTests`
 real — the only automated guard on ADR-025's dependency rule, and previously the thing
 nothing ran. Warnings are errors on purpose: a known-vulnerable dependency should not merge
 quietly, and the answer to a new advisory is a version bump rather than a suppression.
@@ -40,11 +41,15 @@ OpenAPI contract validation and the docs sync, both inherited from `main`.
 ## What has not happened
 
 No broker has been contacted. No message has been captured. No adapter exists, so no
-provider is registered and `/capabilities` reports none. No credential has been written to
-the store — the protector is tested but nothing calls it yet, because broker CRUD is the
-next package. No requirement in `docs/02-business/requirements.md` is met.
+provider is registered and `/capabilities` reports no provider kinds. Credentials are
+encrypted and written, but never used: nothing authenticates against a broker yet.
+
+The broker operations have **no automated tests** — they were verified by running the
+service and exercising every path with HTTP calls, which proves the behaviour once but
+regresses silently. No requirement in `docs/02-business/requirements.md` is met.
 
 ## Next
 
-Broker CRUD (#45). It is the first caller of the credential protector, which is currently
-tested but unused, and the first package whose operations the frontend can gate on.
+Automated tests for the broker operations, then WP-M0-6 preflight — the first code that
+actually talks to a broker, and the point at which the encrypted credentials are used for
+something.

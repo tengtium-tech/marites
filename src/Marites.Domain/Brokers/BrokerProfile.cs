@@ -63,4 +63,91 @@ public sealed class BrokerProfile
 
     /// <summary>Incremented on every update; a stale <c>If-Match</c> is refused with <c>ERR-CMN-006</c>.</summary>
     public int Revision { get; private set; } = 1;
+
+    public static BrokerProfile Create(
+        Guid tenantId,
+        string name,
+        string providerKind,
+        string environment,
+        string credentialKind,
+        byte[] endpointEnc,
+        string? adminUri,
+        string? namespaceOrVhost,
+        byte[]? credentialsEnc,
+        DateTimeOffset now)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("A broker profile needs a name.", nameof(name));
+        }
+
+        return new BrokerProfile
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Name = name.Trim(),
+            ProviderKind = providerKind,
+            Environment = environment,
+            CredentialKind = credentialKind,
+            EndpointEnc = endpointEnc,
+            AdminUri = adminUri,
+            NamespaceOrVhost = namespaceOrVhost,
+            CredentialsEnc = credentialsEnc,
+            CredentialsUpdatedAt = credentialsEnc is null ? null : now.ToUniversalTime(),
+            TlsOpts = "{}",
+            CapabilitiesJson = "{}",
+            IsDefault = false,
+            PreflightState = "unknown",
+            Revision = 1,
+        };
+    }
+
+    /// <summary>
+    /// Applies a change and increments <see cref="Revision"/>. The increment is what makes
+    /// <c>If-Match</c> meaningful: a client holding the previous value is now stale and must
+    /// re-read rather than overwrite a change it never saw.
+    /// </summary>
+    public void Update(
+        string? name,
+        string? environment,
+        string? adminUri,
+        string? namespaceOrVhost,
+        byte[]? endpointEnc,
+        byte[]? credentialsEnc,
+        DateTimeOffset now)
+    {
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            Name = name.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(environment))
+        {
+            Environment = environment;
+        }
+
+        if (adminUri is not null)
+        {
+            AdminUri = adminUri;
+        }
+
+        if (namespaceOrVhost is not null)
+        {
+            NamespaceOrVhost = namespaceOrVhost;
+        }
+
+        if (endpointEnc is not null)
+        {
+            EndpointEnc = endpointEnc;
+        }
+
+        if (credentialsEnc is not null)
+        {
+            // Supplying credentials rotates the stored secret (UpdateBrokerRequest).
+            CredentialsEnc = credentialsEnc;
+            CredentialsUpdatedAt = now.ToUniversalTime();
+        }
+
+        Revision++;
+    }
 }

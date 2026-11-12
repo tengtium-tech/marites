@@ -26,7 +26,7 @@ python docs/05-architecture/diagrams/build.py docs/04-domains/diagrams/domain-re
 | Reporting and metrics | No write aggregate; rollup query projections | `message_rollup` only; never rebuild counts from retained message rows |
 | Access, roles, and audit access | `Tenant`, `AppUser`; audit is a read projection owned by Dead-letter Recovery | `tenant`, `app_user`; Entra owns sessions and Marites stores no tokens |
 
-These roots are model boundaries, not a one-table-per-aggregate rule. The record mapping and invariants are detailed in [backend DDD architecture §1–2](../05-architecture/backend-ddd.md). The twelve current product tables remain unchanged; the event Outbox is a separately marked planned infrastructure record, not part of that count.
+These roots are model boundaries, not a one-table-per-aggregate rule. The record mapping and invariants are detailed in [backend DDD architecture §1–2](../05-architecture/backend-ddd.md). The thirteen current product tables remain unchanged; the event Outbox is a separately marked planned infrastructure record, not part of that count.
 
 ## Responsibility coverage
 

@@ -340,7 +340,28 @@ Delivery is at least once. A publisher crash after sink acceptance but before `p
 
 The planned dispatcher index is `(published_at, next_attempt_at, locked_until)`; it is not part of the current PostgreSQL index list below.
 
-## 13. Indexes
+## 13. `idempotency_key`
+
+The recorded outcome of a command, so a retried `Idempotency-Key` returns `AlreadyApplied`
+instead of applying the command twice (contract conventions §3.1). Deliberately not the
+audit: `operation_audit` is append-only and permanent, while this is swept once the key is
+too old to be retried.
+
+| Column | Type | Null | Default | Note |
+|---|---|---|---|---|
+| `id` | uuid | no | — | |
+| `tenant_id` | uuid | no | — | Scope; a key is never honoured across tenants |
+| `key` | text | no | — | The `Idempotency-Key` header value as received |
+| `operation` | text | no | — | Which command it belongs to, so the same key on a different command is a different record |
+| `request_hash` | text | no | — | HMAC of the request body. Same key with a different hash returns `ERR-CMN-005` |
+| `response_status` | integer | no | — | The status first returned, replayed verbatim |
+| `response_json` | text | no | — | The body first returned, replayed verbatim |
+| `created_at` | timestamptz | no | — | Retention clock |
+
+Unique on `(tenant_id, key, operation)`. Swept after 24 hours, which is longer than any
+client retries a command and shorter than the audit's promise of permanence.
+
+## 14. Indexes
 
 | Index | Table | Purpose |
 |---|---|---|
@@ -358,6 +379,6 @@ The planned dispatcher index is `(published_at, next_attempt_at, locked_until)`;
 
 No index on `payload_ref` or on `exchange`. Neither is used as a filter, and an unused index on the largest table is a write cost with no reader.
 
-## 14. Document control
+## 15. Document control
 
-Revision 0.2 records the column-level definition for twelve current tables and the planned Outbox record, written November 2026 to close the gap named in the [data-and-contracts index](README.md). It is a definition, not a migration: no schema has been applied, and the types have not been exercised against either store. Separate migration streams are planned in [migration-plan.md](migration-plan.md).
+Revision 0.2 records the column-level definition for thirteen current tables and the planned Outbox record, written November 2026 to close the gap named in the [data-and-contracts index](README.md). It is a definition, not a migration: no schema has been applied, and the types have not been exercised against either store. Separate migration streams are planned in [migration-plan.md](migration-plan.md).
