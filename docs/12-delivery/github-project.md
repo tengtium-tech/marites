@@ -23,6 +23,8 @@ Git branches are full repository snapshots, not overlays. The implementation bra
 
 Keep stack-specific implementation code and guidance on its stack branch. The current documentation baseline still includes some first-profile React and C# architecture guidance on `main`; during discovery, classify those documents and move or adapt profile-only guidance to the matching stack branch while retaining shared behavior and contract rules on `main`. Do not maintain two competing authoritative copies. Keep pairing instructions on `react-csharp`; that branch does not own frontend or backend application code. Other frontend and backend profiles can follow the same model when they are created.
 
+**The pairing branch also owns the deployment composition.** A compose file describing both stacks cannot live on either one: `csharp` has no web app and `react` has no API, so the file would dangle from whichever branch held it. `react-csharp` is the one branch where running the two together is the subject, so `deploy/` lives there, with build contexts pointing at the two stack worktrees. This is deployment configuration, not application source — the rule above still holds: the pairing branch contains no frontend or backend code of its own.
+
 ## 2. GitHub Projects and work items
 
 Use one Project for the reusable React frontend and one Project for each backend implementation. The current Projects are:
