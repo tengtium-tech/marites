@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Marites.Api\Marites.Api.csproj" />
+    <ProjectReference Include="..\Marites.Infrastructure\Marites.Infrastructure.csproj" />
     <ProjectReference Include="..\Marites.Worker\Marites.Worker.csproj" />
   </ItemGroup>
 

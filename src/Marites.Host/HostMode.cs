@@ -4,7 +4,10 @@ public enum HostMode
 {
     Api,
     Worker,
-    All
+    All,
+
+    /// <summary>Applies the bookkeeping schema and seeds the implicit tenant, then exits.</summary>
+    Migrate
 }
 
 public static class HostModeParser
@@ -22,6 +25,7 @@ public static class HostModeParser
             "api" => HostMode.Api,
             "worker" => HostMode.Worker,
             "all" => HostMode.All,
+            "migrate" => HostMode.Migrate,
             _ => (HostMode)(-1)
         };
 

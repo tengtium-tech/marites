@@ -86,28 +86,4 @@ public sealed class BookkeepingStoreTests
         Assert.Contains("append-only", delete.Message);
     }
 
-    private sealed class TemporaryStore : IDisposable
-    {
-        private readonly string _path =
-            Path.Combine(Path.GetTempPath(), $"marites-bookkeeping-{Guid.NewGuid():N}.db");
-
-        public BookkeepingDbContext CreateContext()
-        {
-            var options = new DbContextOptionsBuilder<BookkeepingDbContext>()
-                .UseSqlite($"Data Source={_path}")
-                .Options;
-
-            return new BookkeepingDbContext(options);
-        }
-
-        public void Dispose()
-        {
-            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-
-            if (File.Exists(_path))
-            {
-                File.Delete(_path);
-            }
-        }
-    }
 }
