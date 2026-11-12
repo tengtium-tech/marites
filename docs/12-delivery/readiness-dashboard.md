@@ -19,7 +19,7 @@ Nothing here reports an executed test, a built service or a verified deployment.
 
 ## Readiness gate
 
-M0 exits when the contract is reviewed, `/capabilities` and preflight are served, the setup wizard blocks a failing save, and `docker compose up` yields a working UI against a test broker ([DOC-OPS-001 §6](../11-operations/deployment-and-onboarding.md)). None of this is implemented. All nineteen decisions are answered and ADR-001 to ADR-025 stand (23 accepted, ADR-004 and ADR-005 superseded), so no unresolved product decision blocks M0 planning.
+M0 exits when the contract is reviewed, `/capabilities` and preflight are served, the setup wizard blocks a failing save, and `docker compose up` yields a working UI against a test broker ([DOC-OPS-001 §6](../11-operations/deployment-and-onboarding.md)). None of this is implemented. All twenty decisions are answered and ADR-001 to ADR-025 stand (23 accepted, ADR-004 and ADR-005 superseded), so no unresolved product decision blocks M0 planning.
 
 ## By layer
 
