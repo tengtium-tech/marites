@@ -11,5 +11,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/Marites.ArchitectureTests/Marites.ArchitectureTests.csproj" />
     <Project Path="tests/Marites.ArchitectureViolationFixture/Marites.ArchitectureViolationFixture.csproj" />
+    <Project Path="tests/Marites.BookkeepingTests/Marites.BookkeepingTests.csproj" />
   </Folder>
 </Solution>

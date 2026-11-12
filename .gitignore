@@ -15,3 +15,6 @@ Thumbs.db
 # Marites.Host, so a profile for Marites.Api points at the wrong project and carries
 # random ports. A launch profile worth sharing should be written deliberately.
 **/Properties/launchSettings.json
+
+# Local bookkeeping store created at runtime (MARITES_BOOKKEEPING_PATH default).
+data/
