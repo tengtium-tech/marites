@@ -19,7 +19,7 @@ Last reviewed: 2026-11-12 · Documentation baseline: 1.0
 | Bookkeeping store | SQLite via EF Core, created by `marites migrate`. Five tables: `tenant`, `app_user`, `broker_profile`, `operation_audit`, `idempotency_key` — migrations `0001`, `0002`, `0003`, `0007`, `0010`, numbered to match `migration-plan.md` §2.1 |
 | Credential protection | `ICredentialProtector` with an AES-256-GCM adapter: a per-row data key wrapped by the KEK (ADR-018), `MARITES_KEK_PREVIOUS` honoured on unwrap for rotation. Base64 keys only; a KMS URI is refused with a message naming the deferral |
 | Audit | `operation_audit` is append-only by schema — `BEFORE UPDATE` and `BEFORE DELETE` triggers raise, so a repository cannot forget the rule (FR-016) |
-| Tests | **34** — 11 `Marites.ArchitectureTests` (layer dependencies, host-mode parsing, host startup, plus a fixture that deliberately violates the layering), 16 `Marites.InfrastructureTests` (schema, round-trip, audit triggers, migrator idempotency, idempotency-key uniqueness, nine crypto cases) and 7 `Marites.ApiTests` (the broker operations over HTTP against a real Kestrel host) |
+| Tests | **36** — 11 `Marites.ArchitectureTests` (layer dependencies, host-mode parsing, host startup, plus a fixture that deliberately violates the layering), 16 `Marites.InfrastructureTests` (schema, round-trip, audit triggers, migrator idempotency, idempotency-key uniqueness, nine crypto cases) and 9 `Marites.ApiTests` (the broker operations over HTTP against a real Kestrel host, plus contract conformance: every 2xx body validated against `openapi.yaml` at run time) |
 
 ## What runs
 
@@ -28,7 +28,7 @@ the separate step DEC-014 requires. Verified against a fresh file: four tables, 
 triggers, one tenant, and a second run that reports the tenant already exists.
 
 `.NET build and test` runs on every pull request and push to this branch: restore, build
-with `-warnaserror`, then the 34 tests. That is the gate which makes `LayerDependencyTests`
+with `-warnaserror`, then the 36 tests. That is the gate which makes `LayerDependencyTests`
 real — the only automated guard on ADR-025's dependency rule, and previously the thing
 nothing ran. Warnings are errors on purpose: a known-vulnerable dependency should not merge
 quietly, and the answer to a new advisory is a version bump rather than a suppression.

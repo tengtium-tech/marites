@@ -62,6 +62,16 @@ Every case is `Planned`. None has been written, and no result exists. A case ass
 | TC-026 | Integration | M3 | With no provider configured the drawer transmits nothing; configured, an answer cites a queue and a count; a replay asked for in the drawer executes only under `CanExecute` and is audited against the signed-in user with `via`; a Viewer cannot open it | FR-026 |
 | TC-028 | Integration | M1 | With the database made read-only, a discard returns `ERR-OPR-007` and the message is still on the broker; with the process killed between the acknowledgement and the audit write, restart reconciliation produces exactly one audit row for the operation; a command the broker rejects leaves an `abandoned` intent and no success row | FR-028 |
 | TC-029 | Integration | M2 | Compaction of one window run twice leaves every column identical to a single pass; the process is killed mid-transaction on three consecutive runs, and each restart leaves the window either untouched or at the correct totals — never at a partial sum; a read committed between the two halves of the transaction never sees a finer tier that is partly deleted | FR-029 |
+### Executed cases
+
+A case moves out of `Planned` only when a run is recorded against it. Two are recorded here.
+
+| Case | Evidence | Date | Scope of the evidence |
+|---|---|---|---|
+| **TC-001** | `Marites.ApiTests.ContractConformanceTests` — loads `openapi.yaml` at run time and validates every 2xx body against the component schema it declares, covering `/capabilities` and the broker operations | 2026-11-12 | **Partial.** Two of the three clauses are proven: documented statuses, and 2xx bodies validating against the contract. The third — that generated-client tooling preserves the deferred `QUERY` operation when promoted — is not: the operation is still deferred, and the React-side check is tracked in issue #37. TC-001 stays short of fully executed until that clause runs |
+
+**TC-005 remains `Planned`, and cannot be run yet.** It requires a broker profile created, read, updated and deleted *against a real broker*, plus preflight returning a remedy per failing check. No adapter and no preflight exist, so there is nothing to run it against. It becomes runnable after WP-M0-6 and a test broker; marking it executed before then would record evidence that does not exist.
+
 | TC-027 | Integration | M1 | A purge of 10 messages yields 10 evidence rows with their bodies; an edited replay returns `payloadBefore` and `payloadAfter`, and its audit row reports `payloadEdited` while an unedited replay's does not; a single-message replay returns its body whole, byte for byte; a peek returns what it showed; after the evidence retention lapses the call returns `ERR-AUD-001` while `payloadHash` and `payloadEdited` survive; a queue with 3-day row retention still holds its discard evidence at day 30, and a queue with 200-day row retention holds it at day 120; beyond the row bound `payloadTruncated` is true | FR-027 |
 
 ## 3. Milestone gates

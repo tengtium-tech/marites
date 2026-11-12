@@ -15,7 +15,8 @@ namespace Marites.ApiTests;
 /// in sequence: the fixture sets process-wide environment variables, so parallel classes would
 /// race for the same database.
 /// </summary>
-public sealed class BrokerApiTests : IClassFixture<BrokerApiFixture>
+[Collection(ApiCollection.Name)]
+public sealed class BrokerApiTests
 {
     private readonly BrokerApiFixture _fixture;
 

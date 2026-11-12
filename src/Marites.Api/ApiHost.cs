@@ -5,6 +5,7 @@ using Marites.Application.Security;
 using Marites.Infrastructure.Bookkeeping;
 using Marites.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,6 +32,12 @@ public static class ApiHost
 
         var bookkeepingPath = Environment.GetEnvironmentVariable("MARITES_BOOKKEEPING_PATH")
             ?? "./data/marites.db";
+
+        // The contract declares optional properties as `type: string`, and JSON Schema treats
+        // null as a different type — so a null-serialised optional field is a contract
+        // violation, not a harmless blank. Omit absent values rather than sending null.
+        builder.Services.ConfigureHttpJsonOptions(options =>
+            options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull);
 
         builder.Services.AddDbContext<BookkeepingDbContext>(options =>
             options.UseSqlite($"Data Source={Path.GetFullPath(bookkeepingPath)}"));
