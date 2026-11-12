@@ -44,9 +44,10 @@ Marites creates this store. Its nine current records are migrated independently 
 | `sqlite/0007_operation_audit` | `operation_audit` | Append-only; runtime may insert/read, never update/delete |
 | `sqlite/0008_operation_payload` | `operation_payload` | Evidence body rows and expiry index |
 | `sqlite/0009_operation_intent` | `operation_intent` | ADR-023 durable hold and reconciliation index |
-| `sqlite/0010_domain_event_outbox` | `domain_event_outbox` | Planned only; add before enabling a named integration sink. Aggregate and event envelope commit together. |
+| `sqlite/0010_idempotency_key` | `idempotency_key` | Recorded command outcomes, swept after 24 hours |
+| `sqlite/0011_domain_event_outbox` | `domain_event_outbox` | Planned only; add before enabling a named integration sink. Aggregate and event envelope commit together. |
 
-The first nine steps create the current bookkeeping schema. Step 10 remains conditional until a subscriber/sink is selected. The dispatcher leases pending rows, delivers at least once, retries transient failures with bounded backoff, and retains poison events for operator action. The Outbox does not replace `operation_intent` and no event is published until the sink is configured.
+The first ten steps create the current bookkeeping schema. Step 11 remains conditional until a subscriber/sink is selected. The dispatcher leases pending rows, delivers at least once, retries transient failures with bounded backoff, and retains poison events for operator action. The Outbox does not replace `operation_intent` and no event is published until the sink is configured.
 
 ### 2.2 Adopter message store
 

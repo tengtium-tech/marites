@@ -222,6 +222,57 @@ namespace Marites.Infrastructure.Bookkeeping.Migrations
                     b.ToTable("broker_profile", (string)null);
                 });
 
+            modelBuilder.Entity("Marites.Domain.Idempotency.IdempotencyKey", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("key");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("operation");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("request_hash");
+
+                    b.Property<string>("ResponseJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("response_json");
+
+                    b.Property<int>("ResponseStatus")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("response_status");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("TenantId", "Key", "Operation")
+                        .IsUnique();
+
+                    b.ToTable("idempotency_key", (string)null);
+                });
+
             modelBuilder.Entity("Marites.Domain.Tenancy.Tenant", b =>
                 {
                     b.Property<string>("Id")
