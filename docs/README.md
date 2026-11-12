@@ -40,7 +40,7 @@ For a first read: [requirements](02-business/requirements.md) §2, then the [thr
 | Verification | Approved plan only: 30 cases, 8 gates, 0 executed — [verification plan](10-testing/verification-plan.md) |
 | Traceability | Approved — all 29 FRs, 8 NFRs and 25 API operations link to owning specifications and planned cases |
 | Security | Approved design. 26 threats; six planned cases cover ten, six stated residuals; no penetration test |
-| Application code and tests | Not started; no implementation exists |
+| Implementation status | Not recorded here. `main` holds the specification; each stack branch records what it has built in its own `STATUS.md` |
 
 ## Authority and interpretation
 
