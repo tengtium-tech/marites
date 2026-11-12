@@ -29,6 +29,20 @@ python docs/05-architecture/diagrams/build.py docs/07-data-and-contracts/diagram
 
 The message store keeps three traffic tables. Its `tenant_id`, `broker_profile_id` and `queue_ref_id` values identify records in the SQLite bookkeeping store; they are logical references, not database foreign keys across stores.
 
+### SQLite physical mapping
+
+SQLite has no native `uuid`, `datetime` or boolean, so the mapping is fixed here rather than decided per table ([DEC-020](../01-project/decisions-and-open-questions.md)). The message store's columns follow their engine's types and are unaffected.
+
+| Logical type | Stored as | Note |
+|---|---|---|
+| `Guid` | `TEXT`, 36 characters, lowercase hyphenated | `BLOB` would save 20 bytes per key and cost every incident where someone reads the file directly |
+| Timestamp (UTC) | `TEXT`, ISO-8601 with 7 fractional digits | Sorts lexicographically, which is what every range query relies on |
+| Boolean | `INTEGER`, 0 or 1 | The only boolean SQLite has |
+| JSON | `TEXT` | No `JSONB`; `json_each` covers the few columns that need it |
+| Binary | `BLOB` | Payload evidence bodies |
+
+Schema creation is EF Core migrations, applied as a separate step, so `__EFMigrationsHistory` records what has been applied and [the migration plan](migration-plan.md) §2.1 records what was intended.
+
 ## 1. `tenant`
 
 The isolation boundary. One row per team inside one organisation (ADR-014), not per customer.

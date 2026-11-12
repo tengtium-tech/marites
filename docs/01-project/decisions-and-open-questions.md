@@ -47,6 +47,7 @@ status: Approved — Product owner, 2026-11-11
 | DEC-017 | Does the audit keep the message payload? | M1 — audit design | **Answered** |
 | DEC-018 | Is the audit's payload evidence complete or sampled? | M1 — audit design | **Answered** — supersedes DEC-017's sampling rule |
 | DEC-019 | Is an operation — hold, command, record — atomic? | M1 — operations | **Answered** — no, and the two invariants that replace it |
+| DEC-020 | How is the bookkeeping store built — engine, access layer, migrations, type mapping? | M0 — store shape | **Answered** — SQLite, EF Core, EF migrations as a separate step, fixed type mapping |
 
 ---
 
@@ -653,9 +654,41 @@ The `max` matters in both directions. Evidence never expires before the messages
 
 ---
 
+## DEC-020 — How the bookkeeping store is built
+
+**Status:** **Answered** November 2026 — SQLite confirmed; EF Core, EF migrations, and a stated type mapping · **Was constraining:** M0
+
+**The question, in plain terms.** The store is embedded SQLite ([ADR-022](../05-architecture/decisions.md)), and that is settled. But three things were not: what writes to it, how its schema is created, and how a `Guid` or a timestamp is actually stored. Every migration that follows depends on the answer, so building one before answering would have set the shape by accident.
+
+**Answer: keep SQLite, use EF Core, create the schema with EF migrations, and write the type mapping down.**
+
+**1. The engine does not change.** Moving the bookkeeping store to PostgreSQL was considered and rejected. It would have cost the install story that [NFR-006](../02-business/requirements.md) and [DEC-016](#dec-016--running-without-storage) rest on: today an adopter can run Marites with no database at all and still recover messages. Every install — including the evaluation install — would need a PostgreSQL, which is the outcome ADR-022 exists to prevent. The discomfort that prompted the question is real, but it belongs to the tooling, not to SQLite.
+
+**2. Access is EF Core, with the SQLite provider.** Bookkeeping aggregates and configuration go through `Microsoft.Data.Sqlite` under EF Core; Dapper remains available for flat read projections, as [ADR-025](../05-architecture/decisions.md) allows. The capture path is untouched: it writes to the message store through binary `COPY` ([ADR-011](../05-architecture/decisions.md)), and nothing here reaches it.
+
+**3. The schema is created by EF migrations, applied as a separate step.** This exercises the freedom [the migration plan](../07-data-and-contracts/migration-plan.md) §2 already grants — "the concrete migration tool remains an implementation choice" — and the logical step names in §2.1 are used as the migration names so the plan stays readable.
+
+**DEC-014's reason does not carry over, and this is the part worth remembering.** DEC-014 chose a separate step because the runtime credential holds no DDL, so migrating at startup would force it to hold `CREATE`. **SQLite has no roles** — one file, one credential — so that argument evaporates. The separate step survives for the other reason in the same table: a deploy that migrates at startup and then fails leaves a half-migrated schema being served, while a separate step stops before the application starts. Same answer, different justification. Anyone citing least privilege for the SQLite store is citing something that does not apply to it.
+
+**4. The type mapping is now written down**, because SQLite has no native `uuid` or `datetime` and "unspecified" means every table invents its own convention:
+
+| Logical type | Stored as | Why |
+|---|---|---|
+| `Guid` | `TEXT`, 36 characters, lowercase hyphenated | Readable in a SQLite browser during an incident; `BLOB` saves 20 bytes per key and costs every debugging session |
+| Timestamp (UTC) | `TEXT`, ISO-8601 with 7 fractional digits | Sorts lexicographically, which is how every range query compares it; an integer epoch would need conversion at every read |
+| Boolean | `INTEGER`, 0 or 1 | The only boolean SQLite has |
+| JSON | `TEXT` | No `JSONB`; `json_each` is enough for the handful of columns that need it |
+| Binary | `BLOB` | Payload evidence bodies |
+
+**What this changes.** `__EFMigrationsHistory` becomes the record of what was applied, which is a second place to look alongside [the migration plan](../07-data-and-contracts/migration-plan.md) §2.1 — the plan stays the intent, the history table stays the fact.
+
+**Resolution owner:** technical. **Recorded in:** [data dictionary](../07-data-and-contracts/data-dictionary.md) §Schema view (type mapping); [migration plan](../07-data-and-contracts/migration-plan.md) §2, §2.1; ADR-022, ADR-025 and ADR-011 stand unchanged.
+
+---
+
 ## Document control
 
-Revision 0.1 records nineteen questions; **all nineteen are answered.** No decision is open, and none blocks M0. The register is closed: the specification is complete, so a question that is not recorded here is a question the product does not ask. Anything the set does not mention is out of scope by [requirements §1](../02-business/requirements.md), and adding a behaviour to the product means opening a decision here first. DEC-009 was added in November 2026 when the repository was prepared for publication.
+Revision 0.1 records nineteen questions; **all nineteen are answered.** DEC-020 was added in November 2026 while scoping WP-M0-3, and the register now holds twenty. No decision is open, and none blocks M0. The register is closed: the specification is complete, so a question that is not recorded here is a question the product does not ask. Anything the set does not mention is out of scope by [requirements §1](../02-business/requirements.md), and adding a behaviour to the product means opening a decision here first. DEC-009 was added in November 2026 when the repository was prepared for publication.
 
 | ID | Answer | Closed |
 |---|---|---|
@@ -678,5 +711,6 @@ Revision 0.1 records nineteen questions; **all nineteen are answered.** No decis
 | DEC-017 | The audit keeps payload evidence in a separate store, never inside the audit row — and it expires on its own clock, `max(row retention, the evidence retention)`, because it is Marites' record rather than the adopter's traffic | November 2026 |
 | DEC-018 | Evidence is complete, not sampled: one row per message, `before` and `after` for replay, truncated at a stated bound | November 2026 |
 | DEC-019 | An operation is not atomic across the broker and the store: the bodies are held durably first, the audit row is written only after the broker confirms, and reconciliation closes the one window | November 2026 |
+| DEC-020 | The bookkeeping store stays SQLite; EF Core with the Sqlite provider writes it, EF migrations create it as a separate step, and `Guid`/timestamp/JSON storage is fixed rather than left to each table | November 2026 |
 
 New questions get a new identifier. An answered decision is not reopened — it is superseded by a later one, with both retained.

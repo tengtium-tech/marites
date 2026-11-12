@@ -213,6 +213,6 @@ Designed verification exists as named cases; no test has been written, no code e
 
 ## 8. Document control
 
-Revision 0.2 records the initial requirement set and the complete requirement-to-specification crosswalk. Priorities assume the MVP boundary in DOC-OPS-001 §6. All nineteen decisions in [DECISION-LOG](../01-project/decisions-and-open-questions.md) are answered; none blocks M0.
+Revision 0.2 records the initial requirement set and the complete requirement-to-specification crosswalk. Priorities assume the MVP boundary in DOC-OPS-001 §6. All twenty decisions in [DECISION-LOG](../01-project/decisions-and-open-questions.md) are answered; none blocks M0.
 
 *Amended November 2026:* acceptance criteria added for every FR (§3.1) and NFR (§4.1), each with one outcome and a milestone; §7 now cites planned test cases rather than reading "not yet designed". **NFR-008 (accessibility) added**, because both surfaces are used under incident pressure and keyboard-only operation was recorded as a gap in the experience section with no requirement behind it. No existing requirement changed text or priority.
