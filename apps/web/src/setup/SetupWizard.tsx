@@ -119,15 +119,17 @@ export function SetupWizard() {
                 ))}
               </ul>
 
-              {/* The acceptance criterion: a failing preflight blocks enabling, not saving. */}
-              <button type="button" disabled={!passing} title={passing ? undefined : 'Preflight must pass before capture can be enabled'}>
-                Enable capture
-              </button>
-              {!passing && (
-                <p style={{ color: '#8a4b00' }}>
-                  Capture stays disabled until preflight passes. The profile is saved, so it can be corrected.
-                </p>
-              )}
+              {/*
+                No control here, deliberately. Capture is enabled by a capture policy, which the
+                contract defers to M2, and rendering a button that cannot act is the failure
+                /capabilities exists to prevent (ADR-017). The rule is still enforced where it
+                belongs: a profile cannot be captured until preflight passes.
+              */}
+              <p style={{ color: passing ? '#2e7d32' : '#8a4b00' }}>
+                {passing
+                  ? 'Preflight passed. Capture can be enabled once capture policies arrive (M2).'
+                  : 'Capture cannot be enabled until preflight passes. The profile is saved, so it can be corrected.'}
+              </p>
             </>
           )}
         </section>
