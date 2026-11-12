@@ -26,10 +26,16 @@ Last reviewed: 2026-11-12 · Documentation baseline: 1.0
 the separate step DEC-014 requires. Verified against a fresh file: four tables, two
 triggers, one tenant, and a second run that reports the tenant already exists.
 
-OpenAPI contract validation and the docs sync, both inherited from `main`.
+`.NET build and test` runs on every pull request and push to this branch: restore, build
+with `-warnaserror`, then the 26 tests. That is the gate which makes `LayerDependencyTests`
+real — the only automated guard on ADR-025's dependency rule, and previously the thing
+nothing ran. Warnings are errors on purpose: a known-vulnerable dependency should not merge
+quietly, and the answer to a new advisory is a version bump rather than a suppression.
 
-**No build or test job.** `dotnet build` and `dotnet test` have never run in CI, so the 26
-tests pass only when someone runs them. That is still the largest gap on this branch.
+`global.json` pins the SDK to the 10.0 feature band with `rollForward: latestFeature`, so a
+runner image update cannot change the toolchain underneath a green build.
+
+OpenAPI contract validation and the docs sync, both inherited from `main`.
 
 ## What has not happened
 
@@ -40,6 +46,5 @@ next package. No requirement in `docs/02-business/requirements.md` is met.
 
 ## Next
 
-A `dotnet` workflow that restores, builds and runs the tests on every push to this branch —
-without it the tests are a local habit rather than a gate. Then broker CRUD (#45), which the
-store now unblocks, and which is what finally calls the credential protector.
+Broker CRUD (#45). It is the first caller of the credential protector, which is currently
+tested but unused, and the first package whose operations the frontend can gate on.

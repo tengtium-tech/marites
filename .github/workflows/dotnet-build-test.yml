@@ -1,0 +1,48 @@
+name: .NET build and test
+
+# The gate that makes the tests real. Without it, LayerDependencyTests — the only automated
+# guard on ADR-025's dependency rule — runs only when someone remembers.
+#
+# Warnings are errors. The build sits at zero today, and it was at twelve when a vulnerable
+# transitive package arrived; failing that build is the point, not an inconvenience. The cost
+# is that a newly published advisory can fail a pull request that changed no dependency, and
+# the answer to that is a version bump rather than a suppression.
+
+on:
+  pull_request:
+    branches:
+      - csharp
+  push:
+    branches:
+      - csharp
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dotnet-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Marites.slnx
+
+      - name: Build
+        run: dotnet build Marites.slnx --no-restore --configuration Release -warnaserror
+
+      - name: Test
+        run: dotnet test Marites.slnx --no-build --configuration Release --logger "console;verbosity=normal"
