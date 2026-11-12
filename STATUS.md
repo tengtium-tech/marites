@@ -12,7 +12,8 @@ Last reviewed: 2026-11-12 · Documentation baseline: 1.0
 |---|---|
 | Solution | `Marites.slnx`, seven projects under `src/`, two test projects under `tests/` |
 | Layers | `Domain`, `Application`, `Infrastructure`, `Api` — the four layers of ADR-025, with `Contracts` and `Worker` alongside |
-| API | **Six served operations**: `GET /api/v1/capabilities` (OP-CAP-001) and broker CRUD — `listBrokers`, `createBroker`, `getBroker`, `updateBroker`, `deleteBroker` (OP-BRK-001…005). `/capabilities` now reports `brokers`, because it is true; `providerKinds` stays empty until an adapter exists |
+| API | **Seven served operations**: `GET /api/v1/capabilities` (OP-CAP-001), broker CRUD — `listBrokers`, `createBroker`, `getBroker`, `updateBroker`, `deleteBroker` (OP-BRK-001…005) and `POST /brokers/{id}/preflight` (OP-BRK-006). `/capabilities` now reports `brokers`, because it is true; `providerKinds` stays empty until an adapter exists |
+| Preflight | Six contract check ids always returned. Three run against the management API — reachability, vhost visibility, topology-write permission; three report `skipped` with a reason. Verified `passing` against the local RabbitMQ stack, and `failing` with a remedy when a grant was absent |
 | Broker API behaviour | Strong ETags (`"3"`), `If-Match` required on update (428 without it, 409 with a stale one, `ERR-CMN-006`), `Idempotency-Key` required on every command (400 without it, replay of the first answer on repeat, `ERR-CMN-005` if the same key carries a different request), and endpoint credentials redacted on read |
 | Ports | `ProviderPorts` declares the broker seams in `Application`. No adapter implements them |
 | Capture | `CaptureWorker` and `WorkerHost` exist as entrypoints. No consume loop |
