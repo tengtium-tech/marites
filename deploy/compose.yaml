@@ -1,0 +1,62 @@
+# The M0 deployment: one UI against a test broker, with no adopter-supplied database.
+#
+# Two services, not one. The API and the web bundle live on different branches (`csharp` and
+# `react`), so no single build context contains both — the topology follows the repository
+# rather than fighting it. TC-004 said "one container" before the stack split existed; the
+# criterion is amended in the same change.
+#
+# Build contexts point at the sibling worktrees, which is how this repository is laid out
+# locally. Publishing both images from CI and referencing them by tag is the adopter-facing
+# path, and is not built yet.
+
+name: marites
+
+services:
+  api:
+    build:
+      context: ../marites-csharp
+      dockerfile: deploy/Dockerfile.api
+    environment:
+      # Required from first start: the service refuses to boot without it (configuration §1).
+      MARITES_KEK: ${MARITES_KEK:?MARITES_KEK must be set — generate 32 random bytes, base64-encoded}
+      MARITES_BOOKKEEPING_PATH: /app/data/marites.db
+      MARITES_LISTEN: 0.0.0.0:8080
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+    volumes:
+      - marites-data:/app/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/v1/capabilities || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  web:
+    build:
+      context: ../marites-react/apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # The test broker. In a real deployment the adopter supplies this; here it exists so the
+  # stack can be brought up on a clean host and exercised end to end.
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: marites
+      RABBITMQ_DEFAULT_PASS: marites
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  marites-data:

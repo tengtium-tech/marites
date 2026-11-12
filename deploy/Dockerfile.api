@@ -1,0 +1,26 @@
+# The API image. Built from the csharp branch, which carries src/ and no web app — the web
+# service is its own image, because the two stacks live on different branches and a single
+# build context cannot contain both.
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY Marites.slnx ./
+COPY src/ src/
+COPY tests/ tests/
+RUN dotnet restore Marites.slnx
+RUN dotnet publish src/Marites.Host/Marites.Host.csproj -c Release -o /app --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+# The bookkeeping store lives here; compose mounts a named volume over it so a restart does
+# not reseed and a fresh volume is created by `migrate` before `api` starts.
+RUN mkdir -p /app/data && chown -R $APP_UID /app/data
+
+COPY --from=build /app .
+
+USER $APP_UID
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "Marites.Host.dll"]
