@@ -1,0 +1,89 @@
+name: Sync shared docs into stack branches
+
+# `main` owns the specification. Every stack branch carries a copy of `docs/`, so a change
+# merged to `main` has to reach `csharp`, `react` and `react-csharp` or the copies diverge —
+# and the copy that drifts is always the one someone reads.
+#
+# This workflow does that synchronising mechanically. It merges `main` into each stack branch
+# and pushes only when the branch is behind. A conflict is not resolved automatically: the job
+# fails and names the branch, because a conflict means someone edited shared behaviour on a
+# stack branch and that is a classification decision, not a merge to be guessed at.
+#
+# The push uses GITHUB_TOKEN, and a push made with GITHUB_TOKEN does not trigger further
+# workflow runs, so this cannot loop.
+#
+# If a stack branch is protected, the push is rejected and the job fails. Either allow this
+# workflow to bypass the rule or supply a token that may — do not disable the job, because a
+# silent skip is the same as no sync at all.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - csharp
+          - react
+          - react-csharp
+
+    steps:
+      - name: Check out the stack branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.target }}
+          fetch-depth: 0
+
+      - name: Configure the sync identity
+        run: |
+          git config user.name "marites-docs-sync"
+          git config user.email "docs-sync@users.noreply.github.com"
+
+      - name: Merge main
+        id: merge
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "${{ matrix.target }} already contains every commit on main."
+            exit 0
+          fi
+
+          if git merge --no-edit origin/main; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Merged main into ${{ matrix.target }}."
+          else
+            git merge --abort || true
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "::error title=Docs sync conflict::${{ matrix.target }} has its own changes to shared documents. Merging main conflicts, so nothing was pushed. Resolve it on that branch by hand, then re-run this workflow."
+            exit 1
+          fi
+
+      - name: Push the merged branch
+        if: steps.merge.outputs.changed == 'true'
+        run: |
+          git push origin HEAD:${{ matrix.target }}
+          echo "::notice title=Synced::${{ matrix.target }} is now level with main."
+
+      - name: Report a no-op
+        if: steps.merge.outputs.changed != 'true'
+        run: echo "::notice title=No change::${{ matrix.target }} needed no sync."
