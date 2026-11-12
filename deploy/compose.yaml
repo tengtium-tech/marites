@@ -25,10 +25,15 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-    # No healthcheck. The aspnet base image ships neither wget nor curl, so a probe written
-    # with either marks a working container unhealthy and blocks everything downstream. The
-    # web service starts as soon as the container does and answers 502 until the API is up,
-    # which is an honest transient rather than a false failure.
+    healthcheck:
+      # /ready on the admin listener, which is inside the container and not published. It
+      # answers 503 until the bookkeeping store is reachable, so this waits for readiness
+      # rather than for the process to exist.
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9090/ready >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
   web:
     build:
@@ -38,7 +43,7 @@ services:
       - "8081:80"   # 8080 is often already taken by a local `dotnet run`
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy
 
   # The test broker. In a real deployment the adopter supplies one; here it exists so the
   # stack can be brought up on a clean host and exercised end to end.
