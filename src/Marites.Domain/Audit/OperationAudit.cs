@@ -54,4 +54,41 @@ public sealed class OperationAudit
     public DateTimeOffset CreatedAt { get; private set; }
 
     public string? Ip { get; private set; }
+
+    public static OperationAudit Record(
+        Guid tenantId,
+        string action,
+        string target,
+        string result,
+        DateTimeOffset now,
+        Guid? actorId = null,
+        string actorKind = "human",
+        int? messageCount = null,
+        string? payloadHash = null,
+        bool payloadEdited = false,
+        string? via = null,
+        string paramsJson = "{}")
+    {
+        if (string.IsNullOrWhiteSpace(action))
+        {
+            throw new ArgumentException("An audit row needs an action.", nameof(action));
+        }
+
+        return new OperationAudit
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ActorId = actorId,
+            ActorKind = actorKind,
+            Action = action,
+            Target = target,
+            ParamsJson = paramsJson,
+            Result = result,
+            MessageCount = messageCount,
+            PayloadHash = payloadHash,
+            PayloadEdited = payloadEdited,
+            Via = via,
+            CreatedAt = now.ToUniversalTime(),
+        };
+    }
 }

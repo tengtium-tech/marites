@@ -59,15 +59,32 @@ static async Task<int> MigrateAsync()
         .Options;
 
     await using var context = new BookkeepingDbContext(options);
-    var migrator = new BookkeepingMigrator(context);
-    var seeded = await migrator.MigrateAndSeedAsync("Default", "default", DateTimeOffset.UtcNow);
 
-    Console.WriteLine(
-        seeded
-            ? $"Bookkeeping store ready at {fullPath}; seeded the default tenant."
-            : $"Bookkeeping store ready at {fullPath}; a tenant already exists.");
+    try
+    {
+        var migrator = new BookkeepingMigrator(context);
+        var seeded = await migrator.MigrateAndSeedAsync("Default", "default", DateTimeOffset.UtcNow);
 
-    return 0;
+        Console.WriteLine(
+            seeded
+                ? $"Bookkeeping store ready at {fullPath}; seeded the default tenant."
+                : $"Bookkeeping store ready at {fullPath}; a tenant already exists.");
+
+        return 0;
+    }
+    catch (Exception error) when (error is not OutOfMemoryException)
+    {
+        // The store is required, so an unusable one stops the process rather than starting a
+        // service that will fail every request. The message names the path and the reason,
+        // because "unable to open database file" alone sends people looking in the wrong place.
+        Console.Error.WriteLine(
+            $"The bookkeeping store at {fullPath} could not be prepared: {error.Message}");
+        Console.Error.WriteLine(
+            "It is required: there is no audit without it, and no recovery without an audit.");
+
+        return 1;
+    }
+
 }
 
 /// <summary>
