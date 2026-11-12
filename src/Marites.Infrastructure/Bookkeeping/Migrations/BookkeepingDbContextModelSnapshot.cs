@@ -53,6 +53,87 @@ namespace Marites.Infrastructure.Bookkeeping.Migrations
                     b.ToTable("app_user", (string)null);
                 });
 
+            modelBuilder.Entity("Marites.Domain.Audit.OperationAudit", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("action");
+
+                    b.Property<string>("ActorId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("actor_id");
+
+                    b.Property<string>("ActorKind")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("actor_kind");
+
+                    b.Property<string>("CreatedAt")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Ip")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ip");
+
+                    b.Property<int?>("MessageCount")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("message_count");
+
+                    b.Property<string>("OnBehalfOf")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("on_behalf_of");
+
+                    b.Property<string>("ParamsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("params_json");
+
+                    b.Property<long>("PayloadEdited")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("payload_edited");
+
+                    b.Property<string>("PayloadHash")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payload_hash");
+
+                    b.Property<string>("ProposalId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("proposal_id");
+
+                    b.Property<string>("Result")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("result");
+
+                    b.Property<string>("Target")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("target");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Via")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("via");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CreatedAt");
+
+                    b.ToTable("operation_audit", (string)null);
+                });
+
             modelBuilder.Entity("Marites.Domain.Brokers.BrokerProfile", b =>
                 {
                     b.Property<string>("Id")

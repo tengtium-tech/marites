@@ -2,7 +2,7 @@ using Marites.Domain.Tenancy;
 using Marites.Infrastructure.Bookkeeping;
 using Microsoft.EntityFrameworkCore;
 
-namespace Marites.BookkeepingTests;
+namespace Marites.InfrastructureTests;
 
 /// <summary>
 /// The store's two promises: migrations create the schema, and a value that goes in comes out
@@ -61,6 +61,29 @@ public sealed class BookkeepingStoreTests
         Assert.Equal(tenant.Id.ToString("D"), rawId);
         Assert.Equal("2026-11-12T08:30:15.1234567Z", rawCreatedAt);
         Assert.Equal(36, rawId.Length);
+    }
+
+    [Fact]
+    public void The_audit_table_refuses_update_and_delete()
+    {
+        using var store = new TemporaryStore();
+        using var context = store.CreateContext();
+        context.Database.Migrate();
+
+        context.Database.ExecuteSqlRaw(
+            "insert into operation_audit (id, tenant_id, actor_kind, action, target, params_json, result, payload_edited, created_at) " +
+            "values ('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002','human','peek','orders',{0},'ok',0,'2026-11-12T00:00:00.0000000Z')",
+            // Passed as a parameter because ExecuteSqlRaw treats braces in the SQL as format items.
+            "{}");
+
+        // Append-only is a property of the schema, not of the repository that happens to use it.
+        var update = Assert.Throws<Microsoft.Data.Sqlite.SqliteException>(
+            () => context.Database.ExecuteSqlRaw("update operation_audit set result = 'tampered'"));
+        Assert.Contains("append-only", update.Message);
+
+        var delete = Assert.Throws<Microsoft.Data.Sqlite.SqliteException>(
+            () => context.Database.ExecuteSqlRaw("delete from operation_audit"));
+        Assert.Contains("append-only", delete.Message);
     }
 
     private sealed class TemporaryStore : IDisposable

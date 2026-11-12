@@ -1,5 +1,6 @@
 using System.Globalization;
 using Marites.Domain.Access;
+using Marites.Domain.Audit;
 using Marites.Domain.Brokers;
 using Marites.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,8 @@ public sealed class BookkeepingDbContext : DbContext
     public DbSet<AppUser> AppUsers => Set<AppUser>();
 
     public DbSet<BrokerProfile> BrokerProfiles => Set<BrokerProfile>();
+
+    public DbSet<OperationAudit> OperationAudits => Set<OperationAudit>();
 
     /// <summary>36-character lowercase hyphenated, so a value read in a SQLite browser is legible.</summary>
     public static readonly ValueConverter<Guid, string> GuidToText = new(
@@ -101,6 +104,31 @@ public sealed class BookkeepingDbContext : DbContext
             profile.Property(p => p.Revision).HasColumnName("revision").IsRequired();
 
             profile.HasIndex(p => new { p.TenantId, p.Name }).IsUnique();
+        });
+
+        modelBuilder.Entity<OperationAudit>(audit =>
+        {
+            audit.ToTable("operation_audit");
+            audit.HasKey(a => a.Id);
+
+            audit.Property(a => a.Id).HasColumnName("id").HasConversion(GuidToText);
+            audit.Property(a => a.TenantId).HasColumnName("tenant_id").HasConversion(GuidToText);
+            audit.Property(a => a.ActorId).HasColumnName("actor_id").HasConversion(GuidToText);
+            audit.Property(a => a.ActorKind).HasColumnName("actor_kind").IsRequired();
+            audit.Property(a => a.OnBehalfOf).HasColumnName("on_behalf_of").HasConversion(GuidToText);
+            audit.Property(a => a.ProposalId).HasColumnName("proposal_id").HasConversion(GuidToText);
+            audit.Property(a => a.Action).HasColumnName("action").IsRequired();
+            audit.Property(a => a.Target).HasColumnName("target").IsRequired();
+            audit.Property(a => a.ParamsJson).HasColumnName("params_json").IsRequired();
+            audit.Property(a => a.Result).HasColumnName("result").IsRequired();
+            audit.Property(a => a.MessageCount).HasColumnName("message_count");
+            audit.Property(a => a.PayloadHash).HasColumnName("payload_hash");
+            audit.Property(a => a.PayloadEdited).HasColumnName("payload_edited").HasConversion(BooleanToInteger);
+            audit.Property(a => a.Via).HasColumnName("via");
+            audit.Property(a => a.CreatedAt).HasColumnName("created_at").HasConversion(TimestampToText);
+            audit.Property(a => a.Ip).HasColumnName("ip");
+
+            audit.HasIndex(a => new { a.TenantId, a.CreatedAt });
         });
     }
 }
