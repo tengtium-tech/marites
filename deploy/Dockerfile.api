@@ -23,4 +23,7 @@ COPY --from=build /app .
 USER $APP_UID
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "Marites.Host.dll"]
+# migrate before api, in the same container. A fresh volume has no schema, so starting the
+# API first means the first request fails. The migration must also stop the container if it
+# fails: a half-migrated service is worse than a stopped one.
+ENTRYPOINT ["sh", "-c", "dotnet Marites.Host.dll migrate && exec dotnet Marites.Host.dll api"]
