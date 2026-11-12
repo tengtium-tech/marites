@@ -11,7 +11,33 @@ type SaveState =
 
 const newIdempotencyKey = () => crypto.randomUUID();
 
+type Capabilities = { features: string[] };
+
 export function SetupWizard() {
+  // What the backend says it can do, asked before anything is offered. Rendering a form the
+  // API cannot honour is the failure /capabilities exists to prevent (ADR-017) — and it is
+  // invisible from the frontend until a request 404s.
+  const [capabilities, setCapabilities] = useState<Capabilities | null>(null);
+  const [capabilitiesFailed, setCapabilitiesFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch('/api/v1/capabilities')
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
+      .then((body: Capabilities) => {
+        if (!cancelled) setCapabilities(body);
+      })
+      .catch(() => {
+        if (!cancelled) setCapabilitiesFailed(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+
   const [form, setForm] = useState({
     name: '',
     providerKind: 'rabbitmq',
@@ -82,6 +108,36 @@ export function SetupWizard() {
   }
 
   const passing = state.kind === 'saved' && state.preflight?.state === 'passing';
+
+  // Nothing renders until the answer arrives: a form that appears and then withdraws is worse
+  // than a moment of blank, because the user has already started typing.
+  if (capabilities === null && !capabilitiesFailed) {
+    return <main aria-busy="true" />;
+  }
+
+  if (capabilitiesFailed) {
+    return (
+      <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 720, margin: '0 auto', padding: 32 }}>
+        <h1 style={{ fontSize: 24 }}>Connect a broker</h1>
+        <p role="alert" style={{ color: '#b00020' }}>
+          The backend could not be reached, so its capabilities are unknown. Nothing is offered
+          until they are: a control that cannot work is worse than no control.
+        </p>
+      </main>
+    );
+  }
+
+  if (!capabilities!.features.includes('brokers')) {
+    return (
+      <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 720, margin: '0 auto', padding: 32 }}>
+        <h1 style={{ fontSize: 24 }}>Connect a broker</h1>
+        <p role="alert" style={{ color: '#8a4b00' }}>
+          This backend does not report broker management as available, so the form is not shown.
+          Its capabilities are: {capabilities!.features.length ? capabilities!.features.join(', ') : 'none'}.
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 720, margin: '0 auto', padding: 32 }}>
