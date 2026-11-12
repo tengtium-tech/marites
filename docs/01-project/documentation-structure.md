@@ -52,7 +52,7 @@ Call the documentation complete for the planned system only after:
 - Identity, audit, reliable capture, security, operations and delivery requirements have explicit owners and verification.
 - Review status, implementation evidence, executed tests and deployment results are distinguishable. Neither a folder count nor a rendered diagram proves any of them.
 
-The project owner approved the documentation baseline against these coverage criteria on 2026-11-11. This approval covers the described planned system, assumptions, deferred scope and risks; no application code, test execution or deployment exists.
+The project owner approved the documentation baseline against these coverage criteria on 2026-11-11. This approval covers the described planned system, assumptions, deferred scope and risks; no test execution or deployment exists. Implementation lives on the stack branches and is reported there, not in this set.
 
 ## Maintenance
 
