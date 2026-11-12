@@ -53,7 +53,7 @@ Status is always one of:
 | Controlled | Single source for the values it holds; changes require amendment first |
 | Superseded | Retained for history; not authority |
 
-**Approved is the highest status this set uses, and it is not a claim that anything works.** It records that the owner accepted a Reviewed baseline; no application code exists, no case has been executed, and no deployment has been performed.
+**Approved is the highest status this set uses, and it is not a claim that anything works.** It records that the owner accepted a Reviewed baseline; no verification case has been executed and no deployment has been performed. Implementation status is deliberately absent: where code exists on a stack branch, that branch's `STATUS.md` says so, and this set neither claims nor denies it.
 
 **Baseline and revision are different numbers.** Each document carries its own `version`, which records how often that document changed. The set carries one **baseline**, stated in the [documentation index](../README.md) and the [root readme](../../README.md) — 1.0 at this freeze. A document at revision 0.2 inside baseline 1.0 is not a contradiction: the first says how many times the file changed, the second says which snapshot the set is at. Only the baseline moves to 1.0; flattening every document to the same number would erase the revision history each document-control section records.
 
