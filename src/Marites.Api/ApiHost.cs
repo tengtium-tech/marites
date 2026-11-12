@@ -2,6 +2,7 @@ using Marites.Api.Brokers;
 using Marites.Api.Capabilities;
 using Marites.Application.Brokers;
 using Marites.Application.Preflight;
+using Marites.Application.Providers;
 using Marites.Application.Security;
 using Marites.Infrastructure.Bookkeeping;
 using Marites.Infrastructure.RabbitMq;
@@ -74,6 +75,7 @@ public static class ApiHost
         builder.Services.AddScoped<IBrokerProfileRepository, BrokerProfileRepository>();
         builder.Services.AddScoped<IIdempotencyStore, IdempotencyStore>();
         builder.Services.AddScoped<BrokerProfileService>();
+        builder.Services.AddSingleton<IProviderRegistry, RabbitMqProviderRegistry>();
         builder.Services.AddScoped<IBrokerProbe, RabbitMqProbe>();
         builder.Services.AddScoped<PreflightService>();
 

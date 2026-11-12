@@ -1,3 +1,4 @@
+using Marites.Application.Providers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -31,7 +32,6 @@ public static class CapabilitiesEndpoints
     /// in M1-1 — the registry does not exist yet, and a hard-coded list here would be a
     /// second source of truth for VOCABULARY §12.
     /// </summary>
-    private static readonly string[] SupportedProviderKinds = [];
 
     public static IEndpointRouteBuilder MapCapabilitiesEndpoints(this IEndpointRouteBuilder routes)
     {
@@ -43,9 +43,9 @@ public static class CapabilitiesEndpoints
         return routes;
     }
 
-    private static Ok<BackendCapabilitiesResponse> GetBackendCapabilities() =>
+    private static Ok<BackendCapabilitiesResponse> GetBackendCapabilities(IProviderRegistry registry) =>
         TypedResults.Ok(new BackendCapabilitiesResponse(
             ApiVersion,
             SupportedFeatures,
-            SupportedProviderKinds));
+            registry.All.Select(p => p.Kind).ToArray()));
 }
