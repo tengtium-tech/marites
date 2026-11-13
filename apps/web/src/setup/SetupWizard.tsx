@@ -13,6 +13,23 @@ const newIdempotencyKey = () => crypto.randomUUID();
 
 type Capabilities = { features: string[] };
 
+/**
+ * What this build can do with the profile's provider. The flags describe the implementation,
+ * not the broker — RabbitMQ can purge, this build cannot, so canPurge is false.
+ */
+type ProviderCapabilities = {
+  kind: string;
+  displayName: string;
+  supportTier: string;
+  canTap: boolean;
+  canPeek: boolean;
+  canPublish: boolean;
+  canDiscard: boolean;
+  canPurge: boolean;
+  canReplay: boolean;
+  canDeclareShadow: boolean;
+};
+
 export function SetupWizard() {
   // What the backend says it can do, asked before anything is offered. Rendering a form the
   // API cannot honour is the failure /capabilities exists to prevent (ADR-017) — and it is
@@ -50,6 +67,7 @@ export function SetupWizard() {
     password: '',
   });
   const [state, setState] = useState<SaveState>({ kind: 'editing' });
+  const [provider, setProvider] = useState<ProviderCapabilities | null>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
 
   // An alert that is announced but off-screen still leaves the user hunting for it, so a
@@ -89,6 +107,13 @@ export function SetupWizard() {
 
     const created = await response.json();
     setState({ kind: 'saved', brokerId: created.id, revision: created.revision });
+
+    // Asked once the profile exists: the capabilities belong to the provider this profile names,
+    // not to the build in general.
+    const capabilitiesResponse = await fetch(`/api/v1/brokers/${created.id}/capabilities`);
+    if (capabilitiesResponse.ok) {
+      setProvider(await capabilitiesResponse.json());
+    }
   }
 
   async function runPreflight() {
@@ -205,14 +230,46 @@ export function SetupWizard() {
               {/*
                 No control here, deliberately. Capture is enabled by a capture policy, which the
                 contract defers to M2, and rendering a button that cannot act is the failure
-                /capabilities exists to prevent (ADR-017). The rule is still enforced where it
-                belongs: a profile cannot be captured until preflight passes.
+                /capabilities exists to prevent (ADR-017).
               */}
               <p style={{ color: passing ? '#2e7d32' : '#8a4b00' }}>
                 {passing
                   ? 'Preflight passed. Capture can be enabled once capture policies arrive (M2).'
                   : 'Capture cannot be enabled until preflight passes. The profile is saved, so it can be corrected.'}
               </p>
+
+              {provider && (
+                <section aria-labelledby="provider-heading" style={{ marginTop: 20 }}>
+                  <h3 id="provider-heading" style={{ fontSize: 15 }}>
+                    What this build can do with {provider.displayName}
+                  </h3>
+                  {/*
+                    Read from the API, never assumed here. A hard-coded list in the UI is how a
+                    screen ends up offering a control the backend refuses — the failure
+                    /capabilities exists to prevent.
+                  */}
+                  <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0' }}>
+                    {[
+                      ['Observe traffic', provider.canTap],
+                      ['Read queue metadata', provider.canPeek],
+                      ['Publish a message', provider.canPublish],
+                      ['Discard messages', provider.canDiscard],
+                      ['Purge a queue', provider.canPurge],
+                      ['Replay messages', provider.canReplay],
+                      ['Declare a shadow queue', provider.canDeclareShadow],
+                    ].map(([label, available]) => (
+                      <li key={label as string} style={{ padding: '3px 0', color: available ? '#1b5e20' : '#777' }}>
+                        {available ? '✓' : '—'} {label as string}
+                        {!available && <span style={{ fontSize: 12 }}> (not in this build)</span>}
+                      </li>
+                    ))}
+                  </ul>
+                  <p style={{ fontSize: 12, color: '#555' }}>
+                    Provider support tier: {provider.supportTier}. Flags marked “not in this build”
+                    describe Marites, not {provider.displayName}.
+                  </p>
+                </section>
+              )}
             </>
           )}
         </section>
