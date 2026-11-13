@@ -27,7 +27,7 @@ The milestone names and exit criteria are owned by [deployment and onboarding §
 | `WP-M0-4` Identity | Entra JWT validated, role→capability map enforced, `ERR-AUTH-001/002` returned |
 | `WP-M0-5` Capabilities | `GET /capabilities` reports backend feature flags and provider kinds; `GET /brokers/{brokerId}/capabilities` reports the selected provider's capability snapshot and `can_*` flags used by the UI |
 | `WP-M0-6` Preflight | Every check in the preflight set runs and names its remedy on failure |
-| `WP-M0-7` Wizard | Reachability or credential failures block saving; a topology-permission failure saves the profile as `failing`, blocks capture enablement with `ERR-BRK-001`, and shows the missing grant and remedy |
+| `WP-M0-7` Wizard | The profile can always be saved and corrected; capture enablement is refused while any check fails, the failing check is named with its remedy, and a topology-permission failure reports `ERR-BRK-001`. **Amended November 2026:** the original wording blocked the save itself, which traps a user who mistyped a credential on the screen that corrects it — they cannot fix the thing that blocks them. |
 | `WP-M0-8` Deploy | `docker compose up` on a clean host yields a working UI against a test broker; health and metrics endpoints live |
 | `WP-M0-9` Harness v0 | Producer and rejecting consumer run against RabbitMQ; one scenario (`poison-subset`) produces a manifest |
 
