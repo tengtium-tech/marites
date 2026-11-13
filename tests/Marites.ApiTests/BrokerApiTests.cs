@@ -99,8 +99,18 @@ public sealed class BrokerApiTests
         var second = await PostAsync(client, body, "replay-key");
 
         Assert.Equal(HttpStatusCode.Created, first.StatusCode);
-        Assert.Equal(HttpStatusCode.Created, second.StatusCode);
-        Assert.Equal(await first.Content.ReadAsStringAsync(), await second.Content.ReadAsStringAsync());
+
+        // A repeat is 200 with outcome:AlreadyApplied, not a second 201 — conventions §3.1 and
+        // the outcome table. The body is the recorded one, plus the outcome field.
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+
+        using var firstDocument = JsonDocument.Parse(await first.Content.ReadAsStringAsync());
+        using var secondDocument = JsonDocument.Parse(await second.Content.ReadAsStringAsync());
+
+        Assert.Equal("AlreadyApplied", secondDocument.RootElement.GetProperty("outcome").GetString());
+        Assert.Equal(
+            firstDocument.RootElement.GetProperty("id").GetString(),
+            secondDocument.RootElement.GetProperty("id").GetString());
     }
 
     [Fact]
