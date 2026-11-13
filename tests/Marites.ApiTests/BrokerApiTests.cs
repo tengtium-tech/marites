@@ -315,6 +315,10 @@ public sealed class BrokerApiFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         Environment.SetEnvironmentVariable("MARITES_BOOKKEEPING_PATH", _databasePath);
+
+        // Port 0 for the admin listener: the OS picks a free one, so a test run cannot collide
+        // with whatever a developer already has on 9090.
+        Environment.SetEnvironmentVariable("MARITES_ADMIN_ADDR", "127.0.0.1:0");
         Environment.SetEnvironmentVariable(
             "MARITES_KEK",
             Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
