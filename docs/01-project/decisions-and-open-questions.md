@@ -49,6 +49,7 @@ status: Approved — Product owner, 2026-11-11
 | DEC-019 | Is an operation — hold, command, record — atomic? | M1 — operations | **Answered** — no, and the two invariants that replace it |
 | DEC-020 | How is the bookkeeping store built — engine, access layer, migrations, type mapping? | M0 — store shape | **Answered** — SQLite, EF Core, EF migrations as a separate step, fixed type mapping |
 | DEC-021 | When are new broker settings validated? | M0 — contract and wizard | **Answered** — CreateBroker validates before save |
+| DEC-022 | How is a queue identified before it is stored? | M0 — queue metadata | **Answered** — a deterministic UUID derived from the entity's identity |
 
 ---
 
@@ -733,3 +734,38 @@ The register records 21 answered decisions. Record new questions here when disco
 | DEC-021 | CreateBroker validates new settings before persistence; a topology denial can still yield a saved failing profile | November 2026 |
 
 New questions get a new identifier. An answered decision is not reopened — it is superseded by a later one, with both retained.
+
+## DEC-022 — Queue identity is derived, not assigned
+
+**Status:** Answered, November 2026. **Applies to:** WP-M0-1, OP-QUE-001, OP-QUE-002.
+
+`GET /queues` must return a stable `id` for every entity the broker reports, but `queue_ref`
+rows are only created when capture is configured (M2). A random UUID would therefore change the
+public identifier of the same queue the moment someone enabled capture on it — and any bookmark,
+log line or support ticket holding the old id would point at nothing.
+
+**The public id is a UUIDv5 computed from the entity's full identity:**
+
+```
+namespace  6f1c4a52-9d3b-5e77-9f0a-2b8c7d4e1a35   (fixed, published below so implementations agree)
+name       "{broker_profile_id}|{vhost}|{name}|{source_kind}"
+```
+
+with these canonical forms, because two spellings of the same identity would produce two ids:
+
+- `broker_profile_id` — lowercase hyphenated UUID
+- `vhost` — the exact string the broker reports; **empty** when the provider has no vhost
+- `name` — the entity's own name, exactly as the broker reports it, case preserved
+- `source_kind` — the vocabulary value in lower case
+
+**Resolution without a prior list.** `GET /queues/{queueId}` does not consult a mapping table,
+because none exists in M0. It reads the broker's entities for the profile and recomputes each id
+until one matches. That costs one management-API read per detail request and needs no stored
+state — and it means a detail request works for a caller who never listed anything.
+
+**M2 preserves the id.** When `queue_ref` is created, its `id` is set to this computed value
+rather than to `gen_random_uuid()`. The identifier a client saw before capture existed is the
+same one it sees afterwards, and the same one `capture_rule` and `replay_job` reference.
+
+**What this rules out.** A random primary key for `queue_ref`, an id that encodes a database
+row number, and any scheme where the list and the detail disagree about which queue is which.
