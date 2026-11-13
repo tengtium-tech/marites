@@ -292,9 +292,18 @@ public static class BrokerEndpoints
                 extensions: new Dictionary<string, object?> { ["code"] = "ERR-CMN-005" });
         }
 
-        return recorded.ResponseStatus == StatusCodes.Status204NoContent
-            ? TypedResults.NoContent()
-            : Results.Text(recorded.ResponseJson, "application/json", Encoding.UTF8, recorded.ResponseStatus);
+        if (recorded.ResponseStatus == StatusCodes.Status204NoContent)
+        {
+            return TypedResults.NoContent();
+        }
+
+        // Contract conventions §3.1: a repeat returns the recorded outcome with
+        // `outcome: AlreadyApplied`, and the outcome table maps that to 200 — not to the original
+        // status. A create replayed as 201 would tell the client a second profile now exists.
+        var body = JsonNode.Parse(recorded.ResponseJson)?.AsObject() ?? new JsonObject();
+        body["outcome"] = "AlreadyApplied";
+
+        return Results.Json(body, JsonOptions, statusCode: StatusCodes.Status200OK);
     }
 
     private static string Quote(int revision) => $"\"{revision}\"";
