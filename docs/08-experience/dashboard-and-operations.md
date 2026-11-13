@@ -147,7 +147,7 @@ Every operation confirmation displays the cluster name and environment tag. Prod
 | State | Presentation |
 |---|---|
 | No broker configured | Setup wizard, not an empty dashboard |
-| Preflight failed on topology permissions | Read-only metadata mode, with the failing check named |
+| Preflight failed on topology permissions | Show the failed check and remedy. Live metadata is available, as are authorised live recovery actions from M1. Capture remains off |
 | Queue has no DLX | Warning on the queue, explaining that dead-letter monitoring requires adopter configuration |
 | Capture stopped while depth grows | Stale badge with last-seen timestamp — never a bare zero |
 | Window has no data | Explicit "no messages in this window", distinct from "capture unhealthy" |

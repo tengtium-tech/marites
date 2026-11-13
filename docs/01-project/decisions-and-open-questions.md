@@ -48,6 +48,7 @@ status: Approved — Product owner, 2026-11-11
 | DEC-018 | Is the audit's payload evidence complete or sampled? | M1 — audit design | **Answered** — supersedes DEC-017's sampling rule |
 | DEC-019 | Is an operation — hold, command, record — atomic? | M1 — operations | **Answered** — no, and the two invariants that replace it |
 | DEC-020 | How is the bookkeeping store built — engine, access layer, migrations, type mapping? | M0 — store shape | **Answered** — SQLite, EF Core, EF migrations as a separate step, fixed type mapping |
+| DEC-021 | When are new broker settings validated? | M0 — contract and wizard | **Answered** — CreateBroker validates before save |
 
 ---
 
@@ -686,9 +687,26 @@ The `max` matters in both directions. Evidence never expires before the messages
 
 ---
 
+## DEC-021 — Validate new broker settings before saving
+
+**Status:** Answered, November 2026. **Applies to:** WP-M0-1 and WP-M0-7.
+
+`POST /brokers` verifies reachability and credentials for live metadata before
+opening the bookkeeping transaction. If live access cannot be established,
+creation leaves no profile or saved credentials. If live access is verified and
+topology permissions are denied, save the profile as `failing` with the initial
+check result. The created profile can open live metadata. Existing profiles use
+the profile-scoped preflight endpoint for rechecks.
+
+Server-side validation enforces the save rule for both the wizard and direct API
+callers. The create request takes the time needed to check the broker. The wizard
+shows progress and keeps rejected input editable. See
+[deployment and onboarding §2](../11-operations/deployment-and-onboarding.md#2-preflight-readiness-check-fr-013)
+for outcomes and TC-030 for verification.
+
 ## Document control
 
-Revision 0.1 records nineteen questions; **all nineteen are answered.** DEC-020 was added in November 2026 while scoping WP-M0-3, and the register now holds twenty. No decision is open, and none blocks M0. The register is closed: the specification is complete, so a question that is not recorded here is a question the product does not ask. Anything the set does not mention is out of scope by [requirements §1](../02-business/requirements.md), and adding a behaviour to the product means opening a decision here first. DEC-009 was added in November 2026 when the repository was prepared for publication.
+The register records 21 answered decisions. Record new questions here when discovery exposes a gap in the shared specification.
 
 | ID | Answer | Closed |
 |---|---|---|
@@ -712,5 +730,6 @@ Revision 0.1 records nineteen questions; **all nineteen are answered.** DEC-020 
 | DEC-018 | Evidence is complete, not sampled: one row per message, `before` and `after` for replay, truncated at a stated bound | November 2026 |
 | DEC-019 | An operation is not atomic across the broker and the store: the bodies are held durably first, the audit row is written only after the broker confirms, and reconciliation closes the one window | November 2026 |
 | DEC-020 | The bookkeeping store stays SQLite; EF Core with the Sqlite provider writes it, EF migrations create it as a separate step, and `Guid`/timestamp/JSON storage is fixed rather than left to each table | November 2026 |
+| DEC-021 | CreateBroker validates new settings before persistence; a topology denial can still yield a saved failing profile | November 2026 |
 
 New questions get a new identifier. An answered decision is not reopened — it is superseded by a later one, with both retained.

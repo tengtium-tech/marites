@@ -48,20 +48,6 @@
     },
     {
       "from": "api",
-      "to": "bookkeeping",
-      "y": 230,
-      "label": "save broker profile",
-      "variant": "default"
-    },
-    {
-      "from": "admin",
-      "to": "api",
-      "y": 280,
-      "label": "POST /brokers/{id}/preflight",
-      "variant": "emphasis"
-    },
-    {
-      "from": "api",
       "to": "provider",
       "y": 345,
       "label": "check management access + vhost",
@@ -90,16 +76,24 @@
     },
     {
       "from": "api",
+      "to": "bookkeeping",
+      "y": 542,
+      "label": "save only when live access is verified",
+      "variant": "default",
+      "note": "Topology denial saves a failing profile. Unreachable broker or denied live access leaves no profile or credentials."
+    },
+    {
+      "from": "api",
       "to": "admin",
       "y": 565,
-      "label": "checks + remedies",
+      "label": "201 with initial checks, or Problem with remedy",
       "variant": "return"
     },
     {
       "from": "admin",
       "to": "api",
       "y": 625,
-      "label": "select queues to watch",
+      "label": "M2: select queues after mandatory checks pass",
       "variant": "default"
     },
     {
