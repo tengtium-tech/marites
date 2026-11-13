@@ -1,12 +1,16 @@
+using Marites.Api.Auth;
 using Marites.Api.Brokers;
 using Marites.Api.Capabilities;
 using Marites.Api.Operations;
 using Marites.Api.Queues;
+using Marites.Application.Access;
 using Marites.Application.Brokers;
 using Marites.Application.Preflight;
 using Marites.Application.Providers;
 using Marites.Application.Queues;
 using Marites.Application.Security;
+using Marites.Domain.Access;
+using Marites.Infrastructure.Access;
 using Marites.Infrastructure.Bookkeeping;
 using Marites.Infrastructure.RabbitMq;
 using Marites.Infrastructure.Security;
@@ -90,15 +94,66 @@ public static class ApiHost
         builder.Services.AddScoped<IQueueCatalog, RabbitMqQueueCatalog>();
         builder.Services.AddScoped<IBrokerAdmin, RabbitMqAdmin>();
 
+        // Identity is configured, never inferred (ADR-008). The mode decides which credential
+        // the API accepts and is validated here, so a misconfigured install fails at startup
+        // rather than at the first sign-in attempt.
+        var authOptions = AuthOptions.FromEnvironment(Environment.GetEnvironmentVariable, secureByDefault: false);
+        authOptions.Validate(mainUrls);
+
+        builder.Services.AddSingleton(authOptions);
+        builder.Services.AddHttpClient();
+        builder.Services.AddScoped<IUserDirectory, EfUserDirectory>();
+        builder.Services.AddSingleton<ISessionTokens>(services => new HmacSessionTokens(
+            services.GetRequiredService<KekOptions>(), TimeSpan.FromHours(authOptions.SessionHours)));
+
+        if (authOptions.IsGoogle)
+        {
+            builder.Services.AddSingleton<IIdentityTokenValidator>(services => new GoogleIdentityProvider(
+                services.GetRequiredService<IHttpClientFactory>().CreateClient(),
+                authOptions.GoogleClientId!));
+        }
+        else if (authOptions.Mode == AuthOptions.Entra)
+        {
+            builder.Services.AddSingleton<IIdentityTokenValidator>(services => new EntraIdentityProvider(
+                services.GetRequiredService<IHttpClientFactory>().CreateClient(),
+                authOptions.EntraTenantId!,
+                authOptions.EntraAudience!));
+        }
+        else
+        {
+            builder.Services.AddSingleton<IIdentityTokenValidator, NoIdentityTokenValidator>();
+        }
+
+        builder.Services.AddScoped<IdentityService>();
+        builder.Services.AddAuthentication(MaritesAuthenticationHandler.SchemeName)
+            .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, MaritesAuthenticationHandler>(
+                MaritesAuthenticationHandler.SchemeName, _ => { });
+        builder.Services.AddAuthorization(options =>
+        {
+            // Role → capability, in one place. Endpoints name the capability they need; the
+            // policies are the only place a role is mentioned (DOC-UX-001 §2).
+            options.AddPolicy("CanRead", policy => policy.RequireRole(AppRoles.Viewer, AppRoles.Support, AppRoles.Admin));
+            options.AddPolicy("CanManageBrokers", policy => policy.RequireRole(AppRoles.Admin));
+            options.AddPolicy("CanPeek", policy => policy.RequireRole(AppRoles.Support, AppRoles.Admin));
+            options.AddPolicy("CanDiscard", policy => policy.RequireRole(AppRoles.Support, AppRoles.Admin));
+            options.AddPolicy("CanReplay", policy => policy.RequireRole(AppRoles.Support, AppRoles.Admin));
+            options.AddPolicy("CanPurge", policy => policy.RequireRole(AppRoles.Admin));
+        });
+
         configureAdditionalServices?.Invoke(builder.Services);
 
         var app = builder.Build();
+
+        app.UseAuthentication();
+        app.UseMiddleware<CsrfMiddleware>();
+        app.UseAuthorization();
 
         var api = app.MapGroup(ApiBasePath);
         api.MapCapabilitiesEndpoints();
         api.MapBrokerEndpoints();
         api.MapQueueEndpoints();
         api.MapOperationEndpoints();
+        api.MapAuthEndpoints(authOptions);
 
         MapOperationsEndpoints(app, adminEndPoint.Port);
 

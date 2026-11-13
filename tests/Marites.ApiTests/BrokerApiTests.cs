@@ -335,6 +335,11 @@ public sealed class BrokerApiFixture : IAsyncLifetime
         // Port 0 for the admin listener: the OS picks a free one, so a test run cannot collide
         // with whatever a developer already has on 9090.
         Environment.SetEnvironmentVariable("MARITES_ADMIN_ADDR", "127.0.0.1:0");
+
+        // The shared host runs in `none` mode: these tests are about brokers, not identity, and
+        // an entra-mode host would refuse to start without a tenant. Auth behaviour is covered
+        // by AuthApiTests, which builds its own host per mode.
+        Environment.SetEnvironmentVariable("MARITES_AUTH_MODE", "none");
         Environment.SetEnvironmentVariable(
             "MARITES_KEK",
             Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));

@@ -23,13 +23,13 @@ public static class BrokerEndpoints
     {
         var brokers = routes.MapGroup("/brokers").WithTags("Brokers");
 
-        brokers.MapGet("/", ListBrokersAsync).WithName("listBrokers");
-        brokers.MapPost("/", CreateBrokerAsync).WithName("createBroker");
-        brokers.MapGet("/{brokerId:guid}", GetBrokerAsync).WithName("getBroker");
-        brokers.MapPatch("/{brokerId:guid}", UpdateBrokerAsync).WithName("updateBroker");
-        brokers.MapDelete("/{brokerId:guid}", DeleteBrokerAsync).WithName("deleteBroker");
-        brokers.MapPost("/{brokerId:guid}/preflight", RunPreflightAsync).WithName("runPreflight");
-        brokers.MapGet("/{brokerId:guid}/capabilities", GetBrokerCapabilitiesAsync).WithName("getBrokerCapabilities");
+        brokers.MapGet("/", ListBrokersAsync).WithName("listBrokers").RequireAuthorization("CanRead");
+        brokers.MapPost("/", CreateBrokerAsync).WithName("createBroker").RequireAuthorization("CanManageBrokers");
+        brokers.MapGet("/{brokerId:guid}", GetBrokerAsync).WithName("getBroker").RequireAuthorization("CanRead");
+        brokers.MapPatch("/{brokerId:guid}", UpdateBrokerAsync).WithName("updateBroker").RequireAuthorization("CanManageBrokers");
+        brokers.MapDelete("/{brokerId:guid}", DeleteBrokerAsync).WithName("deleteBroker").RequireAuthorization("CanManageBrokers");
+        brokers.MapPost("/{brokerId:guid}/preflight", RunPreflightAsync).WithName("runPreflight").RequireAuthorization("CanManageBrokers");
+        brokers.MapGet("/{brokerId:guid}/capabilities", GetBrokerCapabilitiesAsync).WithName("getBrokerCapabilities").RequireAuthorization("CanRead");
 
         return routes;
     }

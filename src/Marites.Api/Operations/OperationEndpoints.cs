@@ -26,10 +26,10 @@ public static class OperationEndpoints
     {
         var operations = routes.MapGroup("/operations").WithTags("Operations");
 
-        operations.MapPost("/peek", PeekAsync).WithName("peekQueue");
-        operations.MapPost("/discard", DiscardAsync).WithName("discardMessages");
-        operations.MapPost("/purge", PurgeAsync).WithName("purgeQueue");
-        operations.MapPost("/replay", ReplayAsync).WithName("replayMessages");
+        operations.MapPost("/peek", PeekAsync).WithName("peekQueue").RequireAuthorization("CanPeek");
+        operations.MapPost("/discard", DiscardAsync).WithName("discardMessages").RequireAuthorization("CanDiscard");
+        operations.MapPost("/purge", PurgeAsync).WithName("purgeQueue").RequireAuthorization("CanPurge");
+        operations.MapPost("/replay", ReplayAsync).WithName("replayMessages").RequireAuthorization("CanReplay");
 
         return routes;
     }
