@@ -143,17 +143,17 @@ After execution the dialog becomes a progress view (`/operations/:id`): processe
 
 ### 3.5 Setup wizard (`/setup`)
 
-Five steps. Four block the next; **step 2 does not**. The step strip is a control, not a decoration: completed steps are clickable, and steps 4 and 5 are **locked** until preflight passes, labelled *preflight first*.
+In M0, submit profile settings to `POST /brokers` and show the initial results from the response. A rejected create leaves the form editable with the remedy. A created profile can open live metadata even if capture permissions fail. The five steps below describe the full flow through M2.
 
 | Step | Screen | Blocking condition |
 |---|---|---|
 | 1 Profile | Provider, endpoint, credential kind, write-only credentials; beside it, a card stating **what enabling capture will create** | — |
 | 2 Message store *(optional)* | Engine, host, database, schema, both roles; **Test connection**, and a plain statement of what skipping costs — no counts, no message list, no search, and recovery unaffected (DEC-016) | **None** — it may be skipped, which sets live-only |
-| 3 Preflight | One row per check, with a remedy on each failure and `ERR-BRK-001` on a topology failure | A mandatory failure blocks step 4 |
+| 3 Preflight | Initial results from CreateBroker, with a remedy for failures. Once a profile exists, the operator can rerun checks | Mandatory failures block M2 capture setup |
 | 4 Select queues | Every discoverable queue and exchange, with backlog and dead-letter routing. **Queues with a DLX are pre-selected**, because they are the ones that can explain a failure | At least one selection |
 | 5 Capture | What will be watched, the storage ceiling, and the **backfill offer**: the messages already sitting there, rate-limited and opt-in. With no message store this step says so rather than offering a policy that could not be honoured | — |
 
-**Preflight is re-runnable, and that is the designed path out of step 2.** The most common onboarding outcome is a missing grant; the operator adds it in the broker, re-runs, and the wizard continues. A wizard that cannot recover from its own failure state is a wizard that ends in a support ticket.
+For a saved profile with a missing topology grant, the operator can correct the grant and rerun preflight. Follow the [create outcomes](../11-operations/deployment-and-onboarding.md#2-preflight-readiness-check-fr-013) when the profile is still unsaved.
 
 Capture is forward-only (C-002), so the backfill offer is the only way to see what is already queued. It is a checkbox, not a default, because it reads the adopter's queue at a rate the operator chooses.
 

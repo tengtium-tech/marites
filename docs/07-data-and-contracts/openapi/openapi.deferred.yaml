@@ -47,7 +47,7 @@ paths:
       description: |
         Admin only. `payloadPolicy` controls payload retention and never affects counting.
         Returns the projected daily storage cost at the observed rate, so an expensive choice
-        is visible before it is saved. Requires `If-Match`.
+        is visible before it is saved. Requires `If-Match`. Enabling capture requires passing mandatory preflight checks.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
         - $ref: '#/components/parameters/IfMatch'
@@ -65,7 +65,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/CapturePolicyResult' }
         '422':
-          description: Policy would exceed the storage ceiling — ERR-QUE-003
+          description: Mandatory preflight blocks capture enablement (ERR-BRK-001), or the policy exceeds the storage ceiling (ERR-QUE-003)
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }

@@ -86,9 +86,15 @@ paths:
       operationId: createBroker
       summary: Register a broker profile
       description: |
-        Credentials are write-only. They are encrypted at rest and never returned by any
-        endpoint, in any form. The response contains `credentialKind` and
-        `credentialsUpdatedAt` only.
+        Validates the submitted broker settings before persisting a new profile. Run the
+        provider checks before opening the bookkeeping transaction. If live metadata
+        access cannot be established, return a Problem and persist neither the profile
+        nor the submitted credentials. If live access is verified but topology
+        permissions are denied, create the profile with `preflightState: failing`.
+        Return the initial preflight checks and remedies with the created profile.
+        The nested preflight state and timestamp describe the same check run as
+        preflightState and preflightAt on the created profile.
+        Credentials are write-only, encrypted when saved, and never returned or logged.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
@@ -100,10 +106,10 @@ paths:
         '4XX': { $ref: '#/components/responses/ClientError' }
         '5XX': { $ref: '#/components/responses/ServerError' }
         '201':
-          description: Created
+          description: Profile created with its initial preflight result
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/BrokerProfile' }
+              schema: { $ref: '#/components/schemas/CreatedBrokerProfile' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409':
@@ -112,7 +118,12 @@ paths:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
         '422':
-          description: Credential fields do not match the declared kind — ERR-BRK-003
+          description: Credential fields do not match the declared kind (ERR-BRK-003), or the broker rejected credentials or access to the requested scope (ERR-BRK-004)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '503':
+          description: The broker was unreachable or timed out before live access could be verified (ERR-BRK-002)
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
@@ -188,7 +199,7 @@ paths:
       operationId: runPreflight
       summary: Verify the broker is usable before enabling capture
       description: |
-        Runs the readiness checks and records the result on the profile. Each failed check
+        Reruns readiness checks for an existing profile and records the result. Each failed check
         names a remedy — "your user lacks configure on marites." rather than an empty
         dashboard. A failing result does not itself fail the request: the result is the
         answer, and the caller decides what to do with it.
@@ -507,6 +518,15 @@ components:
           type: string
           enum: [unknown, passing, failing, degraded]
         preflightAt: { type: string, format: date-time }
+
+    CreatedBrokerProfile:
+      allOf:
+        - $ref: '#/components/schemas/BrokerProfile'
+        - type: object
+          required: [preflight]
+          properties:
+            preflight:
+              $ref: '#/components/schemas/PreflightResult'
 
     CreateBrokerRequest:
       type: object

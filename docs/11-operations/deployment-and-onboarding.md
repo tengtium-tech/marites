@@ -116,7 +116,16 @@ Documentation drifts; a checklist that runs does not. `POST /api/v1/brokers/{id}
 | Shadow queue declarable with bounded args | Broker policy blocks topology writes |
 | Clock skew application ↔ broker < 5 min | `x-death` timestamps will be wrong |
 
-The React setup wizard runs this inline. A failure on reachability or credentials blocks saving. A failure on topology permissions saves the profile as `failing`, refuses to enable capture (`ERR-BRK-001`) and names the missing grant. Adopters get a precise error instead of a dashboard full of zeros.
+`POST /api/v1/brokers` checks the submitted settings before saving the profile (DEC-021). `POST /api/v1/brokers/{id}/preflight` reruns checks for an existing profile.
+
+| Initial check outcome | Create response and wizard behavior |
+|---|---|
+| Broker unreachable or times out before live access is verified | `503 ERR-BRK-002`. Keep the form open with the remedy. Persist neither the new profile nor its credentials |
+| Broker rejects credentials or denies access to the requested scope for live metadata | `422 ERR-BRK-004`. Keep the form open with the remedy. Persist neither the new profile nor its credentials |
+| Live access verified, but topology permissions are denied | `201`. Save the profile as `failing`, return the initial checks, and show the missing grant and remedy. Live metadata remains available |
+| Live access verified and mandatory checks pass | `201`. Save the profile with the initial check result and open live metadata. A missing DLX is a warning |
+
+M0 ends at live metadata. Capture enablement uses the M2 capture-policy operation. A failed mandatory preflight blocks enablement with `ERR-BRK-001`.
 
 ## 3. Deploying the application
 
@@ -197,7 +206,7 @@ The application ships with **zero broker configuration baked in**. Connection de
 
 Two entry paths:
 
-1. **UI setup wizard** (recommended) — runs preflight inline, refuses to save a failing profile.
+1. **UI setup wizard** (recommended) — submits settings to CreateBroker and follows the outcomes in §2.
 2. **Config file / environment variables** (prefix `MARITES_`) — for GitOps. Secrets come from the environment or a secret manager and are never committed.
 
 **Multiple brokers are first-class** (FR-014). One instance can watch a dev broker and a production broker side by side; the dashboard groups by profile, and cluster identity is always `(broker_profile_id, vhost, queue_name)`.
@@ -224,16 +233,15 @@ Adopters run their own platform; Marites only adds an observation point to it. B
 ## 5. End-to-end first run
 
 ```
-Deploy  →  Open UI  →  Add broker profile  →  Preflight  →  Pick queues
-                                                              ↓
-                            Dashboard live  ←  Capture bound + backfill
+M0: Deploy → Open wizard → Validate and create broker profile → Live metadata
+M2: Passing capture checks → Pick queues → Configure capture → Optional backfill
 ```
 
 1. Deploy the container or binary; expose the HTTP port.
 2. Open the UI — first run shows the setup wizard, not an empty dashboard.
-3. Enter the broker profile. Preflight runs immediately; fix anything red.
-4. Select queues and exchanges to watch. Queues already reporting a DLX are pre-selected.
-5. Confirm — capture bindings are declared and a bounded backfill is offered for existing backlog.
+3. Submit the broker settings and follow the outcome in §2. M0 reaches live metadata when the profile is created.
+4. In M2, after mandatory capture checks pass, select queues and exchanges to watch. Queues with a DLX are pre-selected.
+5. In M2, confirm capture configuration and offer bounded, opt-in backfill.
 6. Dashboard goes live within one poll interval (~10 s).
 7. Repeat 3–5 per additional broker; add users and roles when moving past the single-user profile.
 
@@ -257,9 +265,9 @@ Ships as a Docker image plus Helm chart. Capture workers scale by sharding `queu
 
 | # | Deliverable | Exit criteria |
 |---|---|---|
-| M0 | Contract + skeleton + preflight + deploy | `openapi.yaml` reviewed; backend and provider capabilities plus `/brokers/{id}/preflight` are served; reachability/credential failures block profile saving, while topology-permission failure saves a `failing` profile and blocks capture enablement with `ERR-BRK-001` and a named remedy; `docker compose up` yields a working UI against a test broker; CI green |
+| M0 | Contract + skeleton + preflight + deploy | `openapi.yaml` reviewed; backend and provider capabilities plus `/brokers/{id}/preflight` are served; CreateBroker and the wizard follow the initial check outcomes in §2; `docker compose up` yields a working UI against a test broker; CI green |
 | M1 | Metadata dashboard + **live support console** | Queue tree, depths, rates, DLQ badges; live peek, discard-one, purge and redrive against the broker; audit log writing; RBAC enforced. **A Support user can complete a recovery without leaving the UI** |
-| M2 | Capture pipeline | Shadow binding + backfill; rollups written every second; rows land in store; retention sweeper runs |
+| M2 | Capture pipeline | Shadow binding + backfill; capture enablement rejects failed mandatory preflight with `ERR-BRK-001`; rollups written every second; rows land in store; retention sweeper runs |
 | M3 | Message explorer + historical actions | Search and filters, payload viewer, duplicate grouping; replay a captured message; publish |
 | M4 | Multi-broker + tenancy | Bulkhead isolation across clusters, environment-scoped confirmations, per-tenant isolation tests (broker CRUD and encrypted credentials ship in M0) |
 | M5 | Provider #2 — Azure Service Bus | Adapter passing the shared conformance suite at `full` tier |
