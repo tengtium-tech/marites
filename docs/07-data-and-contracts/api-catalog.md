@@ -2,7 +2,7 @@
 document_id: DOC-API-002
 title: API Catalog
 product: Marites
-version: 0.2
+version: 0.3
 date: 2026-11
 status: Approved — Product owner, 2026-11-11
 ---
@@ -11,23 +11,24 @@ status: Approved — Product owner, 2026-11-11
 
 **Source:** [contract conventions](contract-conventions.md), [error catalog](error-catalog.md). Generated view of `07-data-and-contracts/openapi/openapi.yaml`.
 
-**Counts:** 25 operations designed — **10 in the v0.1 delivery slice**, 15 deferred. Of the 10 active, 6 are queries and 4 are commands. Capability names are owned by [VOCABULARY §2](../14-reference/vocabulary.md); role grants by [DOC-UX-001 §2](../08-experience/dashboard-and-operations.md).
+**Counts:** 25 operations designed — **14 in the served slice (v0.3)**, 11 deferred. Of the 14 active, 6 are queries and 8 are commands. Capability names are owned by [VOCABULARY §2](../14-reference/vocabulary.md); role grants by [DOC-UX-001 §2](../08-experience/dashboard-and-operations.md).
 
 This table exists so the API can be read without opening the contract. If the two disagree, the contract is authoritative and this table is corrected.
 
 ## Scope by revision
 
-Only the v0.1 operations are served. The rest are designed and preserved in `07-data-and-contracts/openapi/openapi.deferred.yaml`; promoting one means moving it into `openapi.yaml` and updating this table — a move, not a rewrite.
+Only the served operations are implemented; the rest are designed and preserved in `07-data-and-contracts/openapi/openapi.deferred.yaml`; promoting one means moving it into `openapi.yaml` and updating this table — a move, not a rewrite.
 
 | Revision | Operations |
 |---|---|
 | **v0.1 — served** | `getBackendCapabilities`, `listBrokers`, `createBroker`, `getBroker`, `updateBroker`, `deleteBroker`, `runPreflight`, `getProviderCapabilities`, `listQueues`, `getQueue` |
-| M1 | `peekQueue`, `discardMessages`, `purgeQueue`, `replayMessages` (live redrive), `getOperation`, `listAudit`, `listAuditPayloads` |
+| **v0.3 — served** | `peekQueue`, `discardMessages`, `purgeQueue`, `replayMessages` (live redrive) — the four recovery operations, acting on the live queue because no capture store exists before M2 |
+| M1 (remaining) | `getOperation`, `listAudit`, `listAuditPayloads` |
 | M3 | `createProposal` — the agent surface (DEC-010) |
 | M2 | `setCapturePolicy`, `getMetricSummary`, `getMetricSeries`, `getMetricAvailability` |
 | M3 | `searchMessages`, `getMessage`, `publishMessage`; `replayMessages` gains captured-message replay |
 
-**Why the slice stops here.** Ten operations cover onboarding end to end — register a broker, verify it, read its queues — which is a demonstrable product. Everything below that line is deferred. The M1 operations act on the live broker and need no capture; the rest depend on capture data that does not exist yet. Milestone numbers follow [DOC-OPS-001 §6](../11-operations/deployment-and-onboarding.md), which owns them.
+**Why the slice stops here.** Ten operations cover onboarding end to end — register a broker, verify it, read its queues — which is a demonstrable product; the four v0.3 operations make recovery possible against a live broker and still need no capture. Everything below that line is deferred and depends on capture data that does not exist yet. Milestone numbers follow [DOC-OPS-001 §6](../11-operations/deployment-and-onboarding.md), which owns them.
 
 ## 1. Capabilities
 
@@ -128,3 +129,5 @@ Append-only. No operation in this API modifies or deletes an audit entry.
 ## 9. Document control
 
 Revision 0.2 records the split: ten operations are served in `openapi.yaml`, fifteen are preserved in `openapi.deferred.yaml`. OP-MSG-001 is a deferred safe/idempotent `QUERY`; no `POST /search` operation exists. The Codex documentation review on 2026-11-11 reconciled the catalog milestones with both contract files and the operation matrix. Regenerating this table is a manual step; when a contract changes, this document is corrected in the same commit.
+
+Revision 0.3 promotes the four recovery operations — `peekQueue`, `discardMessages`, `purgeQueue`, `replayMessages` — into `openapi.yaml`, adapted to run before capture exists: the messages come from the live queue, the identifiers a peek returns are broker-assigned and opaque, and discard and replay name their target queue directly. The deferred `MessageSummary`/`MessageDetail` shapes, which assume captured rows, stay deferred until M2/M3.
