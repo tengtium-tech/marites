@@ -1,7 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
+import { BarChart3, Settings2 } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 /**
- * The console shell, adapted from the prototype's Sidebar (prototype/src/App.tsx at d124931).
+ * The console shell, taken from the prototype's Sidebar (prototype/src/App.tsx at d124931).
  *
  * Only destinations the contract serves appear. The prototype also lists Publish, Audit, AI and
  * Storage; those operations are deferred, and a nav item leading to a 404 is the same failure as
@@ -10,47 +12,55 @@ import { Link, useLocation } from 'react-router-dom';
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
 
-  const items = [
-    { to: '/setup', label: 'Setup', icon: '⚙' },
-    { to: '/queues', label: 'Queues', icon: '▤' },
-  ];
+  const item = (to: string, icon: React.ReactNode, label: string) => {
+    const active = pathname.startsWith(to);
+
+    return (
+      <Link
+        to={to}
+        aria-current={active ? 'page' : undefined}
+        className={cn(
+          'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13.5px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground',
+          active && 'bg-accent font-semibold text-accent-foreground hover:bg-accent'
+        )}
+      >
+        <span className="opacity-80">{icon}</span>
+        {label}
+      </Link>
+    );
+  };
 
   return (
-    <div className="layout">
-      <aside className="sidebar">
-        <div className="sidebar__brand">
-          <span className="sidebar__mark" aria-hidden="true">M</span>
-          <span>
-            <span className="sidebar__title">Marites</span>
-            <span className="sidebar__subtitle">queue observability</span>
+    <div className="grid min-h-screen grid-cols-1 md:grid-cols-[232px_minmax(0,1fr)]">
+      <aside className="sticky top-0 flex h-screen flex-col gap-5 border-r bg-card px-3 py-4">
+        <div className="flex items-center gap-2.5 px-2 pb-1">
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-foreground text-[12px] font-bold text-card">
+            M
           </span>
+          <div className="leading-tight">
+            <div className="text-[14.5px] font-semibold tracking-[-0.02em]">Marites</div>
+            <div className="text-[10.5px] text-muted-foreground">queue observability</div>
+          </div>
         </div>
 
-        <nav className="sidebar__group" aria-label="Operations">
-          <span className="sidebar__label">Operations</span>
-          {items.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="sidebar__item"
-              aria-current={pathname.startsWith(item.to) ? 'page' : undefined}
-            >
-              <span aria-hidden="true" style={{ opacity: 0.8 }}>{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
+        <nav className="flex flex-col gap-0.5" aria-label="Operations">
+          <div className="px-2.5 pb-1.5 text-[10.5px] uppercase tracking-[0.09em] text-muted-foreground">
+            Operations
+          </div>
+          {item('/queues', <BarChart3 className="h-4 w-4" />, 'Queues')}
+          {item('/setup', <Settings2 className="h-4 w-4" />, 'Setup')}
         </nav>
 
-        <div className="sidebar__foot">
+        <div className="mt-3 border-t px-2.5 pt-3 text-[11px] leading-relaxed text-muted-foreground">
           M0 build
-          <div style={{ opacity: 0.75 }}>
+          <div className="opacity-75">
             Setup and live queue metadata. Capture, replay and the console actions arrive in later
             milestones.
           </div>
         </div>
       </aside>
 
-      <main className="page">{children}</main>
+      <main className="min-w-0 px-8 py-6">{children}</main>
     </div>
   );
 }

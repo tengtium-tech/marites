@@ -1,7 +1,11 @@
+import { cn } from '../lib/utils';
+
 /**
- * The five steps from wireframes §3.5. M0 serves step 1 (profile) and step 3 (preflight); the
- * message store, queue selection and capture configuration are M2, so they render as later
- * steps rather than disappearing — the operator should see where the flow goes.
+ * The five steps from wireframes §3.5, drawn as the specification screenshot draws them
+ * (docs/08-experience/images/04-setup-profile.png): a caption above the label, in boxes.
+ *
+ * M0 serves step 1 and step 3. The M2 steps are shown rather than hidden, so the operator can see
+ * where the flow goes — and marked as later, so nothing implies they are available.
  */
 export function SetupProgress({ current, done }: { current: 1 | 3; done: boolean }) {
   const steps = [
@@ -12,20 +16,31 @@ export function SetupProgress({ current, done }: { current: 1 | 3; done: boolean
     { n: 5, label: 'Capture' },
   ];
 
-  const state = (n: number) => {
-    if (done) return n <= 3 ? 'done' : 'later';
-    if (n === current) return 'current';
-    return n < current ? 'done' : 'later';
-  };
+  const state = (n: number) => (done ? (n <= 3 ? 'done' : 'later') : n === current ? 'current' : n < current ? 'done' : 'later');
 
   return (
-    <ol className="steps" aria-label="Setup progress">
+    <ol className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-5" aria-label="Setup progress">
       {steps.map((step) => (
-        <li key={step.n} data-state={state(step.n)}>
-          {/* The caption is the screenshot's "STEP N", not a bare number. */}
-          <span aria-hidden="true">Step {step.n}</span>
+        <li
+          key={step.n}
+          data-state={state(step.n)}
+          className={cn(
+            'rounded-lg border px-3 py-2 text-[12.5px] leading-tight',
+            state(step.n) === 'current' && 'border-primary/55 bg-card text-foreground shadow-sm',
+            state(step.n) === 'done' && 'bg-card text-foreground',
+            state(step.n) === 'later' && 'bg-muted text-muted-foreground opacity-70'
+          )}
+        >
+          <span
+            className={cn(
+              'block text-[10px] uppercase tracking-[0.08em]',
+              state(step.n) === 'current' ? 'text-primary' : 'text-muted-foreground'
+            )}
+          >
+            Step {step.n}
+          </span>
           {step.label}
-          {step.n > 3 && <div className="small" style={{ opacity: 0.8 }}>database first</div>}
+          {step.n > 3 && <div className="text-[10.5px] opacity-80">later milestone</div>}
         </li>
       ))}
     </ol>
