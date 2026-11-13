@@ -6,3 +6,6 @@ Thumbs.db
 
 # Visual Studio per-user state
 .vs/
+
+# Local browser harness (not part of the product)
+.pw/
