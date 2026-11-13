@@ -13,14 +13,14 @@ How it was derived. Operation, method, path and roles are read from the catalog 
 | OP-CAP-001 | GetBackendCapabilities | `GET /capabilities` | FR-019 | All | M0 (served) | Contract | TC-001 |
 | OP-CAP-002 | GetProviderCapabilities | `GET /brokers/{brokerId}/capabilities` | FR-019 | All | M0 (served) | Contract | TC-001 |
 | OP-BRK-001 | ListBrokers | `GET /brokers` | FR-012, FR-014 | All | M0 (served) | Contract | TC-001 |
-| OP-BRK-002 | CreateBroker | `POST /brokers` | FR-012 | Admin | M0 (served) | Contract, idempotency, integration (real broker) | TC-001, TC-002, TC-005 |
+| OP-BRK-002 | CreateBroker | `POST /brokers` | FR-012, FR-013 | Admin | M0 (served) | Contract, idempotency, integration (real broker) | TC-001, TC-002, TC-005, TC-030 |
 | OP-BRK-003 | GetBroker | `GET /brokers/{brokerId}` | FR-012 | All | M0 (served) | Contract | TC-001 |
 | OP-BRK-004 | UpdateBroker | `PATCH /brokers/{brokerId}` | FR-012 | Admin | M0 (served) | Contract, idempotency | TC-001, TC-002 |
 | OP-BRK-005 | DeleteBroker | `DELETE /brokers/{brokerId}` | FR-012 | Admin | M0 (served) | Contract, idempotency, integration (real broker) | TC-001, TC-002, TC-005 |
 | OP-BRK-006 | RunPreflight | `POST /brokers/{brokerId}/preflight` | FR-013 | Admin | M0 (served) | Contract, idempotency, integration (real broker) | TC-001, TC-005 |
 | OP-QUE-001 | ListQueues | `GET /queues` | FR-001, FR-018 | All | M0 (served) | Contract, integration (real broker) | TC-001, TC-006 |
 | OP-QUE-002 | GetQueue | `GET /queues/{queueId}` | FR-001, FR-003, FR-018 | All | M0 (served) | Contract, integration (real broker) | TC-001, TC-006, TC-019 |
-| OP-QUE-003 | SetCapturePolicy | `PUT /queues/{queueId}/capture-policy` | FR-015, FR-023 | Admin | M2 (deferred) | Contract, idempotency | TC-001, TC-002, TC-017 |
+| OP-QUE-003 | SetCapturePolicy | `PUT /queues/{queueId}/capture-policy` | FR-013, FR-015, FR-023 | Admin | M2 (deferred) | Contract, idempotency | TC-001, TC-002, TC-017 |
 | OP-MSG-001 | SearchMessages | `QUERY /messages` | FR-006 | Support, Admin | M3 (deferred) | Contract, integration (real broker) | TC-001, TC-020 |
 | OP-MSG-002 | GetMessage | `GET /messages/{messageId}` | FR-007 | Support, Admin | M3 (deferred) | Contract, integration (real broker) | TC-001, TC-020 |
 | OP-MET-001 | GetMetricSummary | `GET /metrics/summary` | FR-004, FR-005 | All | M2 (deferred) | Contract, integration (real broker) | TC-001, TC-016, TC-019 |

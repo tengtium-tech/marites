@@ -120,7 +120,7 @@ Append-only. No operation in this API modifies or deletes an audit entry.
 | Injects data into a business flow | OP-OPR-005 | Idempotency key, capability gate, audit |
 | Re-sends messages to consumers | OP-OPR-004 | Dry run, rate limit, auto-halt, audit |
 | Removes messages irreversibly | OP-OPR-002, OP-OPR-003 | Typed confirmation, dry run, Admin-only for purge, audit |
-| Mutates broker topology | OP-BRK-002, OP-BRK-005 | Admin-only, preflight, scoped to `marites.` prefix |
+| Mutates broker topology | OP-BRK-002, OP-BRK-005, OP-BRK-006 | Admin only. Create and recheck may create and clean up a temporary probe. Delete cleans up Marites-owned topology. Scope is limited to the `marites.` prefix |
 | Reads sensitive content | OP-MSG-001, OP-MSG-002 | Role gate, tenant scope, no Viewer access |
 | Records intent without effect | OP-OPR-007 | Writes a `pending` audit row; executes nothing |
 | None | All queries | — |

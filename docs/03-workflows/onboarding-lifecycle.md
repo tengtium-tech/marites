@@ -6,7 +6,10 @@ From "we have a broker" to "the dashboard is useful", including the three places
 
 ## 1. The path
 
-![Onboarding sequence](diagrams/onboarding-setup.png)
+The wizard submits settings to `POST /brokers`. The API checks broker access before
+saving and returns the initial result. The wizard follows the [create outcomes](../11-operations/deployment-and-onboarding.md#2-preflight-readiness-check-fr-013).
+After creation, use the profile-scoped preflight operation for rechecks. Queue selection
+and capture configuration arrive in M2.
 
 The C4 model assigns tap declaration to the capture worker. The current design does not specify how API-saved queue rules trigger worker reconciliation; this sequence does not imply a direct API-to-worker call.
 
@@ -31,11 +34,11 @@ The last one is the subtlest: nothing fails, the numbers are simply wrong.
 
 | Stop | What the adopter sees | What they can do |
 |---|---|---|
-| Management API blocked | Setup cannot complete | Enable the plugin, or choose another provider |
-| Topology writes refused | Preflight fails on `topology_write_permitted` | Grant `configure`/`write`/`read` on `^marites\.`, or have their platform team pre-create the queues |
+| Live metadata access cannot be verified | Setup stays open and the profile remains unsaved | Follow the remedy to restore reachability, correct credentials, or grant access |
+| Topology writes refused | Profile saved as `failing` with live metadata available | Apply the named grant and rerun preflight |
 | No dead-letter exchange | Onboarding succeeds; dead-letter monitoring shows "unavailable" | Configure `x-dead-letter-exchange` on new queues; existing queues need recreation |
 
-Only the second is a hard stop. The third is a degraded but working product, which is why it does not block anything.
+A reachability or access failure blocks creation. A topology denial blocks capture. A missing DLX affects dead-letter monitoring for that queue.
 
 ## 4. What onboarding does not do
 

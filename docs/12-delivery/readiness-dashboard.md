@@ -19,20 +19,20 @@ Nothing here reports an executed test, a built service or a verified deployment.
 
 ## Readiness gate
 
-M0 exits when the contract is reviewed, `/capabilities` and preflight are served, the setup wizard refuses to enable capture on a failing check, and `docker compose up` yields a working UI against a test broker ([DOC-OPS-001 §6](../11-operations/deployment-and-onboarding.md)). The wizard saves the profile and then blocks *enabling* rather than saving: a save that a failing check refuses would trap a user who mistyped a credential on the screen that corrects it. None of this is implemented. All twenty decisions are answered and ADR-001 to ADR-025 stand (23 accepted, ADR-004 and ADR-005 superseded), so no unresolved product decision blocks M0 planning.
+The [M0 exit criteria](../11-operations/deployment-and-onboarding.md#milestones) and [verification gates](../10-testing/verification-plan.md#3-milestone-gates) own readiness. The wizard follows DEC-021 and the [initial broker check outcomes](../11-operations/deployment-and-onboarding.md#2-preflight-readiness-check-fr-013).
 
 ## By layer
 
 | Layer | Documentation status | Implementation / verification status | Source and remaining work |
 | --- | --- | --- | --- |
 | Requirements | Approved | Planned; no criterion has been exercised | [DOC-SRS-001](../02-business/requirements.md): 29 FR and eight NFR, each with one acceptance criterion |
-| Decisions | Approved | No formal decision is open; DEC-008's premise remains an assumption to confirm in the adopter environment | [DEC-001 to DEC-019](../01-project/decisions-and-open-questions.md); ADR-001 to ADR-025, 23 accepted and two superseded |
+| Decisions | Approved | No formal decision is open; DEC-008's premise remains an assumption to confirm in the adopter environment | [DEC-001 to DEC-021](../01-project/decisions-and-open-questions.md); ADR-001 to ADR-025, 23 accepted and two superseded |
 | Workflows | Approved | No application execution; timing values are only those recorded in configuration and milestones | [Five records](../03-workflows/README.md): three lifecycles, failure paths, retention and compaction |
 | Architecture | Approved | Implementation not started | [Overview](../05-architecture/architecture-overview.md), [C4](../05-architecture/c4-model.md), [failure modes](../05-architecture/failure-modes.md), and [adapter design](../05-architecture/provider-adapters.md) |
 | Data model | Approved | No schema applied | [Thirteen tables in two stores](../07-data-and-contracts/data-model.md) — ten bookkeeping and three optional message-store tables — including `peak_rate` and `capture_dedupe`; column detail in the [dictionary](../07-data-and-contracts/data-dictionary.md) |
 | Migration | Approved | Planned; nothing applied | [First migration plan](../07-data-and-contracts/migration-plan.md): separate SQLite/PostgreSQL streams, partitioning, tenant isolation, rollback, and named operational gaps |
 | API contract | Approved | Both contracts pass static lint; service and generated-client conformance remain Planned in TC-001 | [Served](../07-data-and-contracts/openapi/openapi.yaml) (10) and [deferred](../07-data-and-contracts/openapi/openapi.deferred.yaml) (15), OpenAPI 3.2.1 |
-| Error catalog | Approved | Implementation not started | [27 codes](../07-data-and-contracts/error-catalog.md), aligned with contract conventions |
+| Error catalog | Approved | Implementation not started | [28 codes](../07-data-and-contracts/error-catalog.md), aligned with contract conventions |
 | Experience | Approved | UI implementation not started; workstation layout is the target, narrow reflow is covered by NFR-008, phone layout is out of scope | [Metric rules](../08-experience/dashboard-and-operations.md), [wireframes](../08-experience/wireframes-and-navigation.md), [accessibility](../08-experience/accessibility.md), and [visual design](../08-experience/visual-design.md) |
 | Security | Approved | No controls implemented or tested; no penetration test | [Threat model](../09-security/threat-model.md): 26 threats, six planned cases cover ten threats, and six residual risks are stated |
 | Platform foundation | Approved | No alerting by accepted scope decision RSK-012 | [Index](../06-platform-foundation/README.md), [configuration reference](../11-operations/configuration-reference.md) (24 variables), and [health/metrics](../11-operations/deployment-and-onboarding.md) §3.2 |

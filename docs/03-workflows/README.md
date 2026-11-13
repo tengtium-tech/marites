@@ -23,11 +23,11 @@ Workflow diagrams are maintained as editable JSON sources with PNG previews for 
 | Live capture | Sequence | [source](diagrams/capture-live.sequence.json) | [PNG](diagrams/capture-live.png) |
 | Dead-letter capture | Sequence | [source](diagrams/dead-letter-capture.sequence.json) | [PNG](diagrams/dead-letter-capture.png) |
 | Recovery actions | Sequence | [source](diagrams/recovery-actions.sequence.json) | [PNG](diagrams/recovery-actions.png) |
-| Onboarding setup | Sequence | [source](diagrams/onboarding-setup.sequence.json) | [PNG](diagrams/onboarding-setup.png) |
+| Onboarding setup | Sequence | [source](diagrams/onboarding-setup.sequence.json) | [Earlier preview](diagrams/onboarding-setup.png), superseded by DEC-021 |
 | Capture failure states | Workflow | [source](diagrams/capture-failure-states.workflow.json) | [PNG](diagrams/capture-failure-states.png) |
 | Dead-letter blind spot | Workflow | [source](diagrams/dead-letter-observability.workflow.json) | [PNG](diagrams/dead-letter-observability.png) |
 | Recovery breaks | Workflow | [source](diagrams/recovery-breaks.workflow.json) | [PNG](diagrams/recovery-breaks.png) |
-| Onboarding exits | Workflow | [source](diagrams/onboarding-exits.workflow.json) | [PNG](diagrams/onboarding-exits.png) |
+| Onboarding exits | Workflow | [source](diagrams/onboarding-exits.workflow.json) | [Earlier preview](diagrams/onboarding-exits.png), superseded by DEC-021 |
 | Rollup tiers | Lifecycle | [source](diagrams/rollup-tiers.lifecycle.json) | [PNG](diagrams/rollup-tiers.png) |
 | Retention sweeper pass | Sequence | [source](diagrams/retention-sweeper.sequence.json) | [PNG](diagrams/retention-sweeper.png) |
 | Storage ceiling | Lifecycle | [source](diagrams/storage-ceiling.lifecycle.json) | [PNG](diagrams/storage-ceiling.png) |
