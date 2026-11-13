@@ -1,22 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 
-type Check = { id: string; label: string; state: 'pass' | 'fail' | 'warn' | 'skipped'; detail?: string; remedy?: string };
+type Check = {
+  id: string;
+  label: string;
+  state: 'pass' | 'fail' | 'warn' | 'skipped';
+  detail?: string;
+  remedy?: string;
+};
+
 type Preflight = { state: 'passing' | 'failing' | 'degraded'; checks: Check[]; checkedAt?: string };
 
-type SaveState =
-  | { kind: 'editing' }
-  | { kind: 'saving' }
-  | { kind: 'saved'; brokerId: string; revision: number; preflight?: Preflight }
-  | { kind: 'error'; message: string };
-
-const newIdempotencyKey = () => crypto.randomUUID();
-
-type Capabilities = { features: string[] };
-
-/**
- * What this build can do with the profile's provider. The flags describe the implementation,
- * not the broker — RabbitMQ can purge, this build cannot, so canPurge is false.
- */
 type ProviderCapabilities = {
   kind: string;
   displayName: string;
@@ -30,12 +23,37 @@ type ProviderCapabilities = {
   canDeclareShadow: boolean;
 };
 
+type Capabilities = { features: string[] };
+
+/** The Problem body the API returns for a refused creation. */
+type Problem = { code?: string; title?: string; detail?: string; remedy?: string; status?: number };
+
+type SaveState =
+  | { kind: 'editing' }
+  | { kind: 'saving' }
+  | { kind: 'saved'; brokerId: string; revision: number; preflightState: string; preflight: Preflight }
+  | { kind: 'rejected'; status: number; problem: Problem };
+
+const newIdempotencyKey = () => crypto.randomUUID();
+
 export function SetupWizard() {
-  // What the backend says it can do, asked before anything is offered. Rendering a form the
-  // API cannot honour is the failure /capabilities exists to prevent (ADR-017) — and it is
-  // invisible from the frontend until a request 404s.
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null);
   const [capabilitiesFailed, setCapabilitiesFailed] = useState(false);
+  const [form, setForm] = useState({
+    name: '',
+    providerKind: 'rabbitmq',
+    environment: 'dev',
+    credentialKind: 'basic',
+    endpoint: '',
+    adminUri: '',
+    namespaceOrVhost: '/',
+    username: '',
+    password: '',
+  });
+  const [state, setState] = useState<SaveState>({ kind: 'editing' });
+  const [provider, setProvider] = useState<ProviderCapabilities | null>(null);
+  const [rechecking, setRechecking] = useState(false);
+  const alertRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,32 +72,18 @@ export function SetupWizard() {
     };
   }, []);
 
-
-  const [form, setForm] = useState({
-    name: '',
-    providerKind: 'rabbitmq',
-    environment: 'dev',
-    credentialKind: 'basic',
-    endpoint: '',
-    adminUri: '',
-    namespaceOrVhost: '/',
-    username: '',
-    password: '',
-  });
-  const [state, setState] = useState<SaveState>({ kind: 'editing' });
-  const [provider, setProvider] = useState<ProviderCapabilities | null>(null);
-  const errorRef = useRef<HTMLParagraphElement>(null);
-
-  // An alert that is announced but off-screen still leaves the user hunting for it, so a
-  // failed save moves focus to the message rather than relying on announcement alone.
+  // A refused creation leaves the form where it is, so the operator can correct it. Focus moves
+  // to the message, because an alert announced but off-screen still leaves them hunting.
   useEffect(() => {
-    if (state.kind === 'error') {
-      errorRef.current?.focus();
+    if (state.kind === 'rejected') {
+      alertRef.current?.focus();
     }
   }, [state]);
 
-  const update = (field: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((current) => ({ ...current, [field]: event.target.value }));
+  const update =
+    (field: keyof typeof form) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm((current) => ({ ...current, [field]: event.target.value }));
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
@@ -101,180 +105,213 @@ export function SetupWizard() {
     });
 
     if (!response.ok) {
-      setState({ kind: 'error', message: `The profile was not saved (${response.status}).` });
+      // DEC-021: a refused creation persists nothing, so there is no half-made profile to clean
+      // up. The form keeps its values and the remedy says what to change.
+      const problem = await response.json().catch(() => ({}) as Problem);
+      setState({ kind: 'rejected', status: response.status, problem });
       return;
     }
 
     const created = await response.json();
-    setState({ kind: 'saved', brokerId: created.id, revision: created.revision });
 
-    // Asked once the profile exists: the capabilities belong to the provider this profile names,
-    // not to the build in general.
-    const capabilitiesResponse = await fetch(`/api/v1/brokers/${created.id}/capabilities`);
-    if (capabilitiesResponse.ok) {
-      setProvider(await capabilitiesResponse.json());
-    }
-  }
-
-  async function runPreflight() {
-    if (state.kind !== 'saved') return;
-
-    const response = await fetch(`/api/v1/brokers/${state.brokerId}/preflight`, {
-      method: 'POST',
-      headers: { 'Idempotency-Key': newIdempotencyKey() },
+    // The initial checks arrive with the created profile; there is no second call.
+    setState({
+      kind: 'saved',
+      brokerId: created.id,
+      revision: created.revision,
+      preflightState: created.preflightState,
+      preflight: created.preflight,
     });
 
-    if (!response.ok) {
-      setState({ ...state, preflight: undefined });
-      return;
+    const capabilityResponse = await fetch(`/api/v1/brokers/${created.id}/capabilities`);
+    if (capabilityResponse.ok) {
+      setProvider(await capabilityResponse.json());
     }
-
-    setState({ ...state, preflight: await response.json() });
   }
 
-  const passing = state.kind === 'saved' && state.preflight?.state === 'passing';
+  /** Explicit recheck against the saved profile — the wizard never re-runs this on its own. */
+  async function recheck() {
+    if (state.kind !== 'saved') return;
 
-  // Nothing renders until the answer arrives: a form that appears and then withdraws is worse
-  // than a moment of blank, because the user has already started typing.
+    setRechecking(true);
+
+    try {
+      const response = await fetch(`/api/v1/brokers/${state.brokerId}/preflight`, {
+        method: 'POST',
+        headers: { 'Idempotency-Key': newIdempotencyKey() },
+      });
+
+      if (response.ok) {
+        const result: Preflight = await response.json();
+        setState({ ...state, preflight: result, preflightState: result.state });
+      }
+    } finally {
+      setRechecking(false);
+    }
+  }
+
   if (capabilities === null && !capabilitiesFailed) {
     return <main aria-busy="true" />;
   }
 
   if (capabilitiesFailed) {
     return (
-      <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 720, margin: '0 auto', padding: 32 }}>
+      <Shell>
         <h1 style={{ fontSize: 24 }}>Connect a broker</h1>
         <p role="alert" style={{ color: '#b00020' }}>
           The backend could not be reached, so its capabilities are unknown. Nothing is offered
           until they are: a control that cannot work is worse than no control.
         </p>
-      </main>
+      </Shell>
     );
   }
 
   if (!capabilities!.features.includes('brokers')) {
     return (
-      <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 720, margin: '0 auto', padding: 32 }}>
+      <Shell>
         <h1 style={{ fontSize: 24 }}>Connect a broker</h1>
         <p role="alert" style={{ color: '#8a4b00' }}>
           This backend does not report broker management as available, so the form is not shown.
-          Its capabilities are: {capabilities!.features.length ? capabilities!.features.join(', ') : 'none'}.
         </p>
-      </main>
+      </Shell>
     );
   }
 
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 720, margin: '0 auto', padding: 32 }}>
+    <Shell>
       <h1 style={{ fontSize: 24 }}>Connect a broker</h1>
       <p style={{ color: '#444' }}>
         Marites observes a broker you already run. It never provisions or repairs one.
       </p>
 
-      <form onSubmit={save} aria-busy={state.kind === 'saving'} style={{ display: 'grid', gap: 12, marginTop: 24 }}>
-        <Field label="Name" value={form.name} onChange={update('name')} required />
-        <Field
-          label="AMQP endpoint"
-          hint="For example amqp://host:5672/ — the address a consumer would use."
-          value={form.endpoint}
-          onChange={update('endpoint')}
-          placeholder="amqp://host:5672/"
-          required
-        />
-        <Field label="Management API" value={form.adminUri} onChange={update('adminUri')} placeholder="http://host:15672" />
-        <Field label="Vhost" value={form.namespaceOrVhost} onChange={update('namespaceOrVhost')} />
-        <Field label="Username" value={form.username} onChange={update('username')} required />
-        <Field label="Password" type="password" value={form.password} onChange={update('password')} required />
-
-        <button type="submit" disabled={state.kind === 'saving'}>
-          {state.kind === 'saving' ? 'Saving…' : 'Save profile'}
-        </button>
-      </form>
-
-      {state.kind === 'error' && (
-        <p
-          ref={errorRef}
+      {state.kind === 'rejected' && (
+        <div
+          ref={alertRef}
           role="alert"
           tabIndex={-1}
-          style={{ color: '#b00020', marginTop: 16 }}
+          style={{ border: '1px solid #b00020', padding: 12, marginTop: 16, background: '#fff5f5' }}
         >
-          {state.message}
-        </p>
+          <strong style={{ color: '#b00020' }}>
+            {state.problem.title ?? 'The profile was not saved'} ({state.status}
+            {state.problem.code ? ` ${state.problem.code}` : ''})
+          </strong>
+          {state.problem.detail && <p style={{ margin: '8px 0 0' }}>{state.problem.detail}</p>}
+          {state.problem.remedy && (
+            <p style={{ margin: '8px 0 0', color: '#8a4b00' }}>Remedy: {state.problem.remedy}</p>
+          )}
+          <p style={{ margin: '8px 0 0', fontSize: 13, color: '#555' }}>
+            Nothing was saved. Correct the fields below and submit again.
+          </p>
+        </div>
+      )}
+
+      {state.kind !== 'saved' && (
+        <form onSubmit={save} aria-busy={state.kind === 'saving'} style={{ display: 'grid', gap: 12, marginTop: 24 }}>
+          <Field label="Name" value={form.name} onChange={update('name')} required />
+          <Field
+            label="AMQP endpoint"
+            hint="For example amqp://host:5672/ — the address a consumer would use."
+            value={form.endpoint}
+            onChange={update('endpoint')}
+            placeholder="amqp://host:5672/"
+            required
+          />
+          <Field label="Management API" value={form.adminUri} onChange={update('adminUri')} placeholder="http://host:15672" />
+          <Field label="Vhost" value={form.namespaceOrVhost} onChange={update('namespaceOrVhost')} />
+          <Field label="Username" value={form.username} onChange={update('username')} required />
+          <Field label="Password" type="password" value={form.password} onChange={update('password')} required />
+
+          <button type="submit" disabled={state.kind === 'saving'}>
+            {state.kind === 'saving' ? 'Checking the broker…' : 'Save profile'}
+          </button>
+          <p style={{ fontSize: 12, color: '#555' }}>
+            Saving checks the broker first. If it cannot be reached, or rejects the credentials,
+            nothing is saved.
+          </p>
+        </form>
       )}
 
       {state.kind === 'saved' && (
-        <section aria-labelledby="preflight-heading" style={{ marginTop: 24 }}>
-          <p>
-            Saved as revision {state.revision}. It is <strong>not verified</strong> until preflight passes.
+        <section aria-labelledby="result-heading" style={{ marginTop: 24 }}>
+          <h2 id="result-heading" style={{ fontSize: 18 }}>
+            Saved — preflight {state.preflightState}
+          </h2>
+          <p style={{ color: '#555' }}>
+            Revision {state.revision}. The checks below ran as part of saving, not afterwards.
           </p>
 
-          <button type="button" onClick={runPreflight}>Run preflight</button>
+          <div aria-live="polite">
+            <CheckList checks={state.preflight.checks} />
+          </div>
 
-          {state.preflight && (
-            <>
-              <h2 id="preflight-heading" style={{ fontSize: 18, marginTop: 20 }}>
-                Preflight: {state.preflight.state}
-              </h2>
-              <div aria-live="polite">
-              <ul style={{ listStyle: 'none', padding: 0 }}>
-                {state.preflight.checks.map((check) => (
-                  <li key={check.id} style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>
-                    <strong>{check.label}</strong> — {check.state}
-                    {check.detail && <div style={{ color: '#555' }}>{check.detail}</div>}
-                    {check.remedy && <div style={{ color: '#8a4b00' }}>Remedy: {check.remedy}</div>}
-                  </li>
-                ))}
-              </ul>
-              </div>
+          <button type="button" onClick={recheck} disabled={rechecking} style={{ marginTop: 12 }}>
+            {rechecking ? 'Rechecking…' : 'Re-run preflight'}
+          </button>
 
-              {/*
-                No control here, deliberately. Capture is enabled by a capture policy, which the
-                contract defers to M2, and rendering a button that cannot act is the failure
-                /capabilities exists to prevent (ADR-017).
-              */}
-              <p style={{ color: passing ? '#2e7d32' : '#8a4b00' }}>
-                {passing
-                  ? 'Preflight passed. Capture can be enabled once capture policies arrive (M2).'
-                  : 'Capture cannot be enabled until preflight passes. The profile is saved, so it can be corrected.'}
-              </p>
+          <p style={{ color: state.preflight.state === 'passing' ? '#2e7d32' : '#8a4b00', marginTop: 12 }}>
+            {state.preflight.state === 'passing'
+              ? 'Preflight passed. Capture can be enabled once capture policies arrive (M2).'
+              : 'Live metadata is available. Capture stays disabled until the failing checks pass.'}
+          </p>
 
-              {provider && (
-                <section aria-labelledby="provider-heading" style={{ marginTop: 20 }}>
-                  <h3 id="provider-heading" style={{ fontSize: 15 }}>
-                    What this build can do with {provider.displayName}
-                  </h3>
-                  {/*
-                    Read from the API, never assumed here. A hard-coded list in the UI is how a
-                    screen ends up offering a control the backend refuses — the failure
-                    /capabilities exists to prevent.
-                  */}
-                  <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0' }}>
-                    {[
-                      ['Observe traffic', provider.canTap],
-                      ['Read queue metadata', provider.canPeek],
-                      ['Publish a message', provider.canPublish],
-                      ['Discard messages', provider.canDiscard],
-                      ['Purge a queue', provider.canPurge],
-                      ['Replay messages', provider.canReplay],
-                      ['Declare a shadow queue', provider.canDeclareShadow],
-                    ].map(([label, available]) => (
-                      <li key={label as string} style={{ padding: '3px 0', color: available ? '#1b5e20' : '#777' }}>
-                        {available ? '✓' : '—'} {label as string}
-                        {!available && <span style={{ fontSize: 12 }}> (not in this build)</span>}
-                      </li>
-                    ))}
-                  </ul>
-                  <p style={{ fontSize: 12, color: '#555' }}>
-                    Provider support tier: {provider.supportTier}. Flags marked “not in this build”
-                    describe Marites, not {provider.displayName}.
-                  </p>
-                </section>
-              )}
-            </>
-          )}
+          {provider && <CapabilityList provider={provider} />}
         </section>
       )}
+    </Shell>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 720, margin: '0 auto', padding: 32 }}>
+      {children}
     </main>
+  );
+}
+
+function CheckList({ checks }: { checks: Check[] }) {
+  return (
+    <ul style={{ listStyle: 'none', padding: 0 }}>
+      {checks.map((check) => (
+        <li key={check.id} style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>
+          <strong>{check.label}</strong> — {check.state}
+          {check.detail && <div style={{ color: '#555' }}>{check.detail}</div>}
+          {check.remedy && <div style={{ color: '#8a4b00' }}>Remedy: {check.remedy}</div>}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function CapabilityList({ provider }: { provider: ProviderCapabilities }) {
+  const rows: Array<[string, boolean]> = [
+    ['Observe traffic', provider.canTap],
+    ['Read queue metadata', provider.canPeek],
+    ['Publish a message', provider.canPublish],
+    ['Discard messages', provider.canDiscard],
+    ['Purge a queue', provider.canPurge],
+    ['Replay messages', provider.canReplay],
+    ['Declare a shadow queue', provider.canDeclareShadow],
+  ];
+
+  return (
+    <section aria-labelledby="provider-heading" style={{ marginTop: 20 }}>
+      <h3 id="provider-heading" style={{ fontSize: 15 }}>
+        What this build can do with {provider.displayName}
+      </h3>
+      <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0' }}>
+        {rows.map(([label, available]) => (
+          <li key={label} style={{ padding: '3px 0', color: available ? '#1b5e20' : '#777' }}>
+            {available ? '✓' : '—'} {label}
+            {!available && <span style={{ fontSize: 12 }}> (not in this build)</span>}
+          </li>
+        ))}
+      </ul>
+      <p style={{ fontSize: 12, color: '#555' }}>
+        Provider support tier: {provider.supportTier}. Flags marked “not in this build” describe
+        Marites, not {provider.displayName}.
+      </p>
+    </section>
   );
 }
 
