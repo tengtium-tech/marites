@@ -79,6 +79,12 @@ public sealed class RabbitMqProbe : IBrokerProbe
                 $"The user '{user}' holds no configure permission covering '{ShadowPrefix}'.",
                 $"Grant configure, write and read on ^{ShadowPrefix.Replace(".", "\\.")} to '{user}' on vhost '{vhost}'."));
 
+        // The broker's own clock, from the Date header of the management API response. It is
+        // the only clock the broker exposes without a write, and skew is the failure mode that
+        // makes message ages and delivery timestamps quietly wrong.
+        var serverDate = await ServerDateAsync(client, "api/overview", cancellationToken);
+        checks.Add(EvaluateClockSkew(serverDate, DateTimeOffset.UtcNow, ClockTolerance));
+
         checks.AddRange(Skipped("Not built yet."));
         return checks;
     }
@@ -87,8 +93,56 @@ public sealed class RabbitMqProbe : IBrokerProbe
     [
         new("dead_letter_configured", "Dead-letter topology readable", "skipped", detail),
         new("shadow_declarable", "Shadow queue declarable", "skipped", detail),
-        new("clock_skew", "Broker clock within tolerance", "skipped", detail),
     ];
+
+    /// <summary>Skew beyond a minute is enough to misorder evidence; beyond that, ages read wrong.</summary>
+    public static readonly TimeSpan ClockTolerance = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// Judges the broker's clock against ours. Extracted so it can be exercised without a
+    /// broker whose clock is actually wrong — which is not something a test can arrange.
+    /// </summary>
+    public static PreflightCheck EvaluateClockSkew(DateTimeOffset? serverDate, DateTimeOffset now, TimeSpan tolerance)
+    {
+        if (serverDate is null)
+        {
+            return new PreflightCheck(
+                "clock_skew", "Broker clock within tolerance", "skipped",
+                "The management API did not report a Date header, so the broker's clock is unknown.");
+        }
+
+        var skew = (serverDate.Value - now).Duration();
+
+        return skew <= tolerance
+            ? new PreflightCheck(
+                "clock_skew", "Broker clock within tolerance", "pass",
+                $"Skew is {skew.TotalSeconds:F0}s, within the {tolerance.TotalSeconds:F0}s tolerance.")
+            : new PreflightCheck(
+                "clock_skew", "Broker clock within tolerance", "fail",
+                $"The broker's clock differs by {skew.TotalSeconds:F0}s, beyond the {tolerance.TotalSeconds:F0}s tolerance.",
+                "Point both hosts at the same time source. Message ages and delivery timestamps read wrong while the clocks disagree.");
+    }
+
+    private static async Task<DateTimeOffset?> ServerDateAsync(
+        HttpClient client,
+        string path,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var response = await client.GetAsync(path, cancellationToken);
+
+            return response.Headers.Date ?? response.Content.Headers.LastModified;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+        catch (TaskCanceledException)
+        {
+            return null;
+        }
+    }
 
     private static async Task<JsonDocument?> GetAsync(HttpClient client, string path, CancellationToken cancellationToken)
     {
