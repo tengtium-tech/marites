@@ -12,7 +12,8 @@ namespace Marites.ApiTests;
 /// documented operation exists. A contract that promises more than the build serves is the
 /// failure `/capabilities` is supposed to prevent, one layer down.
 /// </remarks>
-public sealed partial class RouteCoverageTests : IClassFixture<BrokerApiFixture>
+[Collection(ApiCollection.Name)]
+public sealed partial class RouteCoverageTests
 {
     private readonly BrokerApiFixture _fixture;
 
