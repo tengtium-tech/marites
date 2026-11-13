@@ -2,7 +2,7 @@ openapi: 3.2.1
 
 info:
   title: Marites API
-  version: 0.2.0
+  version: 0.3.0
   license:
     name: MIT
     identifier: MIT
@@ -34,6 +34,8 @@ tags:
     description: Connection profiles and readiness checks
   - name: Queues
     description: Live metadata
+  - name: Operations
+    description: Peek, discard, purge and replay — the actions Support runs during recovery
 
 security:
   - bearerAuth: []
@@ -300,6 +302,144 @@ paths:
               schema: { $ref: '#/components/schemas/QueueDetail' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+
+  /operations/peek:
+    post:
+      tags: [Operations]
+      operationId: peekQueue
+      summary: Read messages still sitting in a queue
+      description: |
+        Non-destructive on providers with true peek; on RabbitMQ this uses get-with-requeue
+        and briefly blocks the queue, so it is rate limited and user-initiated only.
+        `PeekResult.destructive` tells the client which it is doing.
+
+        In this slice the messages come from the live queue, not a capture store — the
+        identifiers a peek returns are the ones a subsequent discard accepts.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PeekRequest' }
+      responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
+        '200':
+          description: Peeked messages
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PeekResult' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: Provider cannot peek safely here — ERR-CAP-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /operations/discard:
+    post:
+      tags: [Operations]
+      operationId: discardMessages
+      summary: Remove specific messages from a queue
+      description: |
+        Destructive and irreversible. Requires a typed confirmation naming the queue when
+        `dryRun` is false — a mismatch returns ERR-OPR-001. The dry run reports what would
+        be removed without removing it. A dry run never writes an audit row; the applied
+        command does.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DiscardRequest' }
+      responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
+        '200':
+          description: Result, or dry-run preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationResult' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: Typed confirmation does not match — ERR-OPR-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /operations/purge:
+    post:
+      tags: [Operations]
+      operationId: purgeQueue
+      summary: Remove every message in a queue
+      description: |
+        Admin only; never scheduled, never automatic. Requires a typed confirmation of the
+        queue name when `dryRun` is false, and the environment tag when the target broker's
+        environment is `prod`. The dry run reports the current depth without removing anything.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PurgeRequest' }
+      responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
+        '200':
+          description: Result, or dry-run preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationResult' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: Typed confirmation or environment tag does not match — ERR-OPR-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /operations/replay:
+    post:
+      tags: [Operations]
+      operationId: replayMessages
+      summary: Re-send dead-lettered messages to their origin
+      description: |
+        The mechanism differs per provider and is reported in `ProviderCapabilities.replayModel`.
+        The dry run returns what would be replayed so the operator sees whether replay will
+        simply dead-letter again. Execution is rate limited and audited.
+
+        In this slice the replay runs to completion within the request and the job is returned
+        terminal; auto-halt arrives with the durable replay job (WP-M1-3).
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReplayRequest' }
+      responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
+        '200':
+          description: Dry-run preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReplayResult' }
+        '202':
+          description: |
+            An accepted replay. Runs to completion in this slice; a replay that failed partway
+            is reported as ERR-OPR-004 with `outcome: Unresolved` — never retry blindly.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReplayResult' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: The provider cannot replay safely here — ERR-CAP-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
 
 components:
 
@@ -682,3 +822,145 @@ components:
         rowRetentionHours: { type: integer, minimum: 1, default: 72 }
         maxRows: { type: integer, format: int64 }
         maxBytes: { type: integer, format: int64 }
+
+    PeekRequest:
+      type: object
+      required: [queueId]
+      properties:
+        queueId: { type: string, format: uuid }
+        limit: { type: integer, minimum: 1, maximum: 100, default: 10 }
+        includePayload: { type: boolean, default: true }
+
+    PeekedMessage:
+      type: object
+      description: |
+        A message as the live broker holds it. Distinct from the captured-message detail the
+        search API will return in M3: there is no capture metadata here, because no capture
+        has happened.
+      required: [messageId, size, redelivered]
+      properties:
+        messageId:
+          type: string
+          description: Broker-assigned identifier, opaque. The value a subsequent discard accepts.
+        routingKey: { type: string }
+        exchange: { type: string }
+        contentType: { type: string }
+        size: { type: integer, format: int64 }
+        payload:
+          type: string
+          contentEncoding: base64
+          description: Present when `includePayload` is true and the payload was retained.
+        headers: { type: object, additionalProperties: true }
+        redelivered: { type: boolean }
+
+    PeekResult:
+      type: object
+      required: [messages, destructive]
+      properties:
+        messages:
+          type: array
+          items: { $ref: '#/components/schemas/PeekedMessage' }
+        destructive:
+          type: boolean
+          description: |
+            True where peeking requires consuming and requeueing, as on RabbitMQ. The client
+            warns before calling, since it briefly blocks the queue.
+
+    DiscardRequest:
+      type: object
+      required: [queueId, messageIds, dryRun]
+      properties:
+        queueId:
+          type: string
+          format: uuid
+          description: The queue the identifiers came from. Resolved without a capture store.
+        messageIds:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items: { type: string }
+          description: Message identifiers exactly as the peek returned them.
+        dryRun: { type: boolean }
+        confirmation:
+          type: string
+          description: Queue name typed by the operator. Required when `dryRun` is false.
+
+    PurgeRequest:
+      type: object
+      required: [queueId, dryRun]
+      properties:
+        queueId: { type: string, format: uuid }
+        dryRun: { type: boolean }
+        confirmation:
+          type: string
+          description: Queue name typed by the operator. Required when `dryRun` is false.
+        environmentConfirmation:
+          type: string
+          description: Environment tag, required when the target environment is `prod`.
+
+    ReplayRequest:
+      type: object
+      required: [queueId, dryRun]
+      properties:
+        queueId:
+          type: string
+          format: uuid
+          description: The dead-letter queue to replay from.
+        maxMessages:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 100
+          description: How many of the queue's messages to replay.
+        dryRun: { type: boolean }
+        maxPerMinute: { type: integer, minimum: 1, maximum: 6000, default: 60 }
+        target:
+          type: object
+          description: Optional override. Defaults to each message's original exchange and routing key.
+          properties:
+            exchange: { type: string }
+            routingKey: { type: string }
+        environmentConfirmation: { type: string }
+
+    ReplayResult:
+      type: object
+      required: [dryRun]
+      properties:
+        dryRun: { type: boolean }
+        wouldReplay: { type: integer, format: int64 }
+        warnings:
+          type: array
+          items: { type: string }
+        job: { $ref: '#/components/schemas/ReplayJob' }
+
+    ReplayJob:
+      type: object
+      required: [id, state, total, processed, failed]
+      properties:
+        id: { type: string, format: uuid }
+        state: { type: string, enum: [pending, running, halted, completed, failed] }
+        total: { type: integer, format: int64 }
+        processed: { type: integer, format: int64 }
+        failed: { type: integer, format: int64 }
+        haltReason: { type: string }
+        createdBy: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    OperationResult:
+      type: object
+      required: [operationId, dryRun, affected]
+      properties:
+        operationId:
+          type: string
+          format: uuid
+          description: Identifies this operation run. The audit surfaces it when the audit screen lands.
+        dryRun: { type: boolean }
+        affected: { type: integer, format: int64 }
+        sample:
+          type: array
+          description: Up to ten affected messages, so a preview is inspectable.
+          items: { $ref: '#/components/schemas/PeekedMessage' }
+        warnings:
+          type: array
+          items: { type: string }
