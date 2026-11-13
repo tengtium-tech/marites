@@ -32,12 +32,15 @@ Every setting an operator can set, in one table. Five of these names appeared ac
 
 | Variable | Type | Default | Required | What it does |
 |---|---|---|---|---|
-| `MARITES_URL` | URL | — | **Yes**, in any non-local deployment | The public base URL. Used for the OAuth redirect, for links in proposals, and for the `audience` check on tokens. A wrong value produces a login loop, not an error |
+| `MARITES_URL` | URL | — | **Yes**, in any non-local deployment | The public base URL. Used for the OAuth redirect, for links in proposals, for the `audience` check on tokens, and to decide whether the session cookie is `Secure`. A wrong value produces a login loop, not an error |
 | `MARITES_LISTEN` | `host:port` | `:8080` | No | Where the HTTP API listens. The only port a user needs |
 | `MARITES_ADMIN_ADDR` | `host:port` | `:9090` | No | Health and metrics. Must **not** be published to the user network |
-| `MARITES_AUTH_MODE` | `entra` \| `none` | `entra` | No | `none` disables identity and is accepted **only** when `MARITES_LISTEN` is loopback — a guard, not a suggestion |
+| `MARITES_AUTH_MODE` | `entra` \| `google` \| `none` | `entra` | No | Selects the identity mode. `google` validates a Google ID token and issues a Marites session; `entra` keeps per-request bearer tokens; `none` disables identity and is accepted **only** when `MARITES_LISTEN` is loopback — a guard, not a suggestion |
 | `MARITES_ENTRA_TENANT_ID` | GUID | — | When `AUTH_MODE=entra` | The directory that issues tokens |
 | `MARITES_ENTRA_AUDIENCE` | string | — | When `AUTH_MODE=entra` | The audience a token must carry; a token for another app is refused |
+| `MARITES_GOOGLE_CLIENT_ID` | string | — | When `AUTH_MODE=google` | The OAuth client ID from Google Cloud Console. **Public configuration, not a secret** — it identifies the app, and the browser needs it too. The client secret is never used: the popup flow is implicit/ID-token only |
+| `MARITES_SESSION_HOURS` | integer | `8` | No | Absolute lifetime of a `google`-mode session, 1–72. Shorter is safer; long enough to finish an incident review is the point |
+| `MARITES_BREAK_GLASS_ENABLED` | boolean | `false` | No | Enables the local break-glass admin. Every use is audited; leaving it off is the default in every auth mode |
 | `MARITES_BOOKKEEPING_PATH` | path | `./data/marites.db` | No | Marites' own store — config, audit, evidence, operations. Created if absent (DEC-012) |
 | `MARITES_MESSAGE_STORE` | connection string | — | No | The adopter's message store. **Absent means live-only**: no counts, no message list, no search, and full recovery (DEC-016) |
 | `MARITES_MIGRATION_CONNECTION` | connection string | — | Only for `marites migrate` | The DDL role, used briefly and never by the running service (DEC-014) |
@@ -55,7 +58,9 @@ Every setting an operator can set, in one table. Five of these names appeared ac
 | `MARITES_CONFIRMATION_TTL_SECONDS` | integer | `60` | No | How long a confirmation token stays valid. Longer widens the window in which a queue can change between preview and execute |
 | `MARITES_BACKFILL_PER_SECOND` | integer | `20` | No | Ceiling on a backfill's read rate, so a live consumer is not starved. Backfill is opt-in and bounded per run (capture lifecycle §4) |
 
-**Two of these change behaviour rather than tuning it.** `MARITES_MESSAGE_STORE` decides whether the install can look back; `MARITES_AUTH_MODE=none` decides whether it has identity at all. Everything else is a dial.
+**Two of these change behaviour rather than tuning it.** `MARITES_MESSAGE_STORE` decides whether the install can look back; `MARITES_AUTH_MODE` decides who may look at all — and `none` is the one value that removes identity entirely, which is why it is loopback-only. Everything else is a dial.
+
+**Who may sign in is not an environment variable.** The role mapping lives in `app_user`, keyed by the verified `(issuer, subject)`, and is written with `marites identity grant` — an operator action that leaves a row, not a JSON blob in a compose file. A Google account with no mapping is refused, and no environment variable can change that into a default role.
 
 ## 3. Values that are not variables
 
@@ -67,6 +72,8 @@ Some things look configurable and deliberately are not:
 | Migration order | Applied from the embedded set, in order, exactly once (DEC-014) |
 | Audit retention | Permanent. There is no setting that shortens it, and that is the point |
 | Tenant model | One implicit tenant in single-broker mode, row-level policy in multi-tenant (ADR-014) |
+| Role mapping | `app_user` rows keyed by `(issuer, subject)`, written by `marites identity grant`. A domain-suffix or email-pattern rule would admit everyone in a workspace and cannot be audited per person |
+| Google client secret | Never configured, because the popup ID-token flow does not use one. If a value is ever needed, it belongs in a secret store, not here |
 
 ## 4. Startup validation
 

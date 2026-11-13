@@ -166,9 +166,11 @@ Domain events that need durable integration delivery use a transactional Outbox 
 
 | ADR | Decision | Status |
 |---|---|---|
-| ADR-008 | Entra ID via OIDC with App Roles mapped to capability policies; a break-glass local admin is required for self-hosted installs | Accepted |
+| ADR-008 | Identity is Entra ID **or Google sign-in**, explicitly selected by `MARITES_AUTH_MODE`; either way roles map to capability policies, and a break-glass local admin is required for self-hosted installs | Accepted (amended November 2026) |
 
-**ADR-008 — rationale.** App Roles arrive in the `roles` claim without a Graph round-trip per request, unlike security groups. Capability policies rather than endpoint checks keep the role matrix in one file. **Consequence:** `MARITES_AUTH_MODE=none|entra` must exist, or local evaluation requires an identity provider and adoption dies at step one. `none` binds to loopback only.
+**ADR-008 — rationale.** App Roles arrive in the `roles` claim without a Graph round-trip per request, unlike security groups. Capability policies rather than endpoint checks keep the role matrix in one file. **Consequence:** `MARITES_AUTH_MODE=none|entra|google` must exist, or local evaluation requires an identity provider and adoption dies at step one. `none` binds to loopback only.
+
+**Amendment, November 2026 — Google sign-in as a configured alternative.** Adopters who run on Google Cloud have Google Workspace identity and no Entra tenant, and requiring an Entra tenant for a self-hosted tool is a deployment tax the product does not need to charge. `MARITES_AUTH_MODE=google` therefore becomes a third explicit mode, not a fallback: the React client obtains a Google ID token through the popup, and the API validates its signature (Google's published keys), issuer, audience and expiry before it trusts any claim. The token proves *who* the caller is; it does not say what they may do. Authorisation is an explicit Marites mapping from the verified `(issuer, subject)` pair to a role, held in `app_user` and created by an operator — a valid Google account with no mapping gets no access, and is refused with `ERR-AUTH-002` rather than being given a default. Because the browser must carry the result of a popup to subsequent calls, Google mode issues a **Marites session** in an HttpOnly cookie with a documented expiry, a logout that revokes it, and CSRF protection on writes; Entra mode keeps its per-request bearer token and is unchanged. The role and capability matrix is untouched by this amendment — both providers map into the same three roles and eleven capability policies ([DOC-UX-001 §2](../08-experience/dashboard-and-operations.md)).
 
 ---
 
@@ -207,3 +209,5 @@ Domain events that need durable integration delivery use a transactional Outbox 
 ## Document control
 
 Revision 0.2 records ADR-001 through ADR-025: 23 accepted decisions and two superseded decisions (ADR-004 and ADR-005). The storage decision added ADR-022, operation ordering added ADR-023, compaction added ADR-024, and the DDD/Clean Architecture direction added ADR-025. No decision remains Proposed. Changing an accepted decision requires a superseding ADR rather than an edit.
+
+Revision 0.3 amends ADR-008 in place, following the precedent set by ADR-021: Google sign-in becomes an explicitly configured identity mode alongside Entra, with a Marites session and an explicit `(issuer, subject)` role mapping. The amendment is additive — Entra's per-request bearer flow, the break-glass admin, and the capability matrix are unchanged.

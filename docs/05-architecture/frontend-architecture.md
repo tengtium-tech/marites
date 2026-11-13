@@ -88,7 +88,7 @@ This table maps existing product features; it does not redefine routes or add ba
 
 | Existing surface / flow | Presentation responsibility | Application use-case boundary | Infrastructure/API boundary | Domain rule source |
 |---|---|---|---|---|
-| Sign-in, callback, role landing, break-glass | Route guard, auth state, role-specific shell | Resolve session and permitted capabilities | Entra/MSAL adapter and current API capabilities | DOC-UX-001 §2; DOC-ARCH-001 §8; DEC-008 |
+| Sign-in, callback, role landing, break-glass | Route guard, auth state, role-specific shell; Google popup in `google` mode, MSAL redirect in `entra` mode | Resolve session and permitted capabilities | `POST /auth/google`, `GET /auth/session`, `POST /auth/logout` in Google mode; MSAL token in Entra mode; current API capabilities | DOC-UX-001 §2; DOC-ARCH-001 §8; DEC-008; ADR-008 |
 | `/setup` and broker management | Setup steps, profile form, preflight results | Create/update/remove broker; run preflight | `POST/PATCH/DELETE /brokers`, `POST /brokers/{id}/preflight` | DOC-UX-003 §3.5; FR-012/013 |
 | Queue list and `/queues/:id` | Queue rows, detail, capability-gated action bar | List/get queue; set capture policy | `GET /queues`, `GET /queues/{queueId}`; deferred `PUT /queues/{queueId}/capture-policy` | DOC-UX-001 §4–5; DOC-UX-003 §3.2 |
 | Message list and detail | Conjunctive filters, duplicate grouping, payload and `x-death` views | Search and retrieve captured messages | Deferred `QUERY /messages`, `GET /messages/{messageId}` | FR-006/007; DOC-UX-003 §3.3 |

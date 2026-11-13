@@ -192,6 +192,27 @@ Once §1 is satisfied, the application deploys on **the adopter's own server** a
 
 **Retention is delegated on purpose.** Marites cannot rotate a file it does not own, and a self-hosted product that tried would fight the platform's log driver. What it can do is guarantee that the logs contain no payload bodies, which is what makes handing them to the platform safe.
 
+### 3.5 Identity configuration
+
+`MARITES_AUTH_MODE` chooses one identity provider, and the server refuses an unrecognised value. The two supported providers are configured differently because they prove identity differently.
+
+**Entra (`entra`).** Register one application, expose the three roles as App Roles, and set `MARITES_ENTRA_TENANT_ID` and `MARITES_ENTRA_AUDIENCE`. The React client uses MSAL with auth code + PKCE; the API validates the bearer token on every request. No Marites session is involved.
+
+**Google (`google`).** Create an OAuth client of type *Web application* with the deployed origin — and `http://localhost:3000` for local work — as an authorised JavaScript origin. Set `MARITES_GOOGLE_CLIENT_ID` from the console; the value is public and appears in the browser, so it is configuration rather than a secret. **No client secret is configured or needed**: the popup returns an ID token directly, and the API validates its signature, issuer, audience and expiry. The token is then discarded in favour of a Marites session cookie.
+
+**Mapping people to roles.** Neither provider's groups decide access. An operator creates the mapping explicitly:
+
+```
+marites identity grant --issuer accounts.google.com --subject <sub> --email <address> --role Admin
+marites identity list
+marites identity revoke --issuer accounts.google.com --subject <sub>
+```
+
+A person who signs in successfully but has no mapping is refused `403 ERR-AUTH-002`, and the response names their own `subject` so the operator can grant it. That is the intended enrolment path: authenticate, be refused, be mapped, sign in again — not "everyone in the domain is a Viewer".
+
+**Secrets and tokens.** The client ID is public; the client secret is not used; ID tokens and session cookies are never logged, never returned by any endpoint other than the cookie itself, and never pasted into an issue or a screenshot. Local configuration keeps the client ID in an untracked file, and no credential of any kind belongs in a committed compose file.
+
+
 ## 4. Pointing at a broker (FR-012)
 
 The application ships with **zero broker configuration baked in**. Connection details are runtime data — a **broker profile**:
@@ -254,8 +275,8 @@ Same `marites` binary in every profile. SQLite is always present for Marites' bo
 | Profile | Bookkeeping store | Optional message store | Auth | Isolation |
 |---|---|---|---|
 | Local / single broker | SQLite, created at install | None for live-only mode; PostgreSQL when history and capture are enabled | `MARITES_AUTH_MODE=none`, loopback only | single implicit tenant |
-| Multi-broker | SQLite, created at install | PostgreSQL | Entra ID + JWT | tenant column, capability policies |
-| K8s / multi-team | SQLite, created at install | PostgreSQL (managed); SQL Server is planned at M7 | Entra ID, one app registration (ADR-014: one install, several teams) | row-level tenant policy, per-tenant keys |
+| Multi-broker | SQLite, created at install | PostgreSQL | Entra ID + JWT, or Google sign-in + Marites session | tenant column, capability policies |
+| K8s / multi-team | SQLite, created at install | PostgreSQL (managed); SQL Server is planned at M7 | Entra ID (one app registration) or Google sign-in (one OAuth client); ADR-014: one install, several teams | row-level tenant policy, per-tenant keys |
 
 The two stores have different jobs. SQLite is always present for configuration, roles, audit, operation evidence and replay progress. The optional message store holds traffic tables only; when it is absent, the product remains fully operable in live-only mode. ADR-004's rejection of SQLite applies to the high-throughput message store; ADR-022 establishes SQLite for bookkeeping and PostgreSQL first for message storage.
 

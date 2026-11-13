@@ -2,7 +2,7 @@
 document_id: DOC-SEC-001
 title: Threat Model
 product: Marites
-version: 0.2
+version: 0.3
 date: 2026-11
 status: Approved — Product owner, 2026-11-11
 ---
@@ -32,7 +32,7 @@ status: Approved — Product owner, 2026-11-11
 | B2 — API ↔ broker | Credentials, publish, peek, management reads | Outbound only |
 | B3 — Worker ↔ broker | Credentials, consume, topology declare | Outbound, plus delivery back over the same connection |
 | B4 — API and worker ↔ stores | SQLite bookkeeping holds configuration, audit, operation evidence and credential metadata; the optional PostgreSQL or SQL Server message store holds traffic rows and counters | Local network / managed database connection |
-| B5 — API ↔ Entra ID | Token validation keys | Outbound |
+| B5 — API ↔ identity provider | Token validation keys; a Google ID token presented once at sign-in | Outbound, plus the token inbound at sign-in |
 | B6 — Operator ↔ broker management UI | Human action outside Marites | Not controlled here |
 
 B6 is listed because it is the boundary people forget: an operator with management-UI access can do everything Marites refuses to do automatically. Marites does not defend the broker against its own administrators, and does not claim to.
@@ -105,6 +105,20 @@ An AI assistant may read through MCP and may propose operations ([agent access](
 
 **THR-026 is not solved by DEC-006.** "Payloads are stored verbatim" is a statement about storage. Sending them to a third party is a different decision with a different owner, which is why the default is off.
 
+### 3.7 Sign-in and session
+
+Google sign-in adds a second identity provider and a browser-held session. Three threats are specific to that combination, and each has a control that does not depend on the client behaving.
+
+| ID | Category | Threat | Control | Residual |
+|---|---|---|---|---|
+| THR-027 | Spoofing | A valid Google account that Marites has never mapped signs in and is given a default role, so anyone with a Google account can read the adopter's traffic | No default role exists. The verified `(issuer, subject)` is looked up in `app_user`; no row means `403 ERR-AUTH-002` and no session is issued. Mapping is an operator action, never derived from a domain or group | An operator can map the wrong subject, or map one that was later reassigned. The mapping is auditable, and the email recorded beside it is display only — the `subject` is the identity |
+| THR-028 | Spoofing | A session cookie is stolen — through a shared machine, an XSS defect elsewhere on the origin, or a backup — and replayed until it expires | HttpOnly so no script can read it; `Secure` on HTTPS; `SameSite=Lax`; absolute expiry of `MARITES_SESSION_HOURS`; logout sets a per-user revocation timestamp that invalidates every session that user holds; the cookie carries no Google token | A stolen cookie is a session until it expires or the user logs out everywhere. The control is a short lifetime plus revocation, not prevention |
+| THR-029 | Tampering | A cross-site request rides the session cookie and purges a queue — the classic CSRF, made easier by cookie auth | `SameSite=Lax` blocks cross-site POSTs in current browsers; independently, every cookie-authenticated write must carry `X-CSRF-Token` matching the double-submit cookie, and a mismatch is refused before anything executes | A browser that ignores `SameSite` and an attacker who can read the CSRF cookie would both be needed; at that point the attacker is already on the origin |
+
+**THR-027 is why Google mode is an explicit mapping, not "any Google account".** An identity provider answers *who*, and for a self-hosted tool watching production traffic, *who may look* is the adopter's decision. The mapping row is that decision made once, in the open, instead of a domain-suffix guess that silently admits everyone in a workspace.
+
+**THR-028 and THR-029 share a property: the control is structural.** Neither depends on the React client clearing state correctly. The cookie is unreadable and short-lived, and the write path checks a token the browser will not attach by itself.
+
 ## 4. Controls that are decisions, not code
 
 Four controls cannot be implemented and cannot be tested. They are recorded so a reviewer does not look for code that does not exist:
@@ -128,8 +142,9 @@ Every threat above has a control. What follows is what the control does **not** 
 | Rate limits bound a tenant, not the broker | `MARITES_OPERATIONS_PER_MINUTE` stops a runaway client; it cannot stop a replay that is within the limit from filling a small queue | Auto-halt on depth growth, and the typed confirmation (THR-015) |
 | Logs are the platform's, not the product's | Marites cannot rotate a file it does not own | Retention and access are delegated in [deployment §3.4](../11-operations/deployment-and-onboarding.md); the guarantee is that no body is ever logged |
 | No penetration test has been run | A document cannot substitute for one | This file is a design review, and says so in §7 |
+| A stolen session cookie is a session until it expires | The product cannot tell the thief from the user; a cookie is a bearer credential by nature | Absolute expiry, logout-everywhere revocation, and HttpOnly ([§3.7](#37-sign-in-and-session)) |
 
-**Six residuals, none of them an unfinished decision.** The difference matters: a gap is something the specification has not answered, and a residual is something no specification can answer. The first three were gaps until this revision and are now decisions with a named cost — key rotation is a procedure, the token binding is enumerated, the rate limits are values.
+**Seven residuals, none of them an unfinished decision.** The difference matters: a gap is something the specification has not answered, and a residual is something no specification can answer. The first three were gaps until this revision and are now decisions with a named cost — key rotation is a procedure, the token binding is enumerated, the rate limits are values.
 
 ## 6. Verification
 
@@ -141,9 +156,10 @@ Every threat above has a control. What follows is what the control does **not** 
 | TC-009 | Replay respects the rate limit and writes exactly one audit row | THR-010, THR-014, THR-015 |
 | TC-021 | Invalid publish body publishes nothing; one key publishes once | THR-011 |
 | TC-022 | Cross-tenant read returns `ERR-CMN-002` | THR-020 |
+| TC-031 | An unmapped Google account is refused `403 ERR-AUTH-002` and receives no session; a mapped account receives only its role's capabilities; a write without the CSRF token is refused | THR-027, THR-028, THR-029 |
 
-Six planned test cases explicitly cover ten of the twenty-six threats. The rest are controls asserted by design review, or risks accepted rather than mitigated — which is the honest ratio for a product with no code.
+Seven planned test cases explicitly cover thirteen of the twenty-nine threats. The rest are controls asserted by design review, or risks accepted rather than mitigated — which is the honest ratio for a product with no code.
 
 ## 7. Document control
 
-Revision 0.2 records the message-search method alignment and corrects the verification coverage count. Threats are added, never renumbered. No control has been implemented or exercised; the model has not received a full independent security review, and no penetration test has been performed.
+Revision 0.3 adds §3.7 and THR-027 to THR-029 for Google sign-in: an unmapped account is refused rather than defaulted, a session cookie is short-lived and revocable, and cookie-authenticated writes require a double-submit CSRF token. Threats are added, never renumbered. Revision 0.2 recorded the message-search method alignment and corrected the verification coverage count. No control has been implemented or exercised; the model has not received a full independent security review, and no penetration test has been performed.

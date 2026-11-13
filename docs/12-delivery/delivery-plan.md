@@ -24,7 +24,7 @@ The milestone names and exit criteria are owned by [deployment and onboarding §
 | `WP-M0-1` Contract freeze | `openapi.yaml` validates in CI and every operation is tagged; changes after this point require a decision record |
 | `WP-M0-2` Skeleton | Three entrypoints (`api`, `worker`, `all`), the four ports, and the architecture test that enforces ADR-025's dependency rules |
 | `WP-M0-3` Bookkeeping store | SQLite file created at install, migrations applied, audit table writable |
-| `WP-M0-4` Identity | Entra JWT validated, role→capability map enforced, `ERR-AUTH-001/002` returned |
+| `WP-M0-4` Identity | Entra JWT or Google ID token validated per `MARITES_AUTH_MODE`, explicit `(issuer, subject)` role mapping enforced, Google mode issuing a revocable session with CSRF on writes, `ERR-AUTH-001/002` distinguished |
 | `WP-M0-5` Capabilities | `GET /capabilities` reports backend feature flags and provider kinds; `GET /brokers/{brokerId}/capabilities` reports the selected provider's capability snapshot and `can_*` flags used by the UI |
 | `WP-M0-6` Preflight | Every check in the preflight set runs and names its remedy on failure |
 | `WP-M0-7` Wizard | CreateBroker validates before persistence and the wizard follows its [initial check outcomes](../11-operations/deployment-and-onboarding.md#2-preflight-readiness-check-fr-013). TC-030 covers direct API calls, persistence, and the wizard's live metadata flow |

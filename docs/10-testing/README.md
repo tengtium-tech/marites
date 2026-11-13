@@ -9,7 +9,7 @@ Trace expected behaviour to implementation evidence without equating document va
 | [Verification plan](verification-plan.md) | Seven verification levels, 30 planned cases (TC-001 to TC-030) and eight milestone gates |
 | [Traffic harness](traffic-harness.md) | The producer, the rejecting consumer, the nine scenarios and the manifest every assertion reads |
 | [Requirement acceptance criteria](../02-business/requirements.md) (§3.1, §4.1) | One testable criterion per FR and NFR, with the milestone at which it can pass |
-| [Operation coverage matrix](../13-traceability/operation-coverage-matrix.md) | Each of the 25 operations tied to its requirement, role, milestone, level and cases |
+| [Operation coverage matrix](../13-traceability/operation-coverage-matrix.md) | Each of the 28 operations tied to its requirement, role, milestone, level and cases |
 | [Contract conformance suite](../05-architecture/architecture-overview.md) (§5) | A specified black-box suite, `contract-tests/`, to be implemented and run over HTTP so it stays valid for any implementation of the contract |
 | [Architecture test](../05-architecture/architecture-overview.md) (§6) | One ArchUnitNET test enforcing the project reference rules |
 | [Failure modes](../05-architecture/failure-modes.md) | The component behaviours each case is designed to provoke |

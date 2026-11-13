@@ -8,12 +8,12 @@ Apply credential protection, payload responsibility, role boundaries and operati
 
 | Record | Shared coverage |
 | --- | --- |
-| [Threat model](threat-model.md) | Assets, six trust boundaries, 26 threats (THR-001 to THR-026) with controls, and the six residual risks that no control removes |
+| [Threat model](threat-model.md) | Assets, six trust boundaries, 29 threats (THR-001 to THR-029) with controls, and the seven residual risks that no control removes |
 | [Credential kinds](../14-reference/vocabulary.md) (§13) and [ADR-018](../05-architecture/decisions.md) | Eight credential shapes in use, ambient credentials first-class, write-only credentials, encrypted per row |
 | [NFR-003 and NFR-004](../02-business/requirements.md) | Credentials never logged or returned; no destructive operation without explicit human confirmation |
 | [Payload responsibility](../11-operations/deployment-and-onboarding.md) (§1.7) and DEC-006 | Bodies stored exactly as published; no masking; `payload_policy = none` is the only way to avoid storing them |
 | [Role and capability matrix](../08-experience/dashboard-and-operations.md) (§2) | Three roles mapped to eleven capability policies; Viewer has no message-level access (DEC-002) |
-| [Identity and break-glass](../05-architecture/architecture-overview.md) (§8) | Entra ID App Roles; a local admin disabled by default and audited on every use |
+| [Identity and break-glass](../05-architecture/architecture-overview.md) (§8) | Entra ID App Roles or Google sign-in with an explicit `(issuer, subject)` mapping; a Marites session cookie in Google mode; a local admin disabled by default and audited on every use |
 | [Operation safety model](../08-experience/dashboard-and-operations.md) (§3) | Guard chain: authorise, validate, dry run, confirm token, rate limit, execute, audit |
 | [Least-privilege broker user](../11-operations/deployment-and-onboarding.md) (§1.2, §4.1) | The exact grants requested and every object Marites creates in a broker |
 | [Provider prerequisites](../11-operations/provider-prerequisites.md) | The equivalent least-privilege sets for Service Bus and Pub/Sub, with the commands that verify them |

@@ -242,12 +242,16 @@ Append-only. No column is ever updated, and no endpoint can delete a row.
 |---|---|---|---|---|
 | `id` | uuid | no | `gen_random_uuid()` | primary key |
 | `tenant_id` | uuid | no | — | — |
-| `entra_object_id` | text | **yes** | — | null for a break-glass account, which exists only locally |
-| `email` | text | no | — | display and audit |
+| `issuer` | text | **yes** | — | the identity provider's identifier: `accounts.google.com` (or `https://accounts.google.com`) for Google, the tenant issuer for Entra. Null for a break-glass account, which exists only locally |
+| `subject` | text | **yes** | — | the provider's stable identifier for the person — Google's `sub`, the Entra object id. Null for a break-glass account |
+| `email` | text | no | — | display and audit. **Not the identity**: it may change, and it never decides access |
 | `role` | text | no | — | check in (`Viewer`, `Support`, `Admin`); VOCABULARY §2 |
 | `is_break_glass` | boolean | no | `false` | at most one per tenant — partial unique index |
+| `sessions_revoked_at` | timestamptz | **yes** | — | set by logout; every session issued before it is invalid. Null means no revocation has happened |
 
-`entra_object_id` is nullable because the break-glass account has no Entra identity. The unique index on `(tenant_id, entra_object_id)` must therefore be partial, excluding nulls.
+`issuer` and `subject` are nullable together because the break-glass account has no provider identity. The unique index on `(tenant_id, issuer, subject)` must therefore be partial, excluding rows where either is null.
+
+**`(issuer, subject)` replaced `entra_object_id` in November 2026.** One column naming one provider could not express a second provider, and a nullable per-provider column per provider is a schema that grows with integrations. The pair is the identity; the email beside it is display data. Migration `0002_identity_mapping` performs the change.
 
 ## 10. `capture_dedupe`
 
