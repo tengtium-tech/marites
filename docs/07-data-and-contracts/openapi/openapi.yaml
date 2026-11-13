@@ -248,6 +248,10 @@ paths:
       operationId: listQueues
       summary: Watched queues with live metadata
       description: |
+        Every entity the broker reports, with metadata read live. `id` is the UUIDv5 of
+        `(brokerId, vhost, name, sourceKind)` under the namespace in DEC-022, so it is stable
+        across reads and identical to the `queue_ref` primary key M2 will create.
+      description: |
         Metadata comes from the provider poller, not from stored rows. `captureState` and
         `deadLetterConfigured` are the two fields that stop an empty dashboard being mistaken
         for a healthy one.
@@ -281,6 +285,11 @@ paths:
       tags: [Queues]
       operationId: getQueue
       summary: One queue with metadata and capture policy
+      description: |
+        The `queueId` is derived from the entity's identity, not assigned by the database
+        (DEC-022), so a caller does not need to list queues first and the identifier does not
+        change when capture is later configured. An unknown id returns 404 — the same answer as
+        an entity the broker no longer reports.
       responses:
         '4XX': { $ref: '#/components/responses/ClientError' }
         '5XX': { $ref: '#/components/responses/ServerError' }
