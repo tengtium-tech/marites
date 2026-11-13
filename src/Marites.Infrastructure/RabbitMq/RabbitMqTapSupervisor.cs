@@ -43,8 +43,6 @@ public sealed class RabbitMqTapSupervisor : IAsyncDisposable
 
     private async Task RunAsync(CancellationToken cancellationToken)
     {
-        var backoff = TimeSpan.FromSeconds(1);
-
         while (!cancellationToken.IsCancellationRequested)
         {
             try
@@ -74,7 +72,6 @@ public sealed class RabbitMqTapSupervisor : IAsyncDisposable
                 await channel.BasicConsumeAsync(Queue, autoAck: false, consumer, cancellationToken);
 
                 IsConnected = true;
-                backoff = TimeSpan.FromSeconds(1);
                 _onStateChanged(DropCount, null);
 
                 // Wait for the channel to close — that is the drop signal. Anything else here
@@ -111,22 +108,38 @@ public sealed class RabbitMqTapSupervisor : IAsyncDisposable
                 break;
             }
 
-            // Backoff, so a broker that is down is not hammered by a reconnect storm from every
-            // tap on every instance at the same instant.
+            // Backoff with full jitter, so a broker that is down is not hammered by every tap on
+            // every instance reconnecting at the same instant. Without jitter the delay is
+            // deterministic and identical everywhere, which turns a restart into a synchronised
+            // stampede the moment the broker comes back.
             try
             {
-                await Task.Delay(backoff, cancellationToken);
+                await Task.Delay(NextBackoff(DropCount), cancellationToken);
             }
             catch (OperationCanceledException)
             {
                 break;
             }
-
-            backoff = TimeSpan.FromSeconds(Math.Min(backoff.TotalSeconds * 2, 30));
         }
 
         IsConnected = false;
     }
+
+    /// <summary>
+    /// Full jitter: a delay chosen at random between zero and the exponential ceiling, rather
+    /// than the ceiling itself. Spreading reconnects across the whole window is what stops them
+    /// arriving together; adding a little noise to a fixed delay would not.
+    /// </summary>
+    /// <remarks>Exposed so the distribution can be exercised without waiting for a real drop.</remarks>
+    public static TimeSpan NextBackoff(int dropCount, Random? random = null)
+    {
+        var ceiling = Math.Min(MaxBackoffSeconds, Math.Pow(2, Math.Min(dropCount, 10)));
+        var chosen = (random ?? Random.Shared).NextDouble() * ceiling;
+
+        return TimeSpan.FromSeconds(chosen);
+    }
+
+    private const int MaxBackoffSeconds = 30;
 
     public async ValueTask DisposeAsync()
     {
