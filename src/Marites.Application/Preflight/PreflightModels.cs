@@ -13,8 +13,23 @@ public sealed record PreflightResult(string State, IReadOnlyList<PreflightCheck>
 /// <summary>What a probe needs to reach a broker. Credentials are plaintext only for the run.</summary>
 public sealed record ProbeTarget(string Endpoint, string? AdminUri, string CredentialsJson, string? Vhost);
 
+/// <summary>
+/// Why live metadata access could not be established. The two cases need different answers:
+/// an unreachable broker is 503 and retryable, rejected credentials are 422 and the operator
+/// must change something.
+/// </summary>
+public enum LiveAccessFailure
+{
+    None,
+    Unreachable,
+    Rejected,
+}
+
+/// <summary>The checks, plus whether the broker could be reached at all.</summary>
+public sealed record ProbeReport(IReadOnlyList<PreflightCheck> Checks, LiveAccessFailure LiveAccess);
+
 /// <summary>Runs the checks against one provider. Implemented per adapter.</summary>
 public interface IBrokerProbe
 {
-    Task<IReadOnlyList<PreflightCheck>> RunAsync(ProbeTarget target, CancellationToken cancellationToken);
+    Task<ProbeReport> RunAsync(ProbeTarget target, CancellationToken cancellationToken);
 }

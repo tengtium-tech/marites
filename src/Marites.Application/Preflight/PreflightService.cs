@@ -43,7 +43,8 @@ public sealed class PreflightService
                 : System.Text.Encoding.UTF8.GetString(_protector.Unprotect(profile.CredentialsEnc)),
             Vhost: profile.NamespaceOrVhost);
 
-        var checks = await _probe.RunAsync(target, cancellationToken);
+        var report = await _probe.RunAsync(target, cancellationToken);
+        var checks = report.Checks;
 
         var state = checks.Any(c => c.State == "fail") ? "failing" : "passing";
         var now = _clock.GetUtcNow();

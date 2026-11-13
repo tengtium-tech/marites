@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Marites.Application.Preflight;
 using Marites.Application.Security;
 using Marites.Domain.Brokers;
 
@@ -13,15 +14,18 @@ public sealed class BrokerProfileService
 {
     private readonly IBrokerProfileRepository _repository;
     private readonly ICredentialProtector _protector;
+    private readonly IBrokerProbe _probe;
     private readonly TimeProvider _clock;
 
     public BrokerProfileService(
         IBrokerProfileRepository repository,
         ICredentialProtector protector,
+        IBrokerProbe probe,
         TimeProvider clock)
     {
         _repository = repository;
         _protector = protector;
+        _probe = probe;
         _clock = clock;
     }
 
@@ -40,7 +44,17 @@ public sealed class BrokerProfileService
         return profile is null ? null : Map(profile);
     }
 
-    public async Task<BrokerView> CreateAsync(BrokerInput input, CancellationToken cancellationToken)
+    /// <summary>
+    /// Creates a profile only after the broker has been checked (DEC-021).
+    /// </summary>
+    /// <remarks>
+    /// The checks run before anything is written, so a broker that cannot be reached — or that
+    /// rejects the credentials — leaves no profile and no stored secret behind. A topology denial
+    /// is different: live access works, so the profile is created as <c>failing</c> and the
+    /// operator can act on it. That distinction is the whole point of the decision, and it is
+    /// enforced here rather than in the wizard, so a direct API caller gets the same rule.
+    /// </remarks>
+    public async Task<CreatedBroker> CreateAsync(BrokerInput input, CancellationToken cancellationToken)
     {
         var tenantId = await _repository.CurrentTenantIdAsync(cancellationToken);
 
@@ -48,6 +62,33 @@ public sealed class BrokerProfileService
         {
             throw new DuplicateBrokerNameException(input.Name);
         }
+
+        // No write has happened at this point. If the next call throws, nothing is persisted.
+        var report = await _probe.RunAsync(
+            new ProbeTarget(
+                Endpoint: input.Endpoint ?? string.Empty,
+                AdminUri: input.AdminUri,
+                CredentialsJson: JsonSerializer.Serialize(input.Credentials ?? new Dictionary<string, string>()),
+                Vhost: input.NamespaceOrVhost),
+            cancellationToken);
+
+        var liveAccessCheck = report.Checks.FirstOrDefault(c => c.Id == "management_api_reachable");
+
+        switch (report.LiveAccess)
+        {
+            case LiveAccessFailure.Unreachable:
+                throw new BrokerUnreachableException(
+                    liveAccessCheck?.Detail ?? "The broker could not be reached.",
+                    liveAccessCheck?.Remedy);
+
+            case LiveAccessFailure.Rejected:
+                throw new BrokerCredentialsRejectedException(
+                    liveAccessCheck?.Detail ?? "The broker rejected the credentials.",
+                    liveAccessCheck?.Remedy);
+        }
+
+        var now = _clock.GetUtcNow();
+        var state = report.Checks.Any(c => c.State == "fail") ? "failing" : "passing";
 
         var profile = BrokerProfile.Create(
             tenantId,
@@ -59,12 +100,14 @@ public sealed class BrokerProfileService
             input.AdminUri,
             input.NamespaceOrVhost,
             ProtectCredentials(input.Credentials),
-            _clock.GetUtcNow());
+            now);
+
+        profile.RecordPreflight(state, now);
 
         _repository.Add(profile);
         await _repository.SaveAsync(cancellationToken);
 
-        return Map(profile);
+        return new CreatedBroker(Map(profile), new PreflightResult(state, report.Checks, now));
     }
 
     public async Task<BrokerView> UpdateAsync(
