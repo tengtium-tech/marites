@@ -19,7 +19,7 @@ status: Approved — Product owner, 2026-11-11
 
 ## 2. Tables
 
-Twelve tables in **two stores** ([DEC-012](../01-project/decisions-and-open-questions.md)). Nine are Marites' own bookkeeping and always exist; three hold traffic and exist only when the adopter connects a message store. The asymmetry is the whole design: one table is enormous, eleven are not, and only the enormous one belongs to the adopter.
+Thirteen tables in **two stores** ([DEC-012](../01-project/decisions-and-open-questions.md)). Ten are Marites' own bookkeeping and always exist; three hold traffic and exist only when the adopter connects a message store. The asymmetry is the whole design: one table is enormous, twelve are not, and only the enormous one belongs to the adopter.
 
 ![Marites data stores and ownership](../05-architecture/diagrams/data-stores.png)
 
@@ -65,11 +65,18 @@ operation_intent  (id, tenant_id, actor_id, actor_kind, on_behalf_of, proposal_i
                    -- ADR-023: the durable hold. Written and committed BEFORE the broker
                    -- command; promoted to operation_audit + operation_payload on success,
                    -- marked abandoned if the command did not take effect. Swept in minutes.
+
+idempotency_key   (id, tenant_id, key, operation, request_hash,
+                   response_status, response_json, created_at)
+                   -- The recorded outcome of a command, so a repeated Idempotency-Key
+                   -- returns AlreadyApplied rather than applying twice (conventions §3.1).
+                   -- Not the audit: the audit is append-only and never expires, while this
+                   -- is swept once the key is too old to be retried.
 ```
 
 ### Planned integration-event Outbox
 
-When an integration-event sink is configured, the bookkeeping store gains a `domain_event_outbox` record. It is a planned infrastructure record, not part of the twelve current product tables or the current logical-model image. The aggregate update and outbox envelope commit in the same SQLite transaction. The event envelope contains IDs and outcome facts only; it never contains broker credentials or message bodies. The delivery and retry contract is specified in [backend DDD architecture §5](../05-architecture/backend-ddd.md), and the logical columns are listed in the [data dictionary](data-dictionary.md).
+When an integration-event sink is configured, the bookkeeping store gains a `domain_event_outbox` record. It is a planned infrastructure record, not part of the thirteen current product tables or the current logical-model image. The aggregate update and outbox envelope commit in the same SQLite transaction. The event envelope contains IDs and outcome facts only; it never contains broker credentials or message bodies. The delivery and retry contract is specified in [backend DDD architecture §5](../05-architecture/backend-ddd.md), and the logical columns are listed in the [data dictionary](data-dictionary.md).
 
 The Outbox does not replace `operation_intent`: the latter holds bodies before an external broker command and is reconciled under ADR-023. Capture-originated integration events are excluded until the message-store transaction and storage port explicitly include their Outbox write.
 
@@ -77,7 +84,7 @@ The Outbox does not replace `operation_intent`: the latter holds bodies before a
 
 ![Marites bookkeeping logical model](diagrams/bookkeeping-logical-model.png)
 
-This view shows the nine current SQLite records, selected key references, and the operation-intent promotion path. It does not include the planned Outbox record. It is a logical relationship map: SQLite physical type mappings are not specified, and fields such as `tenant_id` remain logical scope references unless the dictionary explicitly declares a foreign key.
+This view shows the ten current SQLite records, selected key references, and the operation-intent promotion path. It does not include the planned Outbox record. It is a logical relationship map: SQLite physical type mappings are not specified, and fields such as `tenant_id` remain logical scope references unless the dictionary explicitly declares a foreign key.
 
 Rebuild the preview from the repository root with:
 
