@@ -148,7 +148,7 @@ public sealed class BrokerApiTests
         // the name conflict.
         var again = await CreateAsync(client, "duplicate", key: "duplicate-second");
 
-        Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
+        Assert.Equal(ErrorCatalog.StatusFor("ERR-CMN-003"), (int)again.StatusCode);
         Assert.Contains("ERR-CMN-003", await again.Content.ReadAsStringAsync(), StringComparison.Ordinal);
     }
 
@@ -180,7 +180,9 @@ public sealed class BrokerApiTests
 
         var response = await CreateAsync(client, "unreachable-broker", "amqp://unreachable/v");
 
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        // Both the status and the code come from the catalog: an assertion written against the
+        // implementation would have passed while the code was wrong.
+        Assert.Equal(ErrorCatalog.StatusFor("ERR-BRK-002"), (int)response.StatusCode);
         Assert.Contains("ERR-BRK-002", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
         Assert.Equal(before, await CountBrokersAsync(client));
     }
@@ -193,7 +195,7 @@ public sealed class BrokerApiTests
 
         var response = await CreateAsync(client, "rejected-creds", "amqp://rejected/v");
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(ErrorCatalog.StatusFor("ERR-BRK-004"), (int)response.StatusCode);
         Assert.Contains("ERR-BRK-004", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
         Assert.Equal(before, await CountBrokersAsync(client));
     }
