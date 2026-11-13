@@ -35,18 +35,16 @@ Marites creates this store. Its nine current records are migrated independently 
 
 | Step | Creates | Notes |
 |---|---|---|
-| `sqlite/0001_tenant` | `tenant` | Must exist before tenant-scoped records |
-| `sqlite/0002_app_user` | `app_user` | Break-glass user is provisioned by the application, never inserted with a password by a migration |
-| `sqlite/0003_broker_profile` | `broker_profile` | Includes credential metadata, capability snapshot, and revision |
-| `sqlite/0004_queue_ref` | `queue_ref` | Depends on `broker_profile` |
-| `sqlite/0005_capture_rule` | `capture_rule` | Unique on `queue_ref_id` |
-| `sqlite/0006_replay_job` | `replay_job` | Depends on queue and user identity |
-| `sqlite/0007_operation_audit` | `operation_audit` | Append-only; runtime may insert/read, never update/delete |
-| `sqlite/0008_operation_payload` | `operation_payload` | Evidence body rows and expiry index |
-| `sqlite/0009_operation_intent` | `operation_intent` | ADR-023 durable hold and reconciliation index |
-| `sqlite/0010_domain_event_outbox` | `domain_event_outbox` | Planned only; add before enabling a named integration sink. Aggregate and event envelope commit together. |
+| `0001_bookkeeping_schema` | `tenant`, `app_user`, `broker_profile`, `queue_ref`, `capture_rule`, `replay_job`, `operation_audit`, `operation_payload`, `operation_intent`, `idempotency_key` | One migration, ten tables, created in dependency order. `operation_audit` also carries the append-only triggers |
 
-The first nine steps create the current bookkeeping schema. Step 10 remains conditional until a subscriber/sink is selected. The dispatcher leases pending rows, delivers at least once, retries transient failures with bounded backoff, and retains poison events for operator action. The Outbox does not replace `operation_intent` and no event is published until the sink is configured.
+**One migration, not ten.** The steps above were planned as separate files, but EF orders migrations by
+timestamp rather than by name: the first implementation skipped the tables that did not exist yet and
+numbered the later ones by their eventual position, which meant the missing tables would have applied
+*after* them. With nothing deployed, the set was regenerated as a single migration that creates every
+table in dependency order. The order above is the order inside the migration, and it is the order that
+matters — a separate file per table bought nothing that a comment does not.
+
+Step 11 remains conditional until a subscriber/sink is selected. The dispatcher leases pending rows, delivers at least once, retries transient failures with bounded backoff, and retains poison events for operator action. The Outbox does not replace `operation_intent` and no event is published until the sink is configured.
 
 ### 2.2 Adopter message store
 
