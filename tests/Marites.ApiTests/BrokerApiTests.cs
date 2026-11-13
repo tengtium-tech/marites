@@ -319,6 +319,12 @@ public sealed class BrokerApiFixture : IAsyncLifetime
 
     public HttpClient Client { get; private set; } = null!;
 
+    /// <summary>The stubbed queue catalog the live operations read from.</summary>
+    public StubQueueCatalog QueueCatalog { get; private set; } = null!;
+
+    /// <summary>The stubbed admin the live operations call through.</summary>
+    public StubBrokerAdmin Admin { get; private set; } = null!;
+
     /// <summary>Every route the running host registered, as "METHOD /path".</summary>
     public IReadOnlyList<string> Routes { get; private set; } = [];
 
@@ -343,9 +349,25 @@ public sealed class BrokerApiFixture : IAsyncLifetime
 
         // DEC-021 makes creation depend on the broker; the stub keeps the API tests independent
         // of a container while the real probe is covered against the local stack.
+        var queueCatalog = new StubQueueCatalog();
+        var brokerAdmin = new StubBrokerAdmin();
+        QueueCatalog = queueCatalog;
+        Admin = brokerAdmin;
+
         _app = ApiHost.Build(
             ["--urls", "http://127.0.0.1:0"],
-            services => services.AddScoped<Marites.Application.Preflight.IBrokerProbe>(_ => new StubBrokerProbe()));
+            services =>
+            {
+                services.AddScoped<Marites.Application.Preflight.IBrokerProbe>(_ => new StubBrokerProbe());
+
+                // The live operations endpoints depend on the catalog and the admin. Singletons:
+                // tests in this collection run sequentially, so a test can arrange the queue
+                // list and canned results before its calls.
+                services.AddSingleton(queueCatalog);
+                services.AddSingleton<Marites.Application.Queues.IQueueCatalog>(queueCatalog);
+                services.AddSingleton(brokerAdmin);
+                services.AddSingleton<Marites.Application.Brokers.IBrokerAdmin>(brokerAdmin);
+            });
         await _app.StartAsync();
 
         Client = new HttpClient { BaseAddress = new Uri(_app.Urls.First()) };

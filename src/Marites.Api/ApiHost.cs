@@ -1,5 +1,6 @@
 using Marites.Api.Brokers;
 using Marites.Api.Capabilities;
+using Marites.Api.Operations;
 using Marites.Api.Queues;
 using Marites.Application.Brokers;
 using Marites.Application.Preflight;
@@ -87,6 +88,7 @@ public static class ApiHost
         builder.Services.AddScoped<IBrokerProbe, RabbitMqProbe>();
         builder.Services.AddScoped<PreflightService>();
         builder.Services.AddScoped<IQueueCatalog, RabbitMqQueueCatalog>();
+        builder.Services.AddScoped<IBrokerAdmin, RabbitMqAdmin>();
 
         configureAdditionalServices?.Invoke(builder.Services);
 
@@ -96,6 +98,7 @@ public static class ApiHost
         api.MapCapabilitiesEndpoints();
         api.MapBrokerEndpoints();
         api.MapQueueEndpoints();
+        api.MapOperationEndpoints();
 
         MapOperationsEndpoints(app, adminEndPoint.Port);
 

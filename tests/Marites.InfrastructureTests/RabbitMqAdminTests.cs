@@ -122,7 +122,8 @@ public sealed class RabbitMqAdminTests
         await DeclareAsync(target, quorum: false);
         await PublishAsync(queue, "move-me", "r-1");
 
-        var result = await admin.RedriveAsync(brokerId, queue, target, maxMessages: 10, CancellationToken.None);
+        var result = await admin.RedriveAsync(
+            brokerId, queue, string.Empty, target, maxMessages: 10, CancellationToken.None);
 
         Assert.Equal(1, result.Published);
         Assert.Equal(1, result.Acknowledged);
