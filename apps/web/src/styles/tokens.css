@@ -128,3 +128,65 @@ th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid hsl(var(
 th { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 500; }
 tbody tr:hover { background: hsl(var(--primary) / 0.04); }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Sidebar shell — adapted from the prototype's Sidebar, without its Tailwind dependency. */
+.layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+@media (max-width: 820px) { .layout { grid-template-columns: 1fr; } .sidebar { position: static; height: auto; } }
+
+.sidebar {
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; gap: 20px;
+  padding: 16px 12px;
+  background: hsl(var(--card));
+  border-right: 1px solid hsl(var(--border));
+}
+.sidebar__brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 4px; }
+.sidebar__mark {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: hsl(var(--primary)); color: hsl(0 0% 100%);
+  display: grid; place-items: center; font-weight: 700; font-size: 13px;
+}
+.sidebar__title { font-size: 14px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+.sidebar__subtitle { font-size: 10.5px; color: hsl(var(--muted-foreground)); }
+.sidebar__group { display: flex; flex-direction: column; gap: 2px; }
+.sidebar__label {
+  padding: 0 10px 6px; font-size: 10.5px; letter-spacing: 0.09em;
+  text-transform: uppercase; color: hsl(var(--muted-foreground));
+}
+.sidebar__item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 10px; border: 0; border-radius: 7px; background: transparent;
+  color: hsl(var(--muted-foreground)); font-size: 13.5px; text-align: left; text-decoration: none;
+}
+.sidebar__item:hover { background: hsl(var(--primary) / 0.07); color: hsl(var(--foreground)); }
+.sidebar__item[aria-current='page'] {
+  background: hsl(var(--primary) / 0.12); color: hsl(var(--primary)); font-weight: 600;
+}
+.sidebar__foot {
+  margin-top: auto; padding: 12px 10px 0; border-top: 1px solid hsl(var(--border));
+  font-size: 11px; line-height: 1.6; color: hsl(var(--muted-foreground));
+}
+
+.page { padding: 24px 28px; max-width: 1040px; }
+.page__head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+
+/* Setup progress — the prototype's five steps, two of which M0 serves. */
+.steps { display: flex; gap: 6px; margin: 18px 0 4px; padding: 0; list-style: none; flex-wrap: wrap; }
+.steps li {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 999px; font-size: 12px;
+  border: 1px solid hsl(var(--border)); color: hsl(var(--muted-foreground));
+}
+.steps li[data-state='current'] {
+  border-color: hsl(var(--primary)); color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.08); font-weight: 600;
+}
+.steps li[data-state='done'] { border-color: hsl(var(--success) / 0.4); color: hsl(var(--success)); }
+.steps li[data-state='later'] { opacity: 0.55; }
+
+.broker-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; border: 1px solid hsl(var(--border)); border-radius: 10px;
+  background: hsl(var(--card)); margin-top: 16px;
+}
+.broker-head__name { font-weight: 600; }

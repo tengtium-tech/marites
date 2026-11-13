@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SetupProgress } from './SetupProgress';
 
 type Check = {
   id: string;
@@ -147,9 +148,22 @@ export function SetupWizard() {
     return (
       <>
         <h1>Connect a broker</h1>
-        <p className="muted" style={{ marginTop: 6 }}>
-          Saved as revision {state.revision}. The checks below ran as part of saving.
-        </p>
+        <SetupProgress current={3} done />
+        <div className="broker-head">
+          <div>
+            <div className="broker-head__name">{form.name}</div>
+            <div className="muted small">
+              {form.providerKind} · {form.environment} · revision {state.revision}
+            </div>
+          </div>
+          <span
+            className="checks__state"
+            data-state={passing ? 'pass' : 'fail'}
+            style={{ fontSize: 12 }}
+          >
+            {state.preflight.state}
+          </span>
+        </div>
 
         <div className="setup" style={{ marginTop: 20 }}>
           <div className="card">
@@ -213,6 +227,7 @@ export function SetupWizard() {
       <p className="muted" style={{ marginTop: 6 }}>
         Marites observes a broker you already run. It never provisions or repairs one.
       </p>
+      <SetupProgress current={1} done={false} />
 
       {state.kind === 'rejected' && (
         <div
