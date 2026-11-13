@@ -4,6 +4,7 @@ namespace Marites.Application.Brokers;
 public sealed record PeekedMessage(
     string MessageId,
     string RoutingKey,
+    string? Exchange,
     string? ContentType,
     long Size,
     string? PayloadBase64,
@@ -30,7 +31,19 @@ public interface IBrokerAdmin
 
     Task<long> PurgeAsync(Guid brokerId, string queue, CancellationToken cancellationToken);
 
-    Task<RedriveResult> RedriveAsync(Guid brokerId, string queue, string targetQueue, int maxMessages, CancellationToken cancellationToken);
+    /// <summary>
+    /// Re-sends up to <paramref name="maxMessages"/> from <paramref name="queue"/> and acknowledges
+    /// them. Publish goes to <paramref name="targetExchange"/> and
+    /// <paramref name="targetRoutingKey"/> when given; otherwise each message goes back to the
+    /// exchange and routing key its own death record names, falling back to the queue itself.
+    /// </summary>
+    Task<RedriveResult> RedriveAsync(
+        Guid brokerId,
+        string queue,
+        string? targetExchange,
+        string? targetRoutingKey,
+        int maxMessages,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -42,3 +55,10 @@ public interface IBrokerAdmin
 /// instance, which destroys the message rather than dead-lettering it (architecture overview §2).
 /// </remarks>
 public sealed class BrokerCapabilityException(string detail) : Exception(detail);
+
+/// <summary>
+/// The broker could not be contacted at all (ERR-BRK-002). Adapters translate their client
+/// library's own exception types into this one, so the API layer owns a status code rather
+/// than a vendor's type.
+/// </summary>
+public sealed class BrokerConnectionException(string detail, Exception inner) : Exception(detail, inner);
