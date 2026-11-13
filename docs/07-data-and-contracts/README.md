@@ -8,7 +8,7 @@ What is stored, what the counting means, and the HTTP contract itself.
 
 | Record | Shared coverage |
 | --- | --- |
-| [Data model](data-model.md) | Twelve current tables in two stores, with ownership and bookkeeping relationship diagrams, aggregate mapping, counting-versus-storing split, retention, storage ceiling and access strategy |
+| [Data model](data-model.md) | Thirteen current tables in two stores, with ownership and bookkeeping relationship diagrams, aggregate mapping, counting-versus-storing split, retention, storage ceiling and access strategy |
 | [Data dictionary](data-dictionary.md) | Column-level types, nullability, defaults and constraints, a planned Outbox record, PostgreSQL-first message-store ERD and index list |
 | [First migration plan](migration-plan.md) | Separate SQLite/PostgreSQL migration streams, partitioning, tenant isolation, post-migration checks, rollback, and named gaps |
 | [Contract conventions](contract-conventions.md) | OpenAPI 3.2.1, QUERY semantics, outcome classes, idempotency, revision guard, confirmation, paging, versioning, security. Binding on the contract |

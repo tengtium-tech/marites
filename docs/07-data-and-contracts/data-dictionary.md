@@ -381,4 +381,4 @@ No index on `payload_ref` or on `exchange`. Neither is used as a filter, and an 
 
 ## 15. Document control
 
-Revision 0.2 records the column-level definition for thirteen current tables and the planned Outbox record, written November 2026 to close the gap named in the [data-and-contracts index](README.md). It is a definition, not a migration: no schema has been applied, and the types have not been exercised against either store. Separate migration streams are planned in [migration-plan.md](migration-plan.md).
+Revision 0.2 records the column-level definition for thirteen current tables and the planned Outbox record, written November 2026 to close the gap named in the [data-and-contracts index](README.md). It is a definition; the implementation profile records what has been applied and exercised. Separate migration streams are planned in [migration-plan.md](migration-plan.md).

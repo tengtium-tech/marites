@@ -23,7 +23,7 @@
     {"id": "worker-postgres", "from": "worker", "to": "postgres", "label": "COPY + counters + dedupe", "variant": "emphasis"}
   ],
   "cards": [
-    {"dot": "cyan", "title": "Nine bookkeeping tables", "items": ["tenant, broker_profile, queue_ref, capture_rule, replay_job, operation_audit, app_user, operation_payload and operation_intent stay in SQLite.", "Recovery and audit remain available when the optional message store is absent."]},
+    {"dot": "cyan", "title": "Ten bookkeeping tables", "items": ["tenant, app_user, broker_profile, queue_ref, capture_rule, replay_job, operation_audit, operation_payload, operation_intent and idempotency_key stay in SQLite.", "Recovery and audit remain available when the optional message store is absent."]},
     {"dot": "emerald", "title": "Three traffic tables", "items": ["message_capture, message_rollup and capture_dedupe share the adopter's message database.", "The dedupe ledger commits with each capture batch so redelivery cannot double-count."]},
     {"dot": "amber", "title": "Store boundary", "items": ["Identifiers copied into the message store are logical references; a database foreign key cannot cross from PostgreSQL to SQLite.", "Bodies above 64 KB may spill to an adopter-owned object store; message_capture keeps payload_ref.", "No database schema has been applied; the diagram shows the documented design."]}
   ]
