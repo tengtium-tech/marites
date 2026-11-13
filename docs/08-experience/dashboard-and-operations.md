@@ -68,7 +68,7 @@ The reporting dashboard is the one place a provider-agnostic UI works, because c
 
 ## 2. Roles and capabilities
 
-Roles arrive as Entra App Roles in the `roles` claim and map to **capability policies**, never to endpoints. The mapping lives in exactly one place (`Marites.Application` authorization orchestration; backend DDD §3).
+Roles arrive as Entra App Roles in the `roles` claim — or, in Google mode, as the role recorded in the explicit `(issuer, subject)` mapping — and map to **capability policies**, never to endpoints. Both providers feed the same three roles below; the matrix does not vary by provider. The mapping lives in exactly one place (`Marites.Application` authorization orchestration; backend DDD §3).
 
 | Capability policy | Viewer | Support | Admin |
 |---|---|---|---|

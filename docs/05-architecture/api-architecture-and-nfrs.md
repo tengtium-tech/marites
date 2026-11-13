@@ -20,7 +20,7 @@ The API uses thin endpoint mappings. Middleware performs transport and cross-cut
 3. HSTS outside development and HTTPS redirection; TLS terminates only at the app or a configured trusted proxy.
 4. Routing and response compression.
 5. CORS with the configured origin allowlist and required request headers/methods.
-6. JWT Bearer authentication and role/capability authorization.
+6. Authentication by the configured mode — JWT bearer (`entra`), the Marites session cookie (`google`) — then role/capability authorization. Cookie-authenticated writes are checked for the CSRF token before any use case runs.
 7. Tenant-aware rate limiting and endpoint input validation.
 8. Output caching only for explicitly eligible read endpoints, after authentication/authorization and with a tenant-safe cache key.
 9. Thin endpoint mapping to Application commands or queries.
@@ -29,7 +29,8 @@ Exact middleware registration must match the selected ASP.NET Core version and h
 
 ## 2. Security and access control
 
-- Validate JWT Bearer access tokens for issuer, audience, signature, and expiry. Entra ID/OIDC remains the production identity source; roles arrive as App Roles and map to capability policies (ADR-008).
+- Identity is the configured mode (ADR-008). In `entra` mode, validate JWT bearer tokens for issuer, audience, signature and expiry; roles arrive as App Roles and map to capability policies. In `google` mode, validate the Google ID token once at `POST /auth/google` — signature, issuer, audience, expiry — then look up the verified `(issuer, subject)` in `app_user`; no mapping means no access. The session cookie is validated on every request: signature, expiry, user existence, and issue time after the user's last revocation.
+- Google mode issues `marites_session` (HttpOnly, `SameSite=Lax`, `Secure` on HTTPS, absolute expiry) and requires `X-CSRF-Token` on every cookie-authenticated write. A CSRF mismatch is `403 ERR-AUTH-002` and executes nothing. Reads and bearer-authenticated requests are exempt because neither carries the cookie automatically.
 - Every endpoint enforces authorization server-side. Hiding a React control is a usability rule, not an authorization control. Tenant scope is applied before query projection or aggregate access.
 - FluentValidation checks request shape, lengths, formats, and field-level constraints; Domain methods enforce business invariants. Input is parameterized for data access and output is safely encoded.
 - HTTPS is mandatory. HSTS is enabled in production. Reverse-proxy forwarding is honored only for trusted proxy addresses.

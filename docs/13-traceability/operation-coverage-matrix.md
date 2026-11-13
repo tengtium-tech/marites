@@ -2,7 +2,7 @@
 
 Version 0.3 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
-Counts: 25 operations, 14 served, 11 deferred, 25 tied to a requirement and at least one case, 0 with an executed verification
+Counts: 28 operations, 17 served, 11 deferred, 28 tied to a requirement and at least one case, 0 with an executed verification
 
 This matrix connects every operation in the [API catalog](../07-data-and-contracts/api-catalog.md) to the requirement it serves, the role allowed to call it, its milestone, the verification level and the cases that would prove it. Verification remains Planned: no test code has been written or executed, and no operation exists as running software. Levels and cases are defined once in the [verification plan](../10-testing/verification-plan.md); this table cites them.
 
@@ -35,6 +35,9 @@ How it was derived. Operation, method, path and roles are read from the catalog 
 | OP-OPR-007 | CreateProposal | `POST /operations/proposals` | FR-024 | Service principals | M3 (deferred) | Contract, idempotency | TC-001, TC-024 |
 | OP-AUD-001 | ListAudit | `GET /audit` | FR-016 | Support, Admin | M1 (deferred) | Contract, integration (real broker) | TC-001, TC-008, TC-009 |
 | OP-AUD-002 | ListAuditPayloads | `GET /audit/{auditId}/payloads` | FR-027 | Support, Admin | M1 (deferred) | Contract, integration (real broker) | TC-001, TC-027 |
+| OP-AUTH-001 | SignInWithGoogle | `POST /auth/google` | FR-017 | Anyone with a Google account | M0 (served) | Contract, integration (real identity provider), unmapped-account refusal | TC-001, TC-031 |
+| OP-AUTH-002 | GetSession | `GET /auth/session` | FR-017 | Any signed-in user | M0 (served) | Contract, session expiry | TC-001, TC-031 |
+| OP-AUTH-003 | SignOut | `POST /auth/logout` | FR-017 | Any signed-in user | M0 (served) | Contract, revocation, CSRF | TC-001, TC-031 |
 
 ## Gaps
 
@@ -44,4 +47,4 @@ How it was derived. Operation, method, path and roles are read from the catalog 
 - **`ListBrokers` carries FR-014** although multi-cluster grouping only becomes testable at M4. The operation is served at M0; the requirement is met later. That gap is deliberate and is why FR-014's criterion is M4 in [requirements §3.1](../02-business/requirements.md).
 - **`ReplayMessages` shows one milestone for two deliveries.** The catalog's scope-by-revision table ships live redrive at M1 and adds captured-message replay at M3; this matrix records the first delivery only. The M3 expansion is covered by TC-020's capture-path integration and by FR-010, but it has no row of its own here.
 
-The Codex documentation review on 2026-11-11 confirmed all 25 operations have a requirement, role, milestone, and planned verification case. The deferred capability branch and milestone timing above are documented scope boundaries, not missing mappings. No case has been executed.
+The Codex documentation review on 2026-11-11 confirmed all operations then present have a requirement, role, milestone, and planned verification case; the three sign-in operations added in revision 0.4 follow the same rule. The deferred capability branch and milestone timing above are documented scope boundaries, not missing mappings. No case has been executed.
