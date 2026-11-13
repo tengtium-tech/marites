@@ -33,6 +33,8 @@ public sealed class BookkeepingMigrator
         DateTimeOffset now,
         CancellationToken cancellationToken = default)
     {
+        await EnsureHistoryIsRecognisedAsync(cancellationToken);
+
         await _context.Database.MigrateAsync(cancellationToken);
 
         if (await _context.Tenants.AnyAsync(cancellationToken))
@@ -44,5 +46,38 @@ public sealed class BookkeepingMigrator
         await _context.SaveChangesAsync(cancellationToken);
 
         return true;
+    }
+
+    /// <summary>
+    /// Refuses a store whose history this build does not recognise, before EF tries to apply a
+    /// migration over a schema that already has the tables.
+    /// </summary>
+    /// <remarks>
+    /// The migration set was regenerated into a single <c>0001_bookkeeping_schema</c> before
+    /// release. A store created by the earlier per-table migrations therefore holds history rows
+    /// that no longer exist, and EF's next step is to create tables that are already there — which
+    /// surfaces as "table already exists", an error that describes the symptom and hides the cause.
+    ///
+    /// Nothing is deployed, so the remedy is to delete the store. That is worth saying out loud
+    /// rather than leaving an operator to infer it from a SQLite error.
+    /// </remarks>
+    private async Task EnsureHistoryIsRecognisedAsync(CancellationToken cancellationToken)
+    {
+        var known = _context.Database.GetMigrations().ToHashSet(StringComparer.Ordinal);
+        var applied = (await _context.Database.GetAppliedMigrationsAsync(cancellationToken)).ToList();
+
+        var unknown = applied.Where(migration => !known.Contains(migration)).ToList();
+
+        if (unknown.Count == 0)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"The bookkeeping store at this path was created by migrations this build no longer has: "
+            + string.Join(", ", unknown)
+            + ". The migration set was regenerated into a single 0001_bookkeeping_schema before release, "
+            + "and this store predates it. Nothing is deployed, so deleting the store and re-running "
+            + "migrate loses only local test profiles.");
     }
 }
