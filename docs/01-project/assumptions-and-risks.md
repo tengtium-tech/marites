@@ -11,7 +11,7 @@ An assumption (ASM) is something the design relies on and has not proven. A risk
 | ASM-003 | Adopter clusters may be independent rather than federated; per-cluster scoping holds either way | DEC-008 | Unverified; one plugin-list command settles it |
 | ASM-004 | Traffic volume and payload size are unknown and are handled by per-queue settings and an enforced ceiling | DEC-005 | Accepted |
 | ASM-005 | Producers remove sensitive values before publishing; Marites stores bodies verbatim | DEC-006 | Accepted |
-| ASM-006 | Entra ID is available for identity, or the break-glass account and `MARITES_AUTH_MODE=none` cover its absence | ADR-008 | Accepted |
+| ASM-006 | An identity provider is available — Entra ID or Google sign-in, selected by `MARITES_AUTH_MODE` — or the break-glass account and `none` cover its absence | ADR-008 | Accepted; amended November 2026 to admit Google as a configured alternative |
 | ASM-007 | A get-and-requeue peek on a quorum queue with a delivery limit may count toward that limit | [architecture overview §2](../05-architecture/architecture-overview.md) | **Falsified at M1.** The message is destroyed and does not reach the dead-letter exchange; peek is refused on quorum queues |
 | ASM-008 | One PostgreSQL instance and one container serve the single-server profile at the target rate | NFR-006, NFR-001 | Unverified; load test at M2 |
 | ASM-009 | A Service Bus or Pub/Sub identity can be granted subscription management scoped to the watched topics, rather than at project or namespace level | [provider prerequisites §1.2, §2.2](../11-operations/provider-prerequisites.md) | Unverified; no platform has been configured |

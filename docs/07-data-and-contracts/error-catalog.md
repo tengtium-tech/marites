@@ -42,14 +42,16 @@ Every error body is `application/problem+json`:
 
 | Code | HTTP | Outcome | Retryable | Meaning | Remedy |
 |---|---|---|---|---|---|
-| `ERR-AUTH-001` | 401 | Denied | no | Token missing, expired or invalid | Sign in again |
-| `ERR-AUTH-002` | 403 | Denied | no | Role lacks the capability policy for this operation | Request the role, or ask an Admin to perform it |
+| `ERR-AUTH-001` | 401 | Denied | no | No valid credential: token or session missing, expired, invalid, or revoked | Sign in again |
+| `ERR-AUTH-002` | 403 | Denied | no | Authenticated but not permitted: the role lacks the capability policy, the Google identity has no Marites mapping, or a cookie-authenticated write failed the CSRF check | Request the role or mapping from an Admin; for CSRF, reload the session and retry |
 
 ## 4. Capability
 
 | Code | HTTP | Outcome | Retryable | Meaning | Remedy |
 |---|---|---|---|---|---|
 | `ERR-CAP-001` | 422 | Rejected | no | The connected provider cannot perform this operation | Read `ProviderCapabilities` and omit the control for this provider |
+
+**The 401/403 line is identity versus permission, and it is load-bearing.** `ERR-AUTH-001` means the caller has not proved who they are — the client's answer is the sign-in screen. `ERR-AUTH-002` means the caller proved who they are and still may not do this: the wrong role, no Google mapping at all, or a write that did not carry the CSRF token. Merging the two would tell a signed-in Viewer their session expired, and send them round a login loop that cannot help.
 
 `ERR-CAP-001` exists because clients can be wrong, not because the UI should offer the action. A control that reaches the server and is refused indicates a capability check that failed to run.
 

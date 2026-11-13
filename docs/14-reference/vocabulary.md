@@ -32,7 +32,7 @@ Prose cannot prevent this. A single shared definition can.
 
 **Rule:** if a document, a migration, an API schema, or a UI label needs an enumerated value, it links here. Restating the values inline is a defect — the second copy drifts, and the copy that drifts is always the one someone reads.
 
-**Where to look:** roles and capabilities §2 · message metrics §3 · dead-letter reasons §4 · payload policy §5 · replay state §6 · preflight state §7 · environment tags §8 · identifiers §9 · queue identity §10 · terms §11 · **provider kinds §12** · credential kinds §13 · operation support §14 · capture state §15 · capture mode §16 · AI provider §17.
+**Where to look:** roles and capabilities §2 · message metrics §3 · dead-letter reasons §4 · payload policy §5 · replay state §6 · preflight state §7 · environment tags §8 · identifiers §9 · queue identity §10 · terms §11 · **provider kinds §12** · credential kinds §13 · operation support §14 · capture state §15 · capture mode §16 · AI provider §17 · identity and session §18.
 
 ---
 
@@ -352,8 +352,32 @@ The key is a credential: encrypted per row, write-only, never returned, never lo
 
 **`sendsPayloads`** is a boolean on the provider record, default `false`. With it off the assistant receives headers, death reasons and counts; with it on it receives bodies, and the drawer says so on every screen (THR-026).
 
+## 18. Identity and session
+
+`MARITES_AUTH_MODE` and the values a sign-in produces. Three modes, one role matrix.
+
+| `MARITES_AUTH_MODE` | Who proves identity | What the API accepts afterwards |
+|---|---|---|
+| `entra` | Entra ID; React uses MSAL with auth code + PKCE | A JWT bearer token on every request; roles arrive as App Roles |
+| `google` | Google sign-in; React receives an ID token through the popup | The ID token once at `POST /auth/google`, then the `marites_session` cookie |
+| `none` | Nobody; loopback only | No credentials |
+
+| Term | Meaning |
+|---|---|
+| `issuer` | The identity provider's identifier. `accounts.google.com` or `https://accounts.google.com` for Google; the tenant's issuer for Entra |
+| `subject` | The provider's stable identifier for a person — Google's `sub`. It is the identity; `email` is display data and may change |
+| `identity mapping` | The `app_user` row binding a verified `(issuer, subject)` to one role. Created by an operator; never inferred from a domain, group or email pattern |
+| `unmapped identity` | A valid provider token whose `(issuer, subject)` has no mapping. Refused `403 ERR-AUTH-002`; no session is issued and no default role exists |
+| `Marites session` | The `marites_session` cookie: HttpOnly, `SameSite=Lax`, `Secure` on HTTPS, signed, absolutely expiring after `MARITES_SESSION_HOURS` |
+| `session revocation` | A per-user timestamp set by logout. Every session issued before it is invalid, so logout signs that person out everywhere |
+| `CSRF token` | The `X-CSRF-Token` header, matched against the `marites_csrf` cookie on every cookie-authenticated write |
+
+**The provider decides who; the mapping decides what.** A Google token proves the person controls an account. It says nothing about whether they may see the adopter's traffic, and the design never treats it as if it did.
+
 ## Document control
 
 Revision 0.1 establishes the initial enumeration set. Values here are binding on the implementation, the API contract and the UI. Adding a value requires amending this file first, then reconciling every consumer that cites it.
 
 *Amended November 2026:* §15 added. `captureState` had been defined only inside the contract's `QueueSummary` and used in three documents — an enum with no owner in the controlled vocabulary, which is the exact condition this file exists to prevent.
+
+*Amended November 2026, second pass:* §18 added for identity and session. `MARITES_AUTH_MODE` gained `google`, and the terms that the sign-in flow depends on — issuer, subject, mapping, session, CSRF — had no single owner. `role` is unchanged: both providers map into the same three values (§2).

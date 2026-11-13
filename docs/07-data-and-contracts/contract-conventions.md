@@ -119,11 +119,16 @@ A cursor is a position in one stable ordering. Changing filters while holding a 
 
 ## 8. Security schemes
 
-One scheme: `bearerAuth`, an Entra ID access token. Roles arrive as App Roles in the `roles` claim and map to capability policies ([DOC-UX-001 §2](../08-experience/dashboard-and-operations.md)).
+Two schemes, and `MARITES_AUTH_MODE` decides which one is accepted (ADR-008):
+
+- `bearerAuth` — an Entra ID access token on every request, when the mode is `entra`. Roles arrive as App Roles in the `roles` claim and map to capability policies ([DOC-UX-001 §2](../08-experience/dashboard-and-operations.md)).
+- `sessionCookie` — the `marites_session` cookie issued by `POST /auth/google`, when the mode is `google`. The Google ID token is presented once and never again; the session carries the identity afterwards.
+
+**Cookie-authenticated writes require `X-CSRF-Token`.** Every mutating operation in the contract declares the header, matched against the `marites_csrf` cookie (double submit). A missing or mismatched token is `403 ERR-AUTH-002` and nothing executes. Reads are exempt, and so are bearer-authenticated requests: a header token is not attached by a browser, so it cannot be forged by a cross-site page. This is the one place where the two schemes differ in what the client must send, and it is why the header is declared `required: false` — the requirement depends on the credential.
 
 - The contract names the capability each operation requires.
 - Token format, key handling and transport protection belong to deployment, not to this document.
-- **Credentials are write-only.** No response carries a broker secret in any form, including masked. A response that echoed one would be a defect regardless of the schema.
+- **Credentials are write-only.** No response carries a broker secret in any form, including masked. A response that echoed one would be a defect regardless of the schema. The same rule covers the Google ID token and the session cookie value: neither is returned in a body or written to a log.
 
 ## 9. What this document does not decide
 
@@ -132,3 +137,5 @@ Implementation language, framework, database, deployment topology, or the intern
 ## 10. Document control
 
 Revision 0.2 establishes the OpenAPI 3.2.1 and QUERY conventions. The Codex documentation review on 2026-11-11 found no open convention or contract mismatch. Runtime and generated-client compatibility remain Planned under TC-001. Future contract changes follow these rules first and amend the served/deferred contract pair second.
+
+Revision 0.3 adds the `sessionCookie` scheme and the CSRF rule for cookie-authenticated writes (ADR-008 amendment). `bearerAuth` is unchanged.
