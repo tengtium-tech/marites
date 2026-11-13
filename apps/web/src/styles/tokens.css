@@ -1,0 +1,130 @@
+/* Tokens from DOC-UX-004 §2. Values are HSL triplets; components apply them via hsl(). */
+:root {
+  --background: 220 20% 97%;
+  --card: 0 0% 100%;
+  --foreground: 222 24% 8%;
+  --muted-foreground: 220 9% 42%;
+  --border: 220 14% 91%;
+  --primary: 232 78% 53%;
+  --success: 160 76% 26%;
+  --warning: 32 100% 29%;
+  --destructive: 4 72% 39%;
+  --idle: 220 9% 38%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 220 22% 5%;
+    --card: 220 20% 8%;
+    --foreground: 220 20% 96%;
+    --muted-foreground: 220 10% 66%;
+    --border: 220 16% 17%;
+    --primary: 230 100% 77%;
+    --success: 160 62% 56%;
+    --warning: 38 85% 64%;
+    --destructive: 5 100% 72%;
+    --idle: 220 10% 64%;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: 22px; }
+h2 { font-size: 16px; }
+h3 { font-size: 14px; }
+
+a { color: hsl(var(--primary)); }
+
+.shell { min-height: 100vh; display: flex; flex-direction: column; }
+.shell__header {
+  display: flex; align-items: center; gap: 24px;
+  padding: 0 24px; height: 52px;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+}
+.shell__brand { font-weight: 600; letter-spacing: -0.02em; }
+.shell__nav { display: flex; gap: 4px; }
+.shell__nav a {
+  padding: 6px 10px; border-radius: 6px; text-decoration: none;
+  color: hsl(var(--muted-foreground)); font-size: 13px;
+}
+.shell__nav a[aria-current='page'] {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  font-weight: 500;
+}
+.shell__main { flex: 1; padding: 24px; max-width: 1080px; width: 100%; margin: 0 auto; }
+
+.card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.muted { color: hsl(var(--muted-foreground)); }
+.small { font-size: 12px; }
+
+button {
+  font: inherit; cursor: pointer;
+  padding: 8px 14px; border-radius: 8px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card)); color: hsl(var(--foreground));
+}
+button[data-variant='primary'] {
+  background: hsl(var(--primary)); border-color: hsl(var(--primary));
+  color: hsl(0 0% 100%); font-weight: 500;
+}
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid hsl(var(--primary)); outline-offset: 2px;
+}
+
+.field { display: grid; gap: 4px; }
+.field > span { font-size: 12px; color: hsl(var(--muted-foreground)); }
+input, select {
+  font: inherit; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card)); color: hsl(var(--foreground));
+}
+
+.setup { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 760px) { .setup { grid-template-columns: 1fr; } }
+
+.form-grid { display: grid; gap: 12px; }
+
+.checks { list-style: none; margin: 0; padding: 0; }
+.checks li { padding: 10px 0; border-bottom: 1px solid hsl(var(--border)); }
+.checks li:last-child { border-bottom: 0; }
+.checks__head { display: flex; align-items: baseline; gap: 8px; }
+.checks__state { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+.checks__state[data-state='pass'] { color: hsl(var(--success)); }
+.checks__state[data-state='fail'] { color: hsl(var(--destructive)); }
+.checks__state[data-state='warn'] { color: hsl(var(--warning)); }
+.checks__state[data-state='skipped'] { color: hsl(var(--idle)); }
+.checks__remedy { color: hsl(var(--warning)); margin-top: 2px; }
+
+.alert {
+  border: 1px solid hsl(var(--destructive));
+  border-left-width: 3px;
+  border-radius: 8px;
+  padding: 12px;
+  background: hsl(var(--destructive) / 0.06);
+}
+.alert__code { font-family: ui-monospace, monospace; font-size: 12px; color: hsl(var(--destructive)); }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid hsl(var(--border)); }
+th { font-size: 12px; color: hsl(var(--muted-foreground)); font-weight: 500; }
+tbody tr:hover { background: hsl(var(--primary) / 0.04); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
