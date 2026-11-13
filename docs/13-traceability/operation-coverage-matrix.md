@@ -2,7 +2,7 @@
 
 Version 0.3 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
-Counts: 25 operations, 10 served, 15 deferred, 25 tied to a requirement and at least one case, 0 with an executed verification
+Counts: 25 operations, 14 served, 11 deferred, 25 tied to a requirement and at least one case, 0 with an executed verification
 
 This matrix connects every operation in the [API catalog](../07-data-and-contracts/api-catalog.md) to the requirement it serves, the role allowed to call it, its milestone, the verification level and the cases that would prove it. Verification remains Planned: no test code has been written or executed, and no operation exists as running software. Levels and cases are defined once in the [verification plan](../10-testing/verification-plan.md); this table cites them.
 
@@ -26,10 +26,10 @@ How it was derived. Operation, method, path and roles are read from the catalog 
 | OP-MET-001 | GetMetricSummary | `GET /metrics/summary` | FR-004, FR-005 | All | M2 (deferred) | Contract, integration (real broker) | TC-001, TC-016, TC-019 |
 | OP-MET-002 | GetMetricSeries | `GET /metrics/timeseries` | FR-004, FR-020 | All | M2 (deferred) | Contract, integration (real broker) | TC-001, TC-016 |
 | OP-MET-003 | GetMetricAvailability | `GET /metrics/availability` | FR-021 | All | M2 (deferred) | Contract, integration (real broker) | TC-001, TC-016 |
-| OP-OPR-001 | PeekQueue | `POST /operations/peek` | FR-008 | Support, Admin | M1 (deferred) | Contract, idempotency, integration (real broker) | TC-001, TC-002, TC-008, TC-010 |
-| OP-OPR-002 | DiscardMessages | `POST /operations/discard` | FR-009, FR-028 | Support, Admin | M1 (deferred) | Contract, idempotency, dry run, durable-intent/reconciliation integration | TC-001, TC-002, TC-008, TC-028 |
-| OP-OPR-003 | PurgeQueue | `POST /operations/purge` | FR-009 | Admin | M1 (deferred) | Contract, idempotency, dry run, integration (real broker) | TC-001, TC-002, TC-008 |
-| OP-OPR-004 | ReplayMessages | `POST /operations/replay` | FR-010 | Support, Admin | M1 (deferred) | Contract, idempotency, dry run, integration (real broker) | TC-001, TC-002, TC-009 |
+| OP-OPR-001 | PeekQueue | `POST /operations/peek` | FR-008 | Support, Admin | M1 (served) | Contract, idempotency, integration (real broker) | TC-001, TC-002, TC-008, TC-010 |
+| OP-OPR-002 | DiscardMessages | `POST /operations/discard` | FR-009, FR-028 | Support, Admin | M1 (served) | Contract, idempotency, dry run, durable-intent/reconciliation integration | TC-001, TC-002, TC-008, TC-028 |
+| OP-OPR-003 | PurgeQueue | `POST /operations/purge` | FR-009 | Admin | M1 (served) | Contract, idempotency, dry run, integration (real broker) | TC-001, TC-002, TC-008 |
+| OP-OPR-004 | ReplayMessages | `POST /operations/replay` | FR-010 | Support, Admin | M1 (served) | Contract, idempotency, dry run, integration (real broker) | TC-001, TC-002, TC-009 |
 | OP-OPR-005 | PublishMessage | `POST /operations/publish` | FR-011 | Support, Admin | M3 (deferred) | Contract, idempotency, integration (real broker) | TC-001, TC-002, TC-021 |
 | OP-OPR-006 | GetOperation | `GET /operations/{operationId}` | FR-010, FR-011 | Support, Admin | M1 (deferred) | Contract | TC-001, TC-009 |
 | OP-OPR-007 | CreateProposal | `POST /operations/proposals` | FR-024 | Service principals | M3 (deferred) | Contract, idempotency | TC-001, TC-024 |
