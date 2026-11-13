@@ -309,9 +309,16 @@ public sealed class BrokerApiFixture : IAsyncLifetime
 
     public HttpClient Client { get; private set; } = null!;
 
+    /// <summary>Every route the running host registered, as "METHOD /path".</summary>
+    public IReadOnlyList<string> Routes { get; private set; } = [];
+
     public async Task InitializeAsync()
     {
         Environment.SetEnvironmentVariable("MARITES_BOOKKEEPING_PATH", _databasePath);
+
+        // Port 0 for the admin listener: the OS picks a free one, so a test run cannot collide
+        // with whatever a developer already has on 9090.
+        Environment.SetEnvironmentVariable("MARITES_ADMIN_ADDR", "127.0.0.1:0");
         Environment.SetEnvironmentVariable(
             "MARITES_KEK",
             Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
@@ -332,6 +339,16 @@ public sealed class BrokerApiFixture : IAsyncLifetime
         await _app.StartAsync();
 
         Client = new HttpClient { BaseAddress = new Uri(_app.Urls.First()) };
+
+        Routes = _app.Services
+            .GetRequiredService<Microsoft.AspNetCore.Routing.EndpointDataSource>()
+            .Endpoints
+            .OfType<Microsoft.AspNetCore.Routing.RouteEndpoint>()
+            .SelectMany(endpoint => (endpoint.Metadata
+                    .GetMetadata<Microsoft.AspNetCore.Routing.HttpMethodMetadata>()?.HttpMethods
+                    ?? ["*"])
+                .Select(method => $"{method} /{endpoint.RoutePattern.RawText?.TrimStart('/')}"))
+            .ToList();
     }
 
     public async Task DisposeAsync()

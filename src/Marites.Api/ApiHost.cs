@@ -1,8 +1,10 @@
 using Marites.Api.Brokers;
 using Marites.Api.Capabilities;
+using Marites.Api.Queues;
 using Marites.Application.Brokers;
 using Marites.Application.Preflight;
 using Marites.Application.Providers;
+using Marites.Application.Queues;
 using Marites.Application.Security;
 using Marites.Infrastructure.Bookkeeping;
 using Marites.Infrastructure.RabbitMq;
@@ -43,10 +45,16 @@ public static class ApiHost
         var adminAddress = Environment.GetEnvironmentVariable("MARITES_ADMIN_ADDR") ?? "127.0.0.1:9090";
         var adminEndPoint = ParseEndPoint(adminAddress);
 
+        // An explicit --urls wins over the environment default. ConfigureKestrel's Listen calls
+        // take precedence over both, so ignoring the argument here would silently bind a fixed
+        // port — which is how a test run collided with a developer's own API on 8080.
+        var mainUrls = ReadUrlsArgument(args)
+            ?? Environment.GetEnvironmentVariable("ASPNETCORE_URLS")
+            ?? "http://127.0.0.1:8080";
+
         builder.WebHost.ConfigureKestrel(options =>
         {
-            foreach (var url in (Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://127.0.0.1:8080")
-                         .Split(';', StringSplitOptions.RemoveEmptyEntries))
+            foreach (var url in mainUrls.Split(';', StringSplitOptions.RemoveEmptyEntries))
             {
                 if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
                 {
@@ -78,6 +86,7 @@ public static class ApiHost
         builder.Services.AddSingleton<IProviderRegistry, RabbitMqProviderRegistry>();
         builder.Services.AddScoped<IBrokerProbe, RabbitMqProbe>();
         builder.Services.AddScoped<PreflightService>();
+        builder.Services.AddScoped<IQueueCatalog, RabbitMqQueueCatalog>();
 
         configureAdditionalServices?.Invoke(builder.Services);
 
@@ -86,6 +95,7 @@ public static class ApiHost
         var api = app.MapGroup(ApiBasePath);
         api.MapCapabilitiesEndpoints();
         api.MapBrokerEndpoints();
+        api.MapQueueEndpoints();
 
         MapOperationsEndpoints(app, adminEndPoint.Port);
 
@@ -124,6 +134,24 @@ public static class ApiHost
     /// <summary>Health lives on the admin port only; asking for it on the user port is a 404.</summary>
     private static bool IsAdmin(HttpContext context, int adminPort) =>
         context.Connection.LocalPort == adminPort;
+
+    private static string? ReadUrlsArgument(string[]? args)
+    {
+        for (var i = 0; i < (args?.Length ?? 0); i++)
+        {
+            if (args![i] == "--urls" && i + 1 < args.Length)
+            {
+                return args[i + 1];
+            }
+
+            if (args![i].StartsWith("--urls=", StringComparison.Ordinal))
+            {
+                return args[i]["--urls=".Length..];
+            }
+        }
+
+        return null;
+    }
 
     private static IPEndPoint ParseEndPoint(string address)
     {
