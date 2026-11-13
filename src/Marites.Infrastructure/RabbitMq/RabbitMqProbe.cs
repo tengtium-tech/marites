@@ -90,14 +90,7 @@ public sealed class RabbitMqProbe : IBrokerProbe
             "dead_letter_configured", "Dead-letter topology readable", "skipped",
             "Not built yet: it is reported per queue, and no queue is watched until capture exists (M2)."));
 
-        // RabbitMQ answers this question with topology_write_permitted: configure on 'marites.*'
-        // is exactly the permission a declare needs, so a separate probe would test the same
-        // grant twice. The check stays in the contract because it is not a duplicate elsewhere —
-        // on Service Bus and Pub/Sub it means "a probe subscription can be created with a TTL or
-        // bounded retention", which no other check answers.
-        checks.Add(new PreflightCheck(
-            "shadow_declarable", "Shadow queue declarable", "skipped",
-            "Answered by topology_write_permitted on RabbitMQ: the same grant covers both."));
+        checks.Add(await ProbeDeclareAsync(target, user, password, vhost, cancellationToken));
         return checks;
     }
 
@@ -106,6 +99,73 @@ public sealed class RabbitMqProbe : IBrokerProbe
         new("dead_letter_configured", "Dead-letter topology readable", "skipped", detail),
         new("shadow_declarable", "Shadow queue declarable", "skipped", detail),
     ];
+
+    /// <summary>
+    /// Declares a probe queue, then deletes it.
+    /// </summary>
+    /// <remarks>
+    /// A permission read cannot answer this: a broker can grant `configure` and still refuse the
+    /// declare — quota, name policy, resource limits — and that is precisely the state this check
+    /// exists to find (onboarding lifecycle §2: "broker policy blocks topology writes"). The
+    /// provider prerequisites describe the same mechanism for the other providers: create a
+    /// probe subscription, then delete it.
+    ///
+    /// The probe is named under the shadow prefix, expires on its own if the delete fails, and is
+    /// deleted in a finally so a throwing check does not leave litter in the adopter's broker.
+    /// </remarks>
+    private static async Task<PreflightCheck> ProbeDeclareAsync(
+        ProbeTarget target,
+        string user,
+        string password,
+        string vhost,
+        CancellationToken cancellationToken)
+    {
+        var probe = $"{ShadowPrefix}preflight.{Guid.NewGuid():N}";
+
+        try
+        {
+            var factory = RabbitMqConnectionFactory.Create(
+                target.Endpoint,
+                $$"""{"amqp":"{{user}}:{{password}}"}""");
+
+            await using var connection = await factory.CreateConnectionAsync(cancellationToken);
+            await using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
+
+            await channel.QueueDeclareAsync(
+                probe,
+                durable: false,
+                exclusive: false,
+                autoDelete: true,
+                arguments: new Dictionary<string, object?> { ["x-expires"] = 60_000 },
+                cancellationToken: cancellationToken);
+
+            // The declare is what this check tests. Cleaning up afterwards must not be able to
+            // turn a proven capability into a failure — and x-expires already guarantees the
+            // probe disappears even if this delete never runs.
+            try
+            {
+                await channel.QueueDeleteAsync(
+                    probe, ifUnused: false, ifEmpty: false, cancellationToken: cancellationToken);
+            }
+            catch (Exception cleanupError)
+            {
+                return new PreflightCheck(
+                    "shadow_declarable", "Shadow queue declarable", "pass",
+                    $"Declared a probe queue on vhost '{vhost}'. Cleanup failed ({cleanupError.Message}); it expires in 60s.");
+            }
+
+            return new PreflightCheck(
+                "shadow_declarable", "Shadow queue declarable", "pass",
+                $"Declared and removed a probe queue on vhost '{vhost}'.");
+        }
+        catch (Exception error)
+        {
+            return new PreflightCheck(
+                "shadow_declarable", "Shadow queue declarable", "fail",
+                $"A probe queue could not be declared on vhost '{vhost}': {error.Message}",
+                $"Grant '{user}' configure, write and read on ^{ShadowPrefix.Replace(".", "\\.")} so Marites can declare its shadow queue.");
+        }
+    }
 
     /// <summary>Skew beyond a minute is enough to misorder evidence; beyond that, ages read wrong.</summary>
     public static readonly TimeSpan ClockTolerance = TimeSpan.FromSeconds(60);
