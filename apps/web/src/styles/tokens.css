@@ -94,9 +94,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .field > span { font-size: 12px; color: hsl(var(--muted-foreground)); }
 input, select {
   font: inherit; padding: 8px 10px; border-radius: 8px;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--input, var(--border)));
   background: hsl(var(--card)); color: hsl(var(--foreground));
+  width: 100%;
 }
+input::placeholder { color: hsl(var(--muted-foreground) / 0.8); }
 
 .setup { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 @media (max-width: 760px) { .setup { grid-template-columns: 1fr; } }
@@ -142,12 +144,13 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .sidebar__brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 4px; }
 .sidebar__mark {
-  width: 28px; height: 28px; border-radius: 7px;
-  background: hsl(var(--primary)); color: hsl(0 0% 100%);
-  display: grid; place-items: center; font-weight: 700; font-size: 13px;
+  width: 28px; height: 28px; border-radius: 999px;
+  background: hsl(var(--foreground)); color: hsl(var(--card));
+  display: grid; place-items: center; font-weight: 700; font-size: 12px;
+  flex: 0 0 auto;
 }
-.sidebar__title { font-size: 14px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
-.sidebar__subtitle { font-size: 10.5px; color: hsl(var(--muted-foreground)); }
+.sidebar__title { display: block; font-size: 14px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+.sidebar__subtitle { display: block; font-size: 10.5px; color: hsl(var(--muted-foreground)); line-height: 1.3; }
 .sidebar__group { display: flex; flex-direction: column; gap: 2px; }
 .sidebar__label {
   padding: 0 10px 6px; font-size: 10.5px; letter-spacing: 0.09em;
@@ -170,19 +173,30 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .page { padding: 24px 28px; max-width: 1040px; }
 .page__head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
 
-/* Setup progress — the prototype's five steps, two of which M0 serves. */
-.steps { display: flex; gap: 6px; margin: 18px 0 4px; padding: 0; list-style: none; flex-wrap: wrap; }
+/* Setup progress — five boxes, matching docs/08-experience/images/04-setup-profile.png. */
+.steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 18px 0 6px; padding: 0; list-style: none; }
+@media (max-width: 900px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .steps li {
-  display: flex; align-items: center; gap: 6px;
-  padding: 5px 10px; border-radius: 999px; font-size: 12px;
-  border: 1px solid hsl(var(--border)); color: hsl(var(--muted-foreground));
+  padding: 8px 12px; border-radius: 8px; font-size: 12.5px;
+  border: 1px solid hsl(var(--border)); background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground)); line-height: 1.35;
+}
+.steps li > span:first-child {
+  display: block; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85;
 }
 .steps li[data-state='current'] {
-  border-color: hsl(var(--primary)); color: hsl(var(--primary));
-  background: hsl(var(--primary) / 0.08); font-weight: 600;
+  background: hsl(var(--card)); border-color: hsl(var(--primary) / 0.55);
+  color: hsl(var(--foreground)); box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04);
 }
-.steps li[data-state='done'] { border-color: hsl(var(--success) / 0.4); color: hsl(var(--success)); }
-.steps li[data-state='later'] { opacity: 0.55; }
+.steps li[data-state='current'] > span:first-child { color: hsl(var(--primary)); opacity: 1; }
+.steps li[data-state='done'] { background: hsl(var(--card)); border-color: hsl(var(--border)); color: hsl(var(--foreground)); }
+.steps li[data-state='later'] { opacity: 0.7; }
+
+/* Section caption above a group of fields, as in the screenshot's "DATABASE". */
+.section-label {
+  font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase;
+  color: hsl(var(--muted-foreground)); font-weight: 600;
+}
 
 .broker-head {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;

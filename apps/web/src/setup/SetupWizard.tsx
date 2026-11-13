@@ -257,7 +257,7 @@ export function SetupWizard() {
 
       <form onSubmit={save} aria-busy={state.kind === 'saving'} className="setup" style={{ marginTop: 20 }}>
         <div className="card">
-          <h2>Broker</h2>
+          <span className="section-label">Broker</span>
 
           <div className="form-grid" style={{ marginTop: 12 }}>
             <Field label="Name" value={form.name} onChange={update('name')} required />
@@ -292,7 +292,7 @@ export function SetupWizard() {
         </div>
 
         <aside className="card">
-          <h3>What this will do</h3>
+          <span className="section-label">Why this comes first</span>
           <p className="muted small" style={{ marginTop: 6 }}>
             Saving checks the broker before anything is written. If it cannot be reached, or
             rejects the credentials, no profile is created and nothing is stored.

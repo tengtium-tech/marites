@@ -22,9 +22,10 @@ export function SetupProgress({ current, done }: { current: 1 | 3; done: boolean
     <ol className="steps" aria-label="Setup progress">
       {steps.map((step) => (
         <li key={step.n} data-state={state(step.n)}>
-          <span aria-hidden="true">{state(step.n) === 'done' ? '✓' : step.n}</span>
+          {/* The caption is the screenshot's "STEP N", not a bare number. */}
+          <span aria-hidden="true">Step {step.n}</span>
           {step.label}
-          {step.n > 3 && <span className="small">· M2</span>}
+          {step.n > 3 && <div className="small" style={{ opacity: 0.8 }}>database first</div>}
         </li>
       ))}
     </ol>
