@@ -49,13 +49,13 @@ Capture is forward-only (C-002). A binding added today sees only what is publish
 
 | Property | Value | Why |
 |---|---|---|
-| Mechanism | `POST /api/queues/{vhost}/{name}/get` with `reject_requeue_true` | The only way to read a message without consuming it, on all three providers |
+| Mechanism | `POST /api/queues/{vhost}/{name}/get` with `reject_requeue_true` | Reads a queued message without a consumer — but not without cost: see the quorum-queue caveat below |
 | Bound | The operator's count, defaulting to 100 and capped at 1,000 | A backfill is an investigation, not a migration |
 | Rate | `MARITES_BACKFILL_PER_SECOND`, default 20 | Slow enough that a live consumer is not starved |
 | Opt-in | Per queue, never automatic, never at setup | It has side effects on the queue, and consent must precede them |
 | Stop condition | Any `nack`, any connection error, or the operator cancelling | Partial is fine; a backfill that keeps going after a failure is not |
 
-**What it costs, stated where the operator starts it.** `reject_requeue_true` sets `redelivered` and, on a quorum queue with a delivery limit, a requeue may count toward that limit (ASM-007). Repeated backfills could therefore push a message into the dead-letter exchange. That is why the rate is bounded and why the dialog says *not side-effect free* rather than *read-only*.
+**What it costs, stated where the operator starts it.** On a classic queue `reject_requeue_true` sets `redelivered` and the rate is bounded, and the dialog says *not side-effect free* rather than *read-only*. **On a quorum queue with a delivery limit it destroys messages**: measured at M1 against RabbitMQ 3.13.7, five peeks of one message left the queue empty and the dead-letter exchange empty — the message was gone, not dead-lettered (architecture overview §2). Backfill therefore refuses on a quorum queue with `ERR-CAP-001` rather than rate-limiting a loss.
 
 **Backfilled messages are counted and stored exactly like live ones.** They enter the same batch path, so they are subject to ADR-019's ledger and ADR-024's compaction and need no special case. What they do not get is a claim about traffic before the binding: the rollup records them at the time they were read, not the time they were published, so a backfilled day is a day of investigation, not a day of traffic. The queue stays `live` throughout — backfill is a read, and `captureState` describes the tap, not the operator's reading of it.
 

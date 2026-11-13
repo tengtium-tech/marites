@@ -41,7 +41,9 @@ Declare a Marites-owned queue and bind it to the same exchange with the same rou
 
 Blocking, slow, and it disrupts ordering. Must be rate-limited and user-initiated — never on a timer. Used for one-shot backfill and the explicit "inspect now" action (FR-008).
 
-**Peek is not side-effect free.** `reject_requeue_true` sets the `redelivered` flag, and on a quorum queue with a delivery limit a requeue may count toward that limit, so repeated peeks could push a message into the dead-letter exchange. Treat this as unverified until M1 tests it against the target broker version; until then peek on a quorum queue is rate-limited per queue and the UI says it is not side-effect free.
+**Peek is destructive on a quorum queue, and the loss is silent.** Measured against RabbitMQ 3.13.7 (M1, November 2026): a durable quorum queue with `x-delivery-limit: 3`, a dead-letter exchange and a DLQ, one message, then five `reject_requeue_true` gets. Four peeks returned the message; afterwards the queue held zero and the DLQ held zero. **The message was destroyed, and it did not land in the dead-letter exchange** — the failure the earlier wording anticipated.
+
+So a rate limit is not a mitigation: it bounds how fast messages are lost, not whether. On a quorum queue Marites does not offer peek at all and returns `ERR-CAP-001`, because the only non-destructive read of a body is the shadow-queue copy, which is capture (M2), not peek. On a classic queue `reject_requeue_true` sets `redelivered` and counts toward no limit, so peek remains available there and the dialog says *not side-effect free*.
 
 ### Strategy C — Firehose tracing (fallback)
 
