@@ -50,8 +50,13 @@ operation_audit   (id, tenant_id, actor_id, actor_kind, on_behalf_of, proposal_i
                    action, target, params_json, result, message_count,
                    payload_hash, payload_edited, via, created_at, ip)
 
-app_user          (id, tenant_id, entra_object_id, email, role,
-                   is_break_glass)   -- role values: VOCABULARY §2
+app_user          (id, tenant_id, issuer, subject, email, role,
+                   is_break_glass, sessions_revoked_at)
+                   -- role values: VOCABULARY §2
+                   -- (issuer, subject) is the explicit identity mapping: Google's
+                   -- `sub` under `accounts.google.com`, or the Entra object id
+                   -- under the tenant issuer. No row means no access.
+                   -- sessions_revoked_at invalidates every session issued before it
 
 operation_payload (id, audit_id, message_id, content_hash,
                    payload_before, payload_after, payload_size,
@@ -85,6 +90,8 @@ The Outbox does not replace `operation_intent`: the latter holds bodies before a
 ![Marites bookkeeping logical model](diagrams/bookkeeping-logical-model.png)
 
 This view shows the ten current SQLite records, selected key references, and the operation-intent promotion path. It does not include the planned Outbox record. It is a logical relationship map: SQLite physical type mappings are not specified, and fields such as `tenant_id` remain logical scope references unless the dictionary explicitly declares a foreign key.
+
+**`app_user` is the role mapping.** A row binds a verified `(issuer, subject)` — Google's `sub`, or the Entra object id — to one role. It is written by an operator command, never derived from a provider group or an email domain, and a valid provider identity with no row is refused (`ERR-AUTH-002`). `sessions_revoked_at` is set by logout and invalidates every session issued before it; the count of tables is unchanged, because identity is a column of the user record rather than a second table to keep in step.
 
 Rebuild the preview from the repository root with:
 

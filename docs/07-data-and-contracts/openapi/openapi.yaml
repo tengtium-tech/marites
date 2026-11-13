@@ -2,7 +2,7 @@ openapi: 3.2.1
 
 info:
   title: Marites API
-  version: 0.3.0
+  version: 0.4.0
   license:
     name: MIT
     identifier: MIT
@@ -10,14 +10,18 @@ info:
   description: |
     Marites observes message traffic crossing an adopter-supplied messaging platform.
 
-    **Scope of this document — v0.1 delivery slice.** Ten operations covering onboarding
-    end to end: register a broker, verify it is usable, and read its queues. This is what
-    M0 and the read half of M1 require.
+    **Scope of this document — served operations at revision 0.4.0.** Onboarding end to
+    end, the four live recovery operations, and the three sign-in operations Google mode
+    needs.
 
-    Message inspection, metrics, replay, discard, publish and audit are designed but not
+    Message inspection, metrics, publish, audit and the agent surface are designed but not
     part of this revision. They live in `openapi.deferred.yaml` and are promoted here as
     their milestones arrive. See DOC-API-002 for the full catalogue and which revision owns
     each operation.
+
+    **Authentication is the configured mode** (ADR-008). `entra` accepts a JWT bearer token
+    on every request. `google` accepts a Google ID token once at `POST /auth/google`, then a
+    Marites session cookie; cookie-authenticated writes must also carry `X-CSRF-Token`.
 
     Rules this document follows — outcome classes, idempotency, revision guards, paging,
     versioning — are owned by DOC-API-001, not by this file. Error codes are owned by
@@ -36,9 +40,14 @@ tags:
     description: Live metadata
   - name: Operations
     description: Peek, discard, purge and replay — the actions Support runs during recovery
+  - name: Authentication
+    description: Sign-in, session and sign-out for the configured identity mode
 
+# Either credential is accepted, according to MARITES_AUTH_MODE. A request carrying neither
+# is 401 ERR-AUTH-001; a request whose role lacks the capability is 403 ERR-AUTH-002.
 security:
   - bearerAuth: []
+  - sessionCookie: []
 
 paths:
 
@@ -99,6 +108,7 @@ paths:
         Credentials are write-only, encrypted when saved, and never returned or logged.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
       requestBody:
         required: true
         content:
@@ -156,6 +166,7 @@ paths:
         `If-Match` with the revision last read — a stale value returns ERR-CMN-006.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
         - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
@@ -186,6 +197,7 @@ paths:
         shadow queues, bindings or subscriptions. The adopter's own topology is untouched.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
       responses:
         '4XX': { $ref: '#/components/responses/ClientError' }
         '5XX': { $ref: '#/components/responses/ServerError' }
@@ -207,6 +219,7 @@ paths:
         answer, and the caller decides what to do with it.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
       responses:
         '4XX': { $ref: '#/components/responses/ClientError' }
         '5XX': { $ref: '#/components/responses/ServerError' }
@@ -317,6 +330,7 @@ paths:
         identifiers a peek returns are the ones a subsequent discard accepts.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
       requestBody:
         required: true
         content:
@@ -349,6 +363,7 @@ paths:
         command does.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
       requestBody:
         required: true
         content:
@@ -380,6 +395,7 @@ paths:
         environment is `prod`. The dry run reports the current depth without removing anything.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
       requestBody:
         required: true
         content:
@@ -414,6 +430,7 @@ paths:
         terminal; auto-halt arrives with the durable replay job (WP-M1-3).
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
       requestBody:
         required: true
         content:
@@ -441,6 +458,96 @@ paths:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
 
+  /auth/google:
+    post:
+      tags: [Authentication]
+      operationId: signInWithGoogle
+      summary: Exchange a Google ID token for a Marites session
+      description: |
+        Available only when `MARITES_AUTH_MODE=google`; any other mode answers `404` so the
+        endpoint's existence does not advertise an unused mode.
+
+        The API validates the ID token's signature against Google's published keys, its
+        issuer, its audience (the configured client ID) and its expiry before trusting any
+        claim. The verified `(issuer, subject)` is then looked up in `app_user`: a valid
+        Google account with no mapping gets **no access** and no session, answered as
+        `403 ERR-AUTH-002` with the caller's own `subject` in the detail so an operator can
+        grant it.
+
+        On success the response sets `marites_session` (HttpOnly, `SameSite=Lax`, `Secure`
+        on HTTPS) and `marites_csrf`, and returns the user and the CSRF token. The Google
+        token is not stored and is never logged.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GoogleSignInRequest' }
+      responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
+        '200':
+          description: Session issued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionView' }
+        '401':
+          description: The ID token is missing, expired, or fails signature/issuer/audience validation — ERR-AUTH-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '403':
+          description: The Google account is valid but has no Marites role mapping — ERR-AUTH-002
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /auth/session:
+    get:
+      tags: [Authentication]
+      operationId: getSession
+      summary: The signed-in user and the CSRF token for this session
+      description: |
+        Reads the Marites session cookie and returns the user, their role and the CSRF token
+        a client must echo on writes. A missing, expired or revoked session is `401
+        ERR-AUTH-001` — the client's signal to show the sign-in screen, not an error state.
+      security: []
+      responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
+        '200':
+          description: The current session
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionView' }
+        '401':
+          description: No valid session — ERR-AUTH-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      operationId: signOut
+      summary: End the session, everywhere
+      description: |
+        Clears the session cookie and records a revocation timestamp for the user, so every
+        session that user holds stops being valid — the behaviour a lost device needs.
+        Idempotent: signing out twice is not an error. A cookie-authenticated call must carry
+        `X-CSRF-Token`; a mismatch is `403 ERR-AUTH-002` and nothing is revoked.
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
+      responses:
+        '4XX': { $ref: '#/components/responses/ClientError' }
+        '5XX': { $ref: '#/components/responses/ServerError' }
+        '204': { description: Signed out }
+        '401':
+          description: No session to end — ERR-AUTH-001
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
 components:
 
   securitySchemes:
@@ -449,8 +556,16 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        Entra ID access token. Roles arrive as App Roles in the `roles` claim and map to
-        capability policies: Viewer, Support, Admin.
+        Entra ID access token (`MARITES_AUTH_MODE=entra`). Roles arrive as App Roles in the
+        `roles` claim and map to capability policies: Viewer, Support, Admin.
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: marites_session
+      description: |
+        The Marites session issued by `POST /auth/google` (`MARITES_AUTH_MODE=google`).
+        HttpOnly, `SameSite=Lax`, `Secure` on HTTPS. Cookie-authenticated writes must also
+        carry `X-CSRF-Token`, matched against the `marites_csrf` cookie.
 
   parameters:
     BrokerId:
@@ -480,6 +595,16 @@ components:
         The `revision` the caller last read. A stale value returns ERR-CMN-006; the client
         re-reads and re-applies rather than blind-retrying.
       schema: { type: integer, minimum: 1 }
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: false
+      description: |
+        Required on every write authenticated by the session cookie (`MARITES_AUTH_MODE=google`),
+        and exempt for bearer-authenticated requests. The value is the `csrfToken` returned by
+        `POST /auth/google` or `GET /auth/session`, matched against the `marites_csrf` cookie.
+        A mismatch is `403 ERR-AUTH-002` and nothing executes.
+      schema: { type: string }
 
   responses:
     ClientError:
@@ -552,6 +677,46 @@ components:
         remedy:
           type: string
           description: What the operator should do. Present whenever the cause is actionable.
+
+    Role:
+      type: string
+      enum: [Viewer, Support, Admin]
+      description: The three roles of DOC-UX-001 §2. Both identity providers map into these values.
+
+    GoogleSignInRequest:
+      type: object
+      required: [idToken]
+      properties:
+        idToken:
+          type: string
+          description: |
+            The Google ID token from the popup. Write-only: it is validated, used to look up
+            the mapping, and discarded. It is never stored, returned or logged.
+
+    AuthenticatedUser:
+      type: object
+      required: [id, email, role]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+        capabilities:
+          type: array
+          items: { type: string }
+          description: The capability policies this role holds, so the client can hide controls.
+
+    SessionView:
+      type: object
+      required: [user, csrfToken, expiresAt]
+      properties:
+        user: { $ref: '#/components/schemas/AuthenticatedUser' }
+        csrfToken:
+          type: string
+          description: Echo this in `X-CSRF-Token` on every cookie-authenticated write.
+        expiresAt:
+          type: string
+          format: date-time
+          description: Absolute expiry of the session. After it, every call is 401 ERR-AUTH-001.
 
     ProviderKind:
       type: string

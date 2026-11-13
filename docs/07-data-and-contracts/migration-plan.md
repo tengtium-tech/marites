@@ -36,6 +36,7 @@ Marites creates this store. Its ten current records are created in dependency or
 | Step | Creates | Notes |
 |---|---|---|
 | `0001_bookkeeping_schema` | `tenant`, `app_user`, `broker_profile`, `queue_ref`, `capture_rule`, `replay_job`, `operation_audit`, `operation_payload`, `operation_intent`, `idempotency_key` | One migration, ten tables, created in dependency order. `operation_audit` also carries the append-only triggers |
+| `0002_identity_mapping` | alters `app_user` | Replaces `entra_object_id` with the provider-neutral `(issuer, subject)` pair and adds `sessions_revoked_at` (ADR-008 amendment). No new table: the mapping is the user record, not a second record to keep in step. SQLite rebuilds the table for the dropped column |
 
 **One migration, not ten.** The steps above were planned as separate files, but EF orders migrations by
 timestamp rather than by name: the first implementation skipped the tables that did not exist yet and

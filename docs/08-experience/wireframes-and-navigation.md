@@ -410,12 +410,14 @@ The only thing this document adds is **layout**: tiles in a single row, trend be
 
 ## 5. Authentication states
 
-Identity is Entra ID (`ADR-008`), so **Marites renders no sign-in form** in the normal case: the SPA redirects, and the identity provider owns the page. That leaves five states this product does own, and they were undesigned until the design exploration forced the question.
+Identity is configured (`ADR-008`), and in neither provider does **Marites render a password form**: with Entra the SPA redirects, and with Google a popup opens. The identity provider owns the page either way. That leaves six states this product does own, and they were undesigned until the design exploration forced the question.
 
 | State | What the user sees | Rule |
 |---|---|---|
-| Signed out | Redirect to Entra; nothing rendered in between | No Marites-branded login form |
-| Callback | A quiet loading state, then the role's landing route | Never a flash of the wrong surface |
+| Signed out (`entra`) | Redirect to Entra; nothing rendered in between | No Marites-branded login form |
+| Signed out (`google`) | One "Sign in with Google" button; the popup does the rest | No email/password field, and no client secret in the browser |
+| Callback / popup return | A quiet loading state, then the role's landing route | Never a flash of the wrong surface |
+| Valid Google account, no mapping | "Your account is not mapped to a Marites role" plus the `subject` an Admin needs | Not a generic failure, and never a default role |
 | `MARITES_AUTH_MODE=none` | No sign-in at all; loopback only | First run must not prompt for a sign-in that does not exist |
 | Break-glass | A local form on the Marites origin — the only form Marites owns | Enabled by environment variable, disabled by default, every use audited |
 | **Token expires mid-operation** | The dialog keeps its contents and offers re-authentication | **A replay dialog open for ten minutes must not lose its dry run and typed confirmation** |

@@ -225,14 +225,28 @@ The `ack` comes after the commit. A crash mid-batch produces redelivery, not a g
 
 ## 8. Identity and authorization
 
-Entra ID via OIDC (ADR-008). React uses MSAL.js with auth code + PKCE; the API validates JWT bearer tokens. Roles are **Entra App Roles** arriving in the `roles` claim — cleaner than security groups, which require a Graph call per request.
+Identity is **explicitly configured**, never inferred (ADR-008). `MARITES_AUTH_MODE` selects one of three modes, and the server refuses to start with a value it does not recognise:
 
-Roles map to **capabilities**, not endpoints. Policy-based authorization, with the role→capability table owned by `Marites.Application` as part of authorization orchestration. The matrix is owned by [DOC-UX-001 §2](../08-experience/dashboard-and-operations.md).
+| Mode | Who proves identity | What the API accepts |
+|---|---|---|
+| `entra` | Entra ID via OIDC. React uses MSAL.js with auth code + PKCE | A JWT bearer token on every request, validated for issuer, audience, signature and expiry. Roles arrive as **App Roles** in the `roles` claim — cleaner than security groups, which require a Graph call per request |
+| `google` | Google sign-in. React opens the Google popup and receives a Google ID token | The ID token once, at `POST /auth/google`; afterwards a **Marites session** cookie |
+| `none` | Nobody. The single-server evaluation profile | No credentials. Loopback only, refused on any non-loopback address |
+
+**Google sign-in, step by step.** The browser obtains a Google ID token through the popup; no client secret is involved, and the client ID is public configuration. The API validates the token before trusting any claim: signature against Google's published keys, issuer (`accounts.google.com` or `https://accounts.google.com`), audience (the configured client ID), and expiry, with a small clock-skew allowance. A token that fails any check is `401 ERR-AUTH-001`.
+
+A valid token proves identity, not permission. The API looks the verified `(issuer, subject)` pair up in `app_user` — the **explicit Marites role mapping** — and the row's role becomes the caller's role. A valid Google account with no mapping gets **no access**: the answer is `403 ERR-AUTH-002`, not a default role, and the response names the caller's own `subject` so an operator can create the mapping. Mapping is an operator action (`marites identity grant`), recorded in the bookkeeping store; it is never derived from a Google group, a domain suffix, or an email pattern.
+
+**The Marites session.** After a successful exchange the API sets `marites_session`: HttpOnly (unreadable from JavaScript), `SameSite=Lax`, `Secure` whenever the public URL is HTTPS, scoped to `/`, and signed with a key derived from `MARITES_KEK`. The cookie carries the user, role, issue time and absolute expiry — not a Google token, which is discarded. Sessions expire absolutely after `MARITES_SESSION_HOURS` (default 8) and are validated on every request: signature, expiry, the user still exists, and the session was issued after the user's last revocation. `POST /auth/logout` clears the cookie and sets the user's revocation timestamp, which invalidates every session that user holds — the "sign out everywhere" behaviour a stolen laptop needs. Logout is idempotent.
+
+**CSRF.** A cookie is attached by the browser automatically, so a state-changing request must prove it came from Marites' own page. Every write authenticated by the session cookie carries `X-CSRF-Token`, compared against the `marites_csrf` cookie issued alongside the session (double submit); a mismatch is `403 ERR-AUTH-002` with a remedy, and nothing executes. `SameSite=Lax` blocks the cross-site POST in modern browsers; the token is the control that does not depend on browser behaviour. Reads are not required to carry it, and bearer-authenticated requests are exempt — a token in a header is not attached automatically.
+
+Roles map to **capabilities**, not endpoints, in both modes. Policy-based authorization, with the role→capability table owned by `Marites.Application` as part of authorization orchestration. The matrix is owned by [DOC-UX-001 §2](../08-experience/dashboard-and-operations.md) and is identical for Entra and Google — the provider decides *who*, never *what*.
 
 Two things that will bite if left implicit:
 
-- **Break-glass admin is mandatory for self-hosted software.** When Entra is unreachable or misconfigured, an on-prem install must still be administrable. A local admin account, disabled by default, enabled by environment variable, with every use written to the audit log.
-- **`MARITES_AUTH_MODE=none|entra`.** The single-server profile needs no identity provider. `none` binds to loopback only and refuses to start on a non-loopback address.
+- **Break-glass admin is mandatory for self-hosted software.** When the identity provider is unreachable or misconfigured, an on-prem install must still be administrable. A local admin account, disabled by default, enabled by environment variable, with every use written to the audit log. It exists in every mode, including `google`.
+- **`none` binds to loopback only.** The single-server profile needs no identity provider; `none` refuses to start on a non-loopback address. So does plain HTTP outside loopback, because a session cookie or bearer token over cleartext is a token on the wire.
 
 ## 9. Process topology
 

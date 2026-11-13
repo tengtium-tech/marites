@@ -39,6 +39,7 @@ Every case is `Planned`. None has been written, and no result exists. A case ass
 | TC-004 | Deployment | M0 | `docker compose up` on a clean host serves a working UI against a test broker with one Marites container, creates its SQLite bookkeeping store, requires no adopter-supplied database, and applies the documented defaults | NFR-006, FR-023 |
 | TC-005 | Integration | M0 | A broker profile is created, read, updated and deleted against a real broker, and preflight returns one result per check with a remedy per failure | FR-012, FR-013 |
 | TC-030 | Integration | M0 | Call CreateBroker directly and through the wizard. Unreachable broker returns `503 ERR-BRK-002`; rejected credentials or denied live access returns `422 ERR-BRK-004`. Neither leaves a profile or saved credentials, and the wizard stays editable with the remedy. Topology denial with verified live access returns `201`, saves `failing`, and shows the grant and remedy while allowing live metadata. Passing checks return `201` with the initial result. No response or log contains submitted secrets | FR-012, FR-013 |
+| TC-031 | Integration | M0 | In `google` mode: a mapped Admin, Support and Viewer each receive exactly their role's capabilities from both the UI and direct API calls; an unmapped but valid Google account is refused `403 ERR-AUTH-002` with no session, while a missing or expired session is `401 ERR-AUTH-001`; a cookie-authenticated write without `X-CSRF-Token` is refused and changes nothing; logout revokes every session the user holds; `entra` and `none` answer `404` on the auth endpoints | FR-017, NFR-003 |
 | TC-006 | Integration | M1 | Depth, rates, consumers and unacked match the broker's own management reading in the same poll interval | FR-001 |
 | TC-007 | Integration | M1 | Each role is refused every operation outside its capability matrix and permitted every operation inside it | FR-017 |
 | TC-008 | Integration | M1 | Peek leaves depth unchanged; discard with a matching typed confirmation removes exactly the selection; a mismatch removes nothing | FR-008, FR-009, FR-016 |
@@ -72,6 +73,7 @@ A milestone does not exit until its gate passes. Each gate names the cases that 
 | --- | --- | --- | --- |
 | Contract conformance | TC-001, TC-002 | M0 | The contract or the conventions are wrong; fix the owner, then the contract |
 | Deployment and onboarding | TC-004, TC-030 | M0 | NFR-006, the setup flow, or the failure-specific create behavior is wrong; fix before M1 builds on it |
+| Identity | TC-031 | M0 | ADR-008's mapping is wrong: either an unmapped identity gains access, or a mapped one is refused. Both are authorization defects, not UI bugs |
 | Live console | TC-006, TC-007, TC-008, TC-009, TC-010 | M1 | M1's exit criteria are unmet: Support cannot complete a recovery |
 | Capture | TC-012, TC-013, TC-014, TC-018, TC-019 | M2 | **ADR-011 or ADR-019 is wrong.** A failure here invalidates the counting claim, so it needs a superseding ADR, not a patch |
 | Retention and reporting | TC-015, TC-016, TC-017, TC-029 | M2 | The two-tier design or the degradation order is wrong; DOC-DATA-001 §3–§4 changes first |

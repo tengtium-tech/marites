@@ -36,7 +36,7 @@ For a first read: [requirements](02-business/requirements.md) §2, then the [thr
 | Documentation baseline | **Baseline 1.0**, approved by the project owner on 2026-11-11 across 48 substantive documents, 14 section indexes and two nested indexes — 65 Markdown files counting this page |
 | Requirements and decisions | Approved. 29 FR, 8 NFR, each with one acceptance criterion; 21 DEC answered, 25 ADRs (23 accepted, ADR-004 and ADR-005 superseded) |
 | Architecture and data model | Approved design. Thirteen tables in two stores, four backend layers, four ports, nine components with failure modes |
-| API contract | Approved: 10 served and 15 deferred OpenAPI 3.2.1 operations; both pass static lint, running-service and generated-client conformance remain Planned |
+| API contract | Approved: 17 served and 11 deferred OpenAPI 3.2.1 operations; both pass static lint, running-service and generated-client conformance remain Planned |
 | Verification | Approved plan only: 30 cases, 8 gates, 0 executed — [verification plan](10-testing/verification-plan.md) |
 | Traceability | Approved — all 29 FRs, 8 NFRs and 25 API operations link to owning specifications and planned cases |
 | Security | Approved design. 26 threats; six planned cases cover ten, six stated residuals; no penetration test |

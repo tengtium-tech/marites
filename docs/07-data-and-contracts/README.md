@@ -12,7 +12,7 @@ What is stored, what the counting means, and the HTTP contract itself.
 | [Data dictionary](data-dictionary.md) | Column-level types, nullability, defaults and constraints, a planned Outbox record, PostgreSQL-first message-store ERD and index list |
 | [First migration plan](migration-plan.md) | Separate SQLite/PostgreSQL migration streams, partitioning, tenant isolation, post-migration checks, rollback, and named gaps |
 | [Contract conventions](contract-conventions.md) | OpenAPI 3.2.1, QUERY semantics, outcome classes, idempotency, revision guard, confirmation, paging, versioning, security. Binding on the contract |
-| [API catalog](api-catalog.md) | 25 operations (10 served, 15 deferred) with roles, capabilities, guards, HTTP methods and milestones |
+| [API catalog](api-catalog.md) | 28 operations (17 served, 11 deferred) with roles, capabilities, guards, HTTP methods and milestones |
 | [Error catalog](error-catalog.md) | 28 codes with HTTP status, outcome class and remedy |
 | [API architecture and NFRs](../05-architecture/api-architecture-and-nfrs.md) | Security, reliability, caching, performance, tooling, observability, and API verification rules |
 | [Served contract](openapi/openapi.yaml) | OpenAPI 3.2.1, 10 operations; static lint passed 2026-11-11 |
