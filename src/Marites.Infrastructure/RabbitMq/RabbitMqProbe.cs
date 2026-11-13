@@ -85,7 +85,19 @@ public sealed class RabbitMqProbe : IBrokerProbe
         var serverDate = await ServerDateAsync(client, "api/overview", cancellationToken);
         checks.Add(EvaluateClockSkew(serverDate, DateTimeOffset.UtcNow, ClockTolerance));
 
-        checks.AddRange(Skipped("Not built yet."));
+        // Two checks remain, and they are not the same kind of gap.
+        checks.Add(new PreflightCheck(
+            "dead_letter_configured", "Dead-letter topology readable", "skipped",
+            "Not built yet: it is reported per queue, and no queue is watched until capture exists (M2)."));
+
+        // RabbitMQ answers this question with topology_write_permitted: configure on 'marites.*'
+        // is exactly the permission a declare needs, so a separate probe would test the same
+        // grant twice. The check stays in the contract because it is not a duplicate elsewhere —
+        // on Service Bus and Pub/Sub it means "a probe subscription can be created with a TTL or
+        // bounded retention", which no other check answers.
+        checks.Add(new PreflightCheck(
+            "shadow_declarable", "Shadow queue declarable", "skipped",
+            "Answered by topology_write_permitted on RabbitMQ: the same grant covers both."));
         return checks;
     }
 
