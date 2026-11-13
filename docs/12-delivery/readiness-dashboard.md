@@ -6,7 +6,7 @@ Version 0.4 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
 This is the one place that summarises overall status. Update it in the same change that alters a status.
 
-Nothing here reports an executed test, a built service or a verified deployment. Production application code does not exist; the UI screenshots are design references only.
+Nothing here reports an executed test, a built service or a verified deployment. Each stack branch records implementation and execution evidence in its own `STATUS.md`; the UI screenshots are design references.
 
 | Status | Meaning |
 | --- | --- |
