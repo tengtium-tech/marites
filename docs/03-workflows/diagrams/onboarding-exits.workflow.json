@@ -85,7 +85,7 @@
     {
       "from": "profile",
       "to": "preflight",
-      "label": "register",
+      "label": "submit to CreateBroker",
       "role": "main"
     },
     {
@@ -110,14 +110,14 @@
     {
       "from": "preflight",
       "to": "unreachable",
-      "label": "management unreachable",
+      "label": "live access fails; no save",
       "variant": "security",
       "role": "error"
     },
     {
       "from": "preflight",
       "to": "writeRefused",
-      "label": "topology write refused",
+      "label": "save failing; capture blocked",
       "variant": "security",
       "role": "error"
     }

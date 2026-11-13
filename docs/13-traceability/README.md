@@ -11,7 +11,7 @@ Connect requirements, decisions, operations, milestones and verification using s
 | [Requirement traceability](../02-business/requirements.md) (§7) | All 29 functional requirements and eight NFRs tied to their owning specification and planned case |
 | [Operation coverage matrix](operation-coverage-matrix.md) | Every operation tied to its requirement, role, milestone, verification level and cases |
 | [Verification plan](../10-testing/verification-plan.md) | The 30 cases and eight milestone gates the crosswalks cite; all remain Planned |
-| [Decision register](../01-project/decisions-and-open-questions.md) | DEC-001 to DEC-019 and what each constrains |
+| [Decision register](../01-project/decisions-and-open-questions.md) | DEC-001 to DEC-021 and what each constrains |
 | [Architecture decision register](../05-architecture/decisions.md) | ADR-001 to ADR-025 (23 accepted, 2 superseded) |
 | [Identifier register](../01-project/documentation-standard.md) | Every identifier prefix and its canonical document |
 

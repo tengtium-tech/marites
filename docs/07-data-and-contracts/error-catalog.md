@@ -60,6 +60,7 @@ Every error body is `application/problem+json`:
 | `ERR-BRK-001` | 422 | Rejected | no | Preflight is failing; capture cannot be enabled | Resolve the named failing check, then re-run preflight |
 | `ERR-BRK-002` | 503 | Unavailable | **yes** | The broker could not be reached | Check network reachability and broker health |
 | `ERR-BRK-003` | 422 | Rejected | no | Credential fields do not match the declared `credentialKind` | Supply the fields the kind requires |
+| `ERR-BRK-004` | 422 | Rejected | no | The broker rejected the submitted credentials or denied access to the requested scope for live metadata | Correct the credentials or grant access to the requested broker scope, then submit again |
 
 ## 6. Queue and capture
 

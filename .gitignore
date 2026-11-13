@@ -7,6 +7,7 @@ TestResults/
 .DS_Store
 Thumbs.db
 
+<<<<<<< HEAD
 # Visual Studio solution cache. Machine-local, regenerated on open, and it locks
 # files while the IDE is running, which fails an unattended `git add`.
 .vs/
@@ -18,3 +19,7 @@ Thumbs.db
 
 # Local bookkeeping store created at runtime (MARITES_BOOKKEEPING_PATH default).
 data/
+=======
+# Visual Studio per-user state
+.vs/
+>>>>>>> origin/main

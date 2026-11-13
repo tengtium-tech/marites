@@ -31,7 +31,7 @@ The two stores have separate migration histories, credentials, engines, and tran
 
 ### 2.1 Bookkeeping SQLite
 
-Marites creates this store. Its nine current records are migrated independently in dependency order:
+Marites creates this store. Its ten current records are created in dependency order:
 
 | Step | Creates | Notes |
 |---|---|---|
@@ -89,7 +89,7 @@ This is the weakest point in the isolation story and remains THR-020 / TC-022. M
 
 | Check | Expected |
 |---|---|
-| Inspect SQLite schema | Nine current bookkeeping tables; ten only after the conditional Outbox migration |
+| Inspect SQLite schema | Ten current bookkeeping tables; eleven only after the conditional Outbox migration |
 | PostgreSQL `\dt` | Three message-store parent tables plus range partitions; no bookkeeping tables |
 | PostgreSQL `\d+ message_capture` | Partitioned table, range on `captured_at` |
 | Insert a row outside every `captured_at` partition | Error naming the missing partition |
