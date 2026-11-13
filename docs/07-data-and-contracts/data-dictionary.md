@@ -88,7 +88,7 @@ One row per watched entity. Named `queue_ref` for historical reasons; it holds q
 
 | Column | Type | Null | Default | Constraint / note |
 |---|---|---|---|---|
-| `id` | uuid | no | `gen_random_uuid()` | primary key |
+| `id` | uuid | no | computed | primary key. **Not** `gen_random_uuid()`: it is the UUIDv5 of `(broker_profile_id, vhost, name, source_kind)` under the namespace `6f1c4a52-9d3b-5e77-9f0a-2b8c7d4e1a35`, so the public id is the same before and after the row exists ([DEC-022](../01-project/decisions-and-open-questions.md)) |
 | `broker_profile_id` | uuid | no | — | FK `broker_profile(id)` on delete cascade |
 | `name` | text | no | — | the entity's own name, exactly as the broker reports it |
 | `source_kind` | text | no | — | check in (`queue`, `exchange`, `topic`, `subscription`) |
