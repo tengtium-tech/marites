@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
@@ -118,7 +119,7 @@ public sealed class BrokerApiTests
             "reused-key");
 
         Assert.Equal(HttpStatusCode.Created, first.StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, second.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
 
         var body = await second.Content.ReadAsStringAsync();
         Assert.Contains("ERR-CMN-005", body, StringComparison.Ordinal);
@@ -148,7 +149,7 @@ public sealed class BrokerApiTests
         var again = await CreateAsync(client, "duplicate", key: "duplicate-second");
 
         Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
-        Assert.Contains("ERR-BRK-002", await again.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        Assert.Contains("ERR-CMN-003", await again.Content.ReadAsStringAsync(), StringComparison.Ordinal);
     }
 
     private static Task<HttpResponseMessage> CreateAsync(
@@ -169,6 +170,78 @@ public sealed class BrokerApiTests
 
         return PostAsync(client, JsonSerializer.Serialize(payload), key ?? $"create-{name}");
     }
+
+
+    [Fact]
+    public async Task An_unreachable_broker_refuses_creation_and_persists_nothing()
+    {
+        var client = _fixture.Client;
+        var before = await CountBrokersAsync(client);
+
+        var response = await CreateAsync(client, "unreachable-broker", "amqp://unreachable/v");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Contains("ERR-BRK-002", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        Assert.Equal(before, await CountBrokersAsync(client));
+    }
+
+    [Fact]
+    public async Task Rejected_credentials_refuse_creation_and_persist_nothing()
+    {
+        var client = _fixture.Client;
+        var before = await CountBrokersAsync(client);
+
+        var response = await CreateAsync(client, "rejected-creds", "amqp://rejected/v");
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Contains("ERR-BRK-004", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        Assert.Equal(before, await CountBrokersAsync(client));
+    }
+
+    [Fact]
+    public async Task A_topology_denial_creates_a_failing_profile_with_its_checks()
+    {
+        var client = _fixture.Client;
+
+        var response = await CreateAsync(client, "no-topology-broker", "amqp://no-topology/v");
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = document.RootElement;
+
+        // The resource and the evidence for its state arrive together (DEC-021).
+        Assert.Equal("failing", root.GetProperty("preflightState").GetString());
+        Assert.True(root.TryGetProperty("preflight", out var preflight));
+        Assert.Equal("failing", preflight.GetProperty("state").GetString());
+
+        var failing = preflight.GetProperty("checks").EnumerateArray()
+            .Where(c => c.GetProperty("state").GetString() == "fail")
+            .Select(c => c.GetProperty("id").GetString())
+            .ToList();
+
+        Assert.Contains("topology_write_permitted", failing);
+    }
+
+    private static async Task<int> CountBrokersAsync(HttpClient client)
+    {
+        using var document = JsonDocument.Parse(await client.GetStringAsync("/api/v1/brokers"));
+        return document.RootElement.GetArrayLength();
+    }
+
+    private static Task<HttpResponseMessage> CreateAsync(HttpClient client, string name, string endpoint) =>
+        PostAsync(
+            client,
+            JsonSerializer.Serialize(new
+            {
+                name,
+                providerKind = "rabbitmq",
+                environment = "dev",
+                credentialKind = "basic",
+                endpoint,
+                credentials = new Dictionary<string, string> { ["amqp"] = "u:p" },
+            }),
+            $"create-{name}");
 
     private static async Task<string> CreateAndGetIdAsync(HttpClient client, string name)
     {
@@ -249,7 +322,11 @@ public sealed class BrokerApiFixture : IAsyncLifetime
             await new BookkeepingMigrator(context).MigrateAndSeedAsync("Default", "default", DateTimeOffset.UtcNow);
         }
 
-        _app = ApiHost.Build(["--urls", "http://127.0.0.1:0"]);
+        // DEC-021 makes creation depend on the broker; the stub keeps the API tests independent
+        // of a container while the real probe is covered against the local stack.
+        _app = ApiHost.Build(
+            ["--urls", "http://127.0.0.1:0"],
+            services => services.AddScoped<Marites.Application.Preflight.IBrokerProbe>(_ => new StubBrokerProbe()));
         await _app.StartAsync();
 
         Client = new HttpClient { BaseAddress = new Uri(_app.Urls.First()) };

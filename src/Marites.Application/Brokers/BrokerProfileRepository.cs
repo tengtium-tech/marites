@@ -13,6 +13,9 @@ public sealed record BrokerInput(
     string? NamespaceOrVhost,
     IReadOnlyDictionary<string, string>? Credentials);
 
+/// <summary>A created profile plus the checks that justified creating it (DEC-021).</summary>
+public sealed record CreatedBroker(BrokerView Profile, Preflight.PreflightResult Preflight);
+
 /// <summary>What a caller receives. Credentials are absent by construction, not by filtering.</summary>
 public sealed record BrokerView(
     Guid Id,
@@ -42,6 +45,20 @@ public sealed class RevisionConflictException(int expected, int actual)
     public int Expected { get; } = expected;
 
     public int Actual { get; } = actual;
+}
+
+/// <summary>The broker could not be reached, so nothing was saved. Retryable (ERR-BRK-002).</summary>
+public sealed class BrokerUnreachableException(string detail, string? remedy)
+    : Exception(detail)
+{
+    public string? Remedy { get; } = remedy;
+}
+
+/// <summary>The broker rejected the credentials or denied live metadata access. Nothing was saved (ERR-BRK-004).</summary>
+public sealed class BrokerCredentialsRejectedException(string detail, string? remedy)
+    : Exception(detail)
+{
+    public string? Remedy { get; } = remedy;
 }
 
 /// <summary>A profile with that name already exists in the tenant.</summary>

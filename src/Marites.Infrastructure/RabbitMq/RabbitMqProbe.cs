@@ -14,7 +14,7 @@ public sealed class RabbitMqProbe : IBrokerProbe
 {
     private const string ShadowPrefix = "marites.";
 
-    public async Task<IReadOnlyList<PreflightCheck>> RunAsync(ProbeTarget target, CancellationToken cancellationToken)
+    public async Task<ProbeReport> RunAsync(ProbeTarget target, CancellationToken cancellationToken)
     {
         var checks = new List<PreflightCheck>();
         var (user, password) = ReadCredentials(target.CredentialsJson);
@@ -28,7 +28,7 @@ public sealed class RabbitMqProbe : IBrokerProbe
                 "Add the management API address to the broker profile."));
 
             checks.AddRange(Skipped("Not attempted: the management API was never reached."));
-            return checks;
+            return new ProbeReport(checks, LiveAccessFailure.Unreachable);
         }
 
         using var client = new HttpClient { BaseAddress = new Uri(target.AdminUri.TrimEnd('/') + "/") };
@@ -36,16 +36,26 @@ public sealed class RabbitMqProbe : IBrokerProbe
             "Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($"{user}:{password}")));
         client.Timeout = TimeSpan.FromSeconds(10);
 
-        var overview = await GetAsync(client, "api/overview", cancellationToken);
+        var (overview, refusal) = await GetWithRefusalAsync(client, "api/overview", cancellationToken);
         if (overview is null)
         {
+            // The distinction matters downstream: an unreachable broker is a 503 the operator
+            // retries, rejected credentials are a 422 they must fix.
+            var rejected = refusal is 401 or 403;
+
             checks.Add(new PreflightCheck(
                 "management_api_reachable", "Management API reachable", "fail",
-                $"{target.AdminUri} did not answer, or refused the stored credentials.",
-                "Check the management API address and that the credential's user may sign in to it."));
+                rejected
+                    ? $"{target.AdminUri} rejected the credentials (HTTP {refusal})."
+                    : $"{target.AdminUri} did not answer.",
+                rejected
+                    ? "Correct the credentials, or grant the user access to the management API."
+                    : "Check the management API address and that the broker is reachable from here."));
 
             checks.AddRange(Skipped("Not attempted: the management API was never reached."));
-            return checks;
+
+            return new ProbeReport(
+                checks, rejected ? LiveAccessFailure.Rejected : LiveAccessFailure.Unreachable);
         }
 
         checks.Add(new PreflightCheck("management_api_reachable", "Management API reachable", "pass"));
@@ -91,7 +101,7 @@ public sealed class RabbitMqProbe : IBrokerProbe
             "Not built yet: it is reported per queue, and no queue is watched until capture exists (M2)."));
 
         checks.Add(await ProbeDeclareAsync(target, user, password, vhost, cancellationToken));
-        return checks;
+        return new ProbeReport(checks, LiveAccessFailure.None);
     }
 
     private static IEnumerable<PreflightCheck> Skipped(string detail) =>
@@ -213,6 +223,32 @@ public sealed class RabbitMqProbe : IBrokerProbe
         catch (TaskCanceledException)
         {
             return null;
+        }
+    }
+
+    private static async Task<(JsonDocument? Document, int? Refusal)> GetWithRefusalAsync(
+        HttpClient client,
+        string path,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var response = await client.GetAsync(path, cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return (JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken)), null);
+            }
+
+            return (null, (int)response.StatusCode);
+        }
+        catch (HttpRequestException)
+        {
+            return (null, null);
+        }
+        catch (TaskCanceledException)
+        {
+            return (null, null);
         }
     }
 

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Marites.Application.Brokers;
 using Marites.Application.Preflight;
@@ -78,16 +79,34 @@ public static class BrokerEndpoints
         try
         {
             var created = await service.CreateAsync(ToInput(body), cancellationToken);
-            var payload = JsonSerializer.Serialize(created, JsonOptions);
 
-            await idempotency.RecordAsync(key!, "createBroker", hash, 201, payload, cancellationToken);
+            // CreatedBrokerProfile is BrokerProfile with the initial checks attached, so the
+            // resource and the evidence for its state arrive together (DEC-021) — a client never
+            // has to guess why a profile came back failing.
+            var payload = JsonSerializer.SerializeToNode(created.Profile, JsonOptions)!.AsObject();
+            payload["preflight"] = JsonSerializer.SerializeToNode(created.Preflight, JsonOptions);
 
-            context.Response.Headers.ETag = Quote(created.Revision);
-            return TypedResults.Created($"/api/v1/brokers/{created.Id}", created);
+            await idempotency.RecordAsync(
+                key!, "createBroker", hash, 201, payload.ToJsonString(), cancellationToken);
+
+            context.Response.Headers.ETag = Quote(created.Profile.Revision);
+            context.Response.Headers.Location = $"/api/v1/brokers/{created.Profile.Id}";
+
+            return Results.Json(payload, JsonOptions, statusCode: StatusCodes.Status201Created);
         }
         catch (DuplicateBrokerNameException)
         {
-            return Conflict("ERR-BRK-002", "A broker profile with that name already exists.");
+            // ERR-CMN-003 is the catalog's "record with this name already exists"; ERR-BRK-002
+            // means an unreachable broker and was wrong here.
+            return Conflict("ERR-CMN-003", "A broker profile with that name already exists.");
+        }
+        catch (BrokerUnreachableException error)
+        {
+            return Unavailable("ERR-BRK-002", error.Message, error.Remedy);
+        }
+        catch (BrokerCredentialsRejectedException error)
+        {
+            return Rejected("ERR-BRK-004", error.Message, error.Remedy);
         }
     }
 
@@ -268,7 +287,7 @@ public static class BrokerEndpoints
         if (recorded.RequestHash != hash)
         {
             return Results.Problem(
-                statusCode: StatusCodes.Status400BadRequest,
+                statusCode: StatusCodes.Status409Conflict,
                 title: "Idempotency key reused with different parameters",
                 extensions: new Dictionary<string, object?> { ["code"] = "ERR-CMN-005" });
         }
@@ -290,7 +309,8 @@ public static class BrokerEndpoints
         Results.Problem(
             statusCode: StatusCodes.Status400BadRequest,
             title: $"The {name} header is required",
-            extensions: new Dictionary<string, object?> { ["code"] = "ERR-CMN-003" });
+            // ERR-CMN-001 is request validation; ERR-CMN-003 is a duplicate name and was wrong.
+            extensions: new Dictionary<string, object?> { ["code"] = "ERR-CMN-001" });
 
     private static IResult PreconditionRequired() =>
         Results.Problem(
@@ -303,6 +323,20 @@ public static class BrokerEndpoints
             statusCode: StatusCodes.Status404NotFound,
             title: $"No broker profile {id}",
             extensions: new Dictionary<string, object?> { ["code"] = "ERR-BRK-001" });
+
+    private static IResult Unavailable(string code, string detail, string? remedy) =>
+        Results.Problem(
+            statusCode: StatusCodes.Status503ServiceUnavailable,
+            title: "The broker could not be reached",
+            detail: detail,
+            extensions: new Dictionary<string, object?> { ["code"] = code, ["remedy"] = remedy });
+
+    private static IResult Rejected(string code, string detail, string? remedy) =>
+        Results.Problem(
+            statusCode: StatusCodes.Status422UnprocessableEntity,
+            title: "The broker rejected the credentials or the requested scope",
+            detail: detail,
+            extensions: new Dictionary<string, object?> { ["code"] = code, ["remedy"] = remedy });
 
     private static IResult Conflict(string code, string detail) =>
         Results.Problem(
