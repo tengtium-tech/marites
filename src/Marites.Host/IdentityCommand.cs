@@ -1,6 +1,7 @@
 using Marites.Application.Access;
 using Marites.Domain.Access;
 using Marites.Infrastructure.Access;
+using Marites.Infrastructure.Access;
 using Marites.Infrastructure.Bookkeeping;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,7 +54,7 @@ public static class IdentityCommand
     {
         var values = Parse(args);
 
-        var issuer = Require(values, "issuer");
+        var issuer = NormalizeIssuer(Require(values, "issuer"));
         var subject = Require(values, "subject");
         var email = Require(values, "email");
         var role = Require(values, "role");
@@ -91,7 +92,7 @@ public static class IdentityCommand
     private static async Task<int> RevokeAsync(IUserDirectory users, string[] args)
     {
         var values = Parse(args);
-        var issuer = Require(values, "issuer");
+        var issuer = NormalizeIssuer(Require(values, "issuer"));
         var subject = Require(values, "subject");
 
         var removed = await users.RevokeAsync(issuer, subject, CancellationToken.None);
@@ -105,6 +106,9 @@ public static class IdentityCommand
         Console.WriteLine($"Revoked the mapping for {issuer} / {subject}.");
         return 0;
     }
+
+    private static string NormalizeIssuer(string issuer) =>
+        issuer == GoogleIdentityProvider.IssuerShort ? GoogleIdentityProvider.Issuer : issuer;
 
     private static Dictionary<string, string> Parse(string[] args)
     {
