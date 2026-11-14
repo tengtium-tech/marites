@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { BarChart3, LogOut, Settings2 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
-import { BarChart3, Settings2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 /**
@@ -15,6 +15,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
   const { state, signOut, can } = useAuth();
   const user = state.status === 'authenticated' ? state.session.user : null;
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState('');
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    setSignOutError('');
+    try {
+      await signOut();
+    } catch (error) {
+      setSignOutError(error instanceof Error ? error.message : 'Sign-out failed. Try again.');
+    } finally {
+      setSigningOut(false);
+    }
+  }
 
   const item = (to: string, icon: React.ReactNode, label: string) => {
     const active = pathname.startsWith(to);
@@ -67,13 +81,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span>{user.role}</span>
                 <button
                   type="button"
-                  onClick={() => void signOut()}
+                  onClick={() => void handleSignOut()}
+                  disabled={signingOut}
                   className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-[11px] hover:bg-secondary hover:text-foreground"
                 >
                   <LogOut className="h-3 w-3" />
-                  Sign out
+                  {signingOut ? 'Signing out…' : 'Sign out'}
                 </button>
               </div>
+              {signOutError && <p role="alert" className="mt-2 text-destructive">{signOutError}</p>}
             </div>
           )}
           M0 build

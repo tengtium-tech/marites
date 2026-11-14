@@ -97,11 +97,15 @@ export async function signInWithGoogle(idToken: string): Promise<Session> {
 }
 
 export async function signOut(): Promise<void> {
-  await fetch('/api/v1/auth/logout', {
+  const response = await fetch('/api/v1/auth/logout', {
     method: 'POST',
     credentials: 'same-origin',
     headers: csrfHeaders(),
   });
+
+  if (!response.ok) {
+    throw await toError(response);
+  }
 
   setCsrfToken('');
 }
