@@ -15,8 +15,8 @@ public static class AuthEndpoints
     {
         var auth = routes.MapGroup("/auth").WithTags("Authentication");
 
-        // Sign-in and session are the only anonymous operations in the API: one is how a
-        // caller obtains a credential, the other is how it asks whether it has one.
+        // Session endpoints handle missing credentials themselves so they can return
+        // the correct response for the configured mode and for repeated logout.
         auth.MapPost("/google", (HttpContext context, GoogleSignInBody body, IdentityService identity, CancellationToken cancellationToken) =>
                 SignInAsync(context, body, identity, options, cancellationToken))
             .WithName("signInWithGoogle")
@@ -30,7 +30,7 @@ public static class AuthEndpoints
         auth.MapPost("/logout", (HttpContext context, IdentityService identity, CancellationToken cancellationToken) =>
                 LogoutAsync(context, identity, options, cancellationToken))
             .WithName("signOut")
-            .RequireAuthorization("CanRead");
+            .AllowAnonymous();
 
         return routes;
     }
@@ -113,6 +113,11 @@ public static class AuthEndpoints
                 Guid.Empty, "local", AppRoles.Admin, now, now.AddHours(options.SessionHours), string.Empty)));
         }
 
+        if (!options.IsGoogle)
+        {
+            return Results.NotFound();
+        }
+
         var session = await identity.ReadSessionAsync(
             context.Request.Cookies[AuthOptions.SessionCookie], cancellationToken);
 
@@ -141,25 +146,20 @@ public static class AuthEndpoints
             return Results.NoContent();
         }
 
+        if (!options.IsGoogle)
+        {
+            return Results.NotFound();
+        }
+
         var session = await identity.ReadSessionAsync(
             context.Request.Cookies[AuthOptions.SessionCookie], cancellationToken);
 
-        if (session is null)
+        // CSRF middleware protects an authenticated session. With no valid session,
+        // clearing stale cookies makes a repeated logout safe and idempotent.
+        if (session is not null)
         {
-            return Results.Problem(
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "No session to end",
-                extensions: new Dictionary<string, object?>
-                {
-                    ["code"] = "ERR-AUTH-001",
-                    ["outcome"] = "Denied",
-                    ["retryable"] = false,
-                });
+            await identity.LogoutAsync(session.UserId, cancellationToken);
         }
-
-        // Revoking every session this user holds is the behaviour a lost device needs; the
-        // cookie is cleared as well so the browser stops sending it.
-        await identity.LogoutAsync(session.UserId, cancellationToken);
 
         context.Response.Cookies.Delete(AuthOptions.SessionCookie, CookieOptions(context, options, true, null));
         context.Response.Cookies.Delete(AuthOptions.CsrfCookie, CookieOptions(context, options, false, null));
