@@ -1,8 +1,9 @@
 namespace Marites.Domain.Access;
 
 /// <summary>
-/// A person, mapped to one of the three roles. Sessions and tokens belong to Entra ID; this
-/// row holds only what Marites must know about the person (ADR-008, VOCABULARY §2).
+/// A person, mapped to one of the three roles. The mapping is explicit: the verified
+/// <c>(issuer, subject)</c> pair is the identity, and a provider identity with no row here has
+/// no access (ADR-008, VOCABULARY §18).
 /// </summary>
 public sealed class AppUser
 {
@@ -16,10 +17,17 @@ public sealed class AppUser
     public Guid TenantId { get; private set; }
 
     /// <summary>
-    /// The Entra object id. Nullable because the break-glass admin is a local account with no
-    /// directory identity — the one user that must exist when Entra is unreachable.
+    /// The identity provider's identifier — <c>accounts.google.com</c> for Google, the tenant
+    /// issuer for Entra. Null for the break-glass admin, which exists only locally.
     /// </summary>
-    public string? EntraObjectId { get; private set; }
+    public string? Issuer { get; private set; }
+
+    /// <summary>
+    /// The provider's stable identifier for the person — Google's <c>sub</c>, the Entra object
+    /// id. Null for the break-glass admin. This is the identity; <see cref="Email"/> is display
+    /// data and never decides access.
+    /// </summary>
+    public string? Subject { get; private set; }
 
     public string Email { get; private set; } = string.Empty;
 
@@ -28,4 +36,33 @@ public sealed class AppUser
 
     /// <summary>Disabled by default, enabled by environment variable, and every use is audited.</summary>
     public bool IsBreakGlass { get; private set; }
+
+    /// <summary>
+    /// Set by logout. Every session issued before this instant is invalid, so signing out on one
+    /// device signs the person out everywhere.
+    /// </summary>
+    public DateTimeOffset? SessionsRevokedAt { get; private set; }
+
+    public static AppUser CreateMapped(
+        Guid tenantId,
+        string issuer,
+        string subject,
+        string email,
+        string role) => new()
+    {
+        Id = Guid.NewGuid(),
+        TenantId = tenantId,
+        Issuer = issuer,
+        Subject = subject,
+        Email = email,
+        Role = role,
+        IsBreakGlass = false,
+        SessionsRevokedAt = null,
+    };
+
+    public void ChangeRole(string role) => Role = role;
+
+    public void ChangeEmail(string email) => Email = email;
+
+    public void RevokeSessions(DateTimeOffset now) => SessionsRevokedAt = now;
 }

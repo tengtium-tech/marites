@@ -87,12 +87,20 @@ public sealed class BookkeepingDbContext : DbContext
 
             user.Property(u => u.Id).HasColumnName("id").HasConversion(GuidToText);
             user.Property(u => u.TenantId).HasColumnName("tenant_id").HasConversion(GuidToText);
-            user.Property(u => u.EntraObjectId).HasColumnName("entra_object_id");
+            user.Property(u => u.Issuer).HasColumnName("issuer");
+            user.Property(u => u.Subject).HasColumnName("subject");
             user.Property(u => u.Email).HasColumnName("email").IsRequired();
             user.Property(u => u.Role).HasColumnName("role").IsRequired();
             user.Property(u => u.IsBreakGlass).HasColumnName("is_break_glass").HasConversion(BooleanToInteger);
+            user.Property(u => u.SessionsRevokedAt).HasColumnName("sessions_revoked_at").HasConversion(TimestampToText);
 
             user.HasIndex(u => u.TenantId);
+
+            // The identity pair is unique per tenant, and partial: the break-glass admin has no
+            // provider identity, and two nulls must not collide.
+            user.HasIndex(u => new { u.TenantId, u.Issuer, u.Subject })
+                .IsUnique()
+                .HasFilter("issuer IS NOT NULL AND subject IS NOT NULL");
         });
 
         modelBuilder.Entity<BrokerProfile>(profile =>

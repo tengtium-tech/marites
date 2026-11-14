@@ -37,6 +37,7 @@ public static class CapabilitiesEndpoints
     {
         routes.MapGet("/capabilities", GetBackendCapabilities)
             .WithName("getBackendCapabilities")
+            .RequireAuthorization("CanRead")
             .WithTags("Capabilities")
             .Produces<BackendCapabilitiesResponse>(StatusCodes.Status200OK);
 
