@@ -25,8 +25,16 @@ one thing on either stack that is both automated and passing.
 
 ## What has not happened
 
-The wizard has not been driven in a browser against a live API. `npm run build` passes and the shell renders, but no one has clicked Save and watched the preflight results come back — that is the next thing to do, and the acceptance criterion depends on it. No
-accessibility check has run, so NFR-008 is unmet rather than partially met.
+No accessibility audit has run, so NFR-008 remains unverified.
+
+## Local Google identity verification
+
+On 2026-11-14, the local preview paired this React work with the C# implementation
+from PR #100. A valid Google sign-in without a mapping showed the role refusal.
+After an explicit Admin grant, the operator signed in, saved a Docker RabbitMQ
+profile with passing preflight, and opened its live queue list. Opening `orders`
+loaded live metadata, and **Back to queues** preserved the broker filter.
+Support and Viewer browser sign-in and the full TC-031 matrix remain unverified.
 
 ## Next
 
