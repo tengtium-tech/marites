@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { BarChart3, Settings2 } from 'lucide-react';
+import { useState } from 'react';
+import { BarChart3, LogOut, Settings2 } from 'lucide-react';
+import { useAuth } from '../auth/AuthProvider';
 import { cn } from '../lib/utils';
 
 /**
@@ -11,6 +13,22 @@ import { cn } from '../lib/utils';
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
+  const { state, signOut, can } = useAuth();
+  const user = state.status === 'authenticated' ? state.session.user : null;
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState('');
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    setSignOutError('');
+    try {
+      await signOut();
+    } catch (error) {
+      setSignOutError(error instanceof Error ? error.message : 'Sign-out failed. Try again.');
+    } finally {
+      setSigningOut(false);
+    }
+  }
 
   const item = (to: string, icon: React.ReactNode, label: string) => {
     const active = pathname.startsWith(to);
@@ -48,10 +66,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             Operations
           </div>
           {item('/queues', <BarChart3 className="h-4 w-4" />, 'Queues')}
-          {item('/setup', <Settings2 className="h-4 w-4" />, 'Setup')}
+          {/* Setup manages brokers, which is an Admin capability. Hiding it is usability; the
+              API refuses the call for every other role regardless. */}
+          {can('manage_brokers') && item('/setup', <Settings2 className="h-4 w-4" />, 'Setup')}
         </nav>
 
-        <div className="mt-3 border-t px-2.5 pt-3 text-[11px] leading-relaxed text-muted-foreground">
+        <div className="mt-auto border-t px-2.5 pt-3 text-[11px] leading-relaxed text-muted-foreground">
+          {user && (
+            <div className="mb-3">
+              <div className="truncate text-[11.5px] font-medium text-foreground" title={user.email}>
+                {user.email}
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span>{user.role}</span>
+                <button
+                  type="button"
+                  onClick={() => void handleSignOut()}
+                  disabled={signingOut}
+                  className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-[11px] hover:bg-secondary hover:text-foreground"
+                >
+                  <LogOut className="h-3 w-3" />
+                  {signingOut ? 'Signing out…' : 'Sign out'}
+                </button>
+              </div>
+              {signOutError && <p role="alert" className="mt-2 text-destructive">{signOutError}</p>}
+            </div>
+          )}
           M0 build
           <div className="opacity-75">
             Setup and live queue metadata. Capture, replay and the console actions arrive in later
