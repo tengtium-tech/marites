@@ -511,6 +511,8 @@ paths:
         Reads the Marites session cookie and returns the user, their role and the CSRF token
         a client must echo on writes. A missing, expired or revoked session is `401
         ERR-AUTH-001` — the client's signal to show the sign-in screen, not an error state.
+        In loopback none mode, returns the implicit local Admin with an empty CSRF token
+        and issues no cookies. In entra mode, returns 404.
       security: []
       responses:
         '4XX': { $ref: '#/components/responses/ClientError' }
@@ -536,6 +538,7 @@ paths:
         session that user holds stops being valid — the behaviour a lost device needs.
         Idempotent: signing out twice is not an error. A cookie-authenticated call must carry
         `X-CSRF-Token`; a mismatch is `403 ERR-AUTH-002` and nothing is revoked.
+        In loopback none mode, returns 204 with no session to revoke. In entra mode, returns 404.
       parameters:
         - $ref: '#/components/parameters/CsrfToken'
       responses:
