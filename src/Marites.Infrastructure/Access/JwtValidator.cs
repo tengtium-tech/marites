@@ -44,6 +44,7 @@ public sealed class JwtValidator
 
         JsonElement header;
         JsonElement payload;
+        byte[] signature;
 
         try
         {
@@ -52,15 +53,20 @@ public sealed class JwtValidator
 
             using var payloadDocument = JsonDocument.Parse(Base64Url.Decode(parts[1]));
             payload = payloadDocument.RootElement.Clone();
+            signature = Base64Url.Decode(parts[2]);
         }
         catch (Exception exception) when (exception is FormatException or JsonException)
         {
             return null;
         }
 
-        if (!header.TryGetProperty("alg", out var algorithm)
+        if (header.ValueKind != JsonValueKind.Object
+            || payload.ValueKind != JsonValueKind.Object
+            || !header.TryGetProperty("alg", out var algorithm)
+            || algorithm.ValueKind != JsonValueKind.String
             || algorithm.GetString() != "RS256"
             || !header.TryGetProperty("kid", out var kidElement)
+            || kidElement.ValueKind != JsonValueKind.String
             || kidElement.GetString() is not { Length: > 0 } kid)
         {
             return null;
@@ -73,7 +79,6 @@ public sealed class JwtValidator
         }
 
         var signingInput = Encoding.ASCII.GetBytes($"{parts[0]}.{parts[1]}");
-        var signature = Base64Url.Decode(parts[2]);
 
         using var rsa = RSA.Create();
         rsa.ImportParameters(key.Value);
