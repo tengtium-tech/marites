@@ -14,8 +14,8 @@ public static class QueueEndpoints
     {
         var queues = routes.MapGroup("/queues").WithTags("Queues");
 
-        queues.MapGet("/", ListQueuesAsync).WithName("listQueues");
-        queues.MapGet("/{queueId:guid}", GetQueueAsync).WithName("getQueue");
+        queues.MapGet("/", ListQueuesAsync).WithName("listQueues").RequireAuthorization("CanRead");
+        queues.MapGet("/{queueId:guid}", GetQueueAsync).WithName("getQueue").RequireAuthorization("CanRead");
 
         return routes;
     }

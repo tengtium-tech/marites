@@ -32,6 +32,8 @@ switch (mode)
     }
     case HostMode.Migrate:
         return await MigrateAsync();
+    case HostMode.Identity:
+        return await IdentityCommand.RunAsync(args[1..]);
     default:
         return 2;
 }

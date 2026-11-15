@@ -28,18 +28,26 @@ namespace Marites.Infrastructure.Bookkeeping.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("email");
 
-                    b.Property<string>("EntraObjectId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("entra_object_id");
-
                     b.Property<long>("IsBreakGlass")
                         .HasColumnType("INTEGER")
                         .HasColumnName("is_break_glass");
+
+                    b.Property<string>("Issuer")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("issuer");
 
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("TEXT")
                         .HasColumnName("role");
+
+                    b.Property<string>("SessionsRevokedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sessions_revoked_at");
+
+                    b.Property<string>("Subject")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("subject");
 
                     b.Property<string>("TenantId")
                         .IsRequired()
@@ -49,6 +57,10 @@ namespace Marites.Infrastructure.Bookkeeping.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Issuer", "Subject")
+                        .IsUnique()
+                        .HasFilter("issuer IS NOT NULL AND subject IS NOT NULL");
 
                     b.ToTable("app_user", (string)null);
                 });
