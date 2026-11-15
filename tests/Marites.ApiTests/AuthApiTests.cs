@@ -171,6 +171,25 @@ public sealed class AuthApiTests : IAsyncLifetime
         Assert.NotEmpty((string?)body["csrfToken"] ?? string.Empty);
     }
 
+    [Fact]
+    public async Task An_expired_session_is_refused_even_if_the_cookie_is_sent()
+    {
+        using var scope = _app!.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserDirectory>();
+        var user = await users.FindBySubjectAsync(GoogleIssuer, "sub-viewer", default);
+        Assert.NotNull(user);
+
+        var tokens = scope.ServiceProvider.GetRequiredService<ISessionTokens>();
+        var (token, _) = tokens.Issue(user, DateTimeOffset.UtcNow.AddDays(-1));
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/auth/session");
+        request.Headers.Add("Cookie", $"marites_session={token}");
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("ERR-AUTH-001", await CodeAsync(response));
+    }
+
     // ------------------------------------------------------------------
     // Roles, direct API calls
     // ------------------------------------------------------------------
