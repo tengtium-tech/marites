@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { csrfHeaders } from '../auth/session';
 import { useNavigate } from 'react-router-dom';
 import { SetupProgress } from './SetupProgress';
 import { Button } from '../components/ui/button';
@@ -79,7 +80,11 @@ export function SetupWizard() {
 
     const response = await fetch('/api/v1/brokers', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': newIdempotencyKey() },
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': newIdempotencyKey(),
+        ...csrfHeaders(),
+      },
       body: JSON.stringify({
         name: form.name,
         providerKind: form.providerKind,
@@ -118,7 +123,7 @@ export function SetupWizard() {
     try {
       const response = await fetch(`/api/v1/brokers/${state.brokerId}/preflight`, {
         method: 'POST',
-        headers: { 'Idempotency-Key': newIdempotencyKey() },
+        headers: { 'Idempotency-Key': newIdempotencyKey(), ...csrfHeaders() },
       });
 
       if (response.ok) {

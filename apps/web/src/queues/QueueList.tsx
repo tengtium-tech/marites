@@ -95,7 +95,7 @@ export function QueueList() {
               {queues.map((q) => (
                 <tr key={q.id}>
                   <td>
-                    <Link to={`/queues/${q.id}`}>{q.name}</Link>
+                    <Link to={{ pathname: `/queues/${q.id}`, search: params.toString() }}>{q.name}</Link>
                     {q.vhost && <div className="muted small">vhost {q.vhost}</div>}
                   </td>
                   <td className="num">{q.depth ?? '—'}</td>

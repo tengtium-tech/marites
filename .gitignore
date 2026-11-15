@@ -9,3 +9,8 @@ Thumbs.db
 
 # Local browser harness (not part of the product)
 .pw/
+
+# Local identity configuration: the public Google client ID, per machine. Never a secret, and
+# never committed — the deployed value belongs to the operator's environment.
+apps/web/.env.local
+.env*.local
