@@ -2,7 +2,7 @@
 
 Version 0.3 | November 2026 | Status: Approved — Product owner, 2026-11-11
 
-Counts: 28 operations, 17 served, 11 deferred, 28 tied to a requirement and at least one case, 0 with an executed verification
+Counts: 29 operations, 18 served, 11 deferred, 29 tied to a requirement and at least one case, 0 with an executed verification
 
 This matrix connects every operation in the [API catalog](../07-data-and-contracts/api-catalog.md) to the requirement it serves, the role allowed to call it, its milestone, the verification level and the cases that would prove it. Verification remains Planned: no test code has been written or executed, and no operation exists as running software. Levels and cases are defined once in the [verification plan](../10-testing/verification-plan.md); this table cites them.
 
@@ -38,6 +38,7 @@ How it was derived. Operation, method, path and roles are read from the catalog 
 | OP-AUTH-001 | SignInWithGoogle | `POST /auth/google` | FR-017 | Anyone with a Google account | M0 (served) | Contract, integration (real identity provider), unmapped-account refusal | TC-001, TC-031 |
 | OP-AUTH-002 | GetSession | `GET /auth/session` | FR-017 | Any signed-in user | M0 (served) | Contract, session expiry | TC-001, TC-031 |
 | OP-AUTH-003 | SignOut | `POST /auth/logout` | FR-017 | Any signed-in user | M0 (served) | Contract, revocation, CSRF | TC-001, TC-031 |
+| OP-AUTH-004 | SignInWithRecoveryKey | `POST /auth/break-glass` | FR-016, FR-017 | Operator with recovery key | M0 (served) | Contract, denied credential, audit-before-access and cookie guards | TC-001, TC-031 |
 
 ## Gaps
 
