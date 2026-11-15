@@ -41,6 +41,7 @@ Every setting an operator can set, in one table. Five of these names appeared ac
 | `MARITES_GOOGLE_CLIENT_ID` | string | — | When `AUTH_MODE=google` | The OAuth client ID from Google Cloud Console. **Public configuration, not a secret** — it identifies the app, and the browser needs it too. The client secret is never used: the popup flow is implicit/ID-token only |
 | `MARITES_SESSION_HOURS` | integer | `8` | No | Absolute lifetime of a `google`-mode session, 1–72. Shorter is safer; long enough to finish an incident review is the point |
 | `MARITES_BREAK_GLASS_ENABLED` | boolean | `false` | No | Enables the local break-glass admin. Every use is audited; leaving it off is the default in every auth mode |
+| `MARITES_BREAK_GLASS_KEY_SHA256` | 64 hexadecimal characters | — | Yes | Required when break-glass is enabled. SHA-256 of the 32 raw random key bytes. Keep the original key offline and deliver it to the sign-in form as unpadded base64url. Restart to apply changes and invalidate recovery sessions |
 | `MARITES_BOOKKEEPING_PATH` | path | `./data/marites.db` | No | Marites' own store — config, audit, evidence, operations. Created if absent (DEC-012) |
 | `MARITES_MESSAGE_STORE` | connection string | — | No | The adopter's message store. **Absent means live-only**: no counts, no message list, no search, and full recovery (DEC-016) |
 | `MARITES_MIGRATION_CONNECTION` | connection string | — | Only for `marites migrate` | The DDL role, used briefly and never by the running service (DEC-014) |

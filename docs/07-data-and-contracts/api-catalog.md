@@ -11,7 +11,7 @@ status: Approved — Product owner, 2026-11-11
 
 **Source:** [contract conventions](contract-conventions.md), [error catalog](error-catalog.md). Generated view of `07-data-and-contracts/openapi/openapi.yaml`.
 
-**Counts:** 28 operations designed — **17 in the served slice (v0.4)**, 11 deferred. Of the 17 active, 7 are queries and 10 are commands. Capability names are owned by [VOCABULARY §2](../14-reference/vocabulary.md); role grants by [DOC-UX-001 §2](../08-experience/dashboard-and-operations.md).
+**Counts:** 29 operations designed — **18 in the served slice (v0.4)**, 11 deferred. Of the 18 active, 7 are queries and 11 are commands. Capability names are owned by [VOCABULARY §2](../14-reference/vocabulary.md); role grants by [DOC-UX-001 §2](../08-experience/dashboard-and-operations.md).
 
 This table exists so the API can be read without opening the contract. If the two disagree, the contract is authoritative and this table is corrected.
 
@@ -111,10 +111,11 @@ recorded against that person with `via` set ([ADR-021](../05-architecture/decisi
 | OP-AUTH-001 | SignInWithGoogle | `POST /auth/google` | command | Anyone with a Google account | — | Google ID token validation; explicit `(issuer, subject)` mapping |
 | OP-AUTH-002 | GetSession | `GET /auth/session` | query | Any signed-in user | — | session cookie |
 | OP-AUTH-003 | SignOut | `POST /auth/logout` | command | Any signed-in user | — | session cookie, CSRF token |
+| OP-AUTH-004 | SignInWithRecoveryKey | `POST /auth/break-glass` | command | Operator with recovery key | — | explicitly enabled, secure transport, rate limit, append-only audit |
 
-`OP-AUTH-001` is the only operation in this API that accepts an unauthenticated caller, and it accepts exactly one thing: a Google ID token. It is served only in `google` mode; `entra` and `none` answer `404`, because an endpoint that cannot work in the configured mode should not appear to exist. A valid token with no mapping is `403 ERR-AUTH-002` — the identity is real, the permission is not.
+`OP-AUTH-001` exchanges a Google ID token and `OP-AUTH-004` exchanges a local recovery key. Both accept unauthenticated callers. It is served only in `google` mode; `entra` and `none` answer `404`, because an endpoint that cannot work in the configured mode should not appear to exist. A valid token with no mapping is `403 ERR-AUTH-002` — the identity is real, the permission is not.
 
-`OP-AUTH-002` is a read, so it is not audited: it changes nothing. `OP-AUTH-003` revokes every session the user holds and is idempotent. Neither is available in `entra` mode, where the bearer token's own expiry is the session. In loopback `none` mode, session read returns the implicit local Admin with an empty CSRF token and issues no cookies. Logout returns `204` with no session to revoke.
+`OP-AUTH-002` is a read, so it is not audited: it changes nothing. `OP-AUTH-003` revokes every session the user holds and is idempotent. In `entra` mode, both require a recovery session. Recovery requests are audited before access is granted. In loopback `none` mode, session read returns the implicit local Admin with an empty CSRF token and issues no cookies. Logout returns `204` with no session to revoke.
 
 ## 8. Audit
 
