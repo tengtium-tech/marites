@@ -512,7 +512,7 @@ paths:
         a client must echo on writes. A missing, expired or revoked session is `401
         ERR-AUTH-001` — the client's signal to show the sign-in screen, not an error state.
         In loopback none mode, returns the implicit local Admin with an empty CSRF token
-        and issues no cookies. In entra mode, returns 404.
+        and issues no cookies when there is no recovery session. In entra mode, returns 404 unless a valid recovery session is present.
       security: []
       responses:
         '4XX': { $ref: '#/components/responses/ClientError' }
@@ -538,7 +538,7 @@ paths:
         session that user holds stops being valid — the behaviour a lost device needs.
         Idempotent: signing out twice is not an error. A cookie-authenticated call must carry
         `X-CSRF-Token`; a mismatch is `403 ERR-AUTH-002` and nothing is revoked.
-        In loopback none mode, returns 204 with no session to revoke. In entra mode, returns 404.
+        In loopback none mode, returns 204 when there is no recovery session to revoke. In entra mode, returns 404 unless a valid recovery session is present.
       parameters:
         - $ref: '#/components/parameters/CsrfToken'
       responses:
@@ -557,8 +557,8 @@ paths:
       operationId: signInWithRecoveryKey
       summary: Open a local emergency Admin session
       description: |
-        Available only when break-glass is enabled. Requires HTTPS or a directly connected
-        loopback client. The recovery key is checked locally without an identity provider.
+        Available only when break-glass is enabled. Requires HTTPS or a direct connection to a
+        loopback-only listener. The recovery key is checked locally without an identity provider.
         Success sets the normal session and CSRF cookies. A recovery session lasts at most
         30 minutes and is invalidated by a host restart. Session read and logout accept a valid
         recovery cookie regardless of the provider mode. Audit must succeed before access is granted.
