@@ -114,7 +114,7 @@ recorded against that person with `via` set ([ADR-021](../05-architecture/decisi
 
 `OP-AUTH-001` is the only operation in this API that accepts an unauthenticated caller, and it accepts exactly one thing: a Google ID token. It is served only in `google` mode; `entra` and `none` answer `404`, because an endpoint that cannot work in the configured mode should not appear to exist. A valid token with no mapping is `403 ERR-AUTH-002` — the identity is real, the permission is not.
 
-`OP-AUTH-002` is a read, so it is not audited: it changes nothing. `OP-AUTH-003` revokes every session the user holds and is idempotent. Neither is available in `entra` mode, where the bearer token's own expiry is the session.
+`OP-AUTH-002` is a read, so it is not audited: it changes nothing. `OP-AUTH-003` revokes every session the user holds and is idempotent. Neither is available in `entra` mode, where the bearer token's own expiry is the session. In loopback `none` mode, session read returns the implicit local Admin with an empty CSRF token and issues no cookies. Logout returns `204` with no session to revoke.
 
 ## 8. Audit
 
