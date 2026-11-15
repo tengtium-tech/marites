@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { AuthError, fetchSession, signInWithGoogle, signOut, type Session } from './session';
+import { AuthError, fetchSession, signInWithGoogle, signOut as revokeSession, type Session } from './session';
 
 type AuthState =
   | { status: 'loading' }
@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await signOut();
+    await revokeSession();
     setState({ status: 'anonymous' });
   }, []);
 
